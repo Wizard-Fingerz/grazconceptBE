@@ -1,0 +1,3 @@
+create tour
+update tour
+delete tour
