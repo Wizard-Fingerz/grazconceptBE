@@ -12,4 +12,5 @@ class DefinitionConfig(AppConfig):
         import definition.user_type.signals
         import definition.client_type.signals
         import definition.service_of_interest.signals
+        import definition.document_type.signals
 

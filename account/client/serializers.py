@@ -30,6 +30,7 @@ class ClientSerializer(serializers.ModelSerializer):
             'client_type_name',
             'service_of_interest_name',
             'assigned_to_teams_name',
+            "is_prospect"
         ]
         read_only_fields = [
             'id',

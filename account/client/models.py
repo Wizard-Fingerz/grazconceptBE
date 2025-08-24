@@ -12,6 +12,7 @@ class Client(User):
     assign_to_teams = models.ManyToManyField(TableDropDownDefinition, limit_choices_to={'table_name': 'service_of_interest'}, related_name="client_service_of_interest_team")
     internal_note_and_reminder = models.TextField(blank = True, null = True)
     country = models.CharField(max_length=100, blank=True, null=True)
+    is_prospect = models.BooleanField(default=False)
 
 
     @property
