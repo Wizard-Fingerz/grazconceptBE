@@ -10,4 +10,6 @@ class DefinitionConfig(AppConfig):
         import definition.roles.superadmin_signals
         import definition.gender.signals
         import definition.user_type.signals
+        import definition.client_type.signals
+        import definition.service_of_interest.signals
 

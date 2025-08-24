@@ -1,0 +1,6 @@
+Student
+JAPA Client
+Investor
+Buyer
+Loan Seeker
+Exam Candidate
