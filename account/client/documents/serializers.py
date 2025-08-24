@@ -11,10 +11,14 @@ class ClientDocumentsSerializer(serializers.ModelSerializer):
             'type',
             'uploaded_at',
             'uploaded_by',
-            'type_term'
+            'type_term',
+            'client_name'
+
         ]
         read_only_fields = [
             'id',
             'uploaded_at',
-            'type_term'
+            'type_term',
+            'client_name'
+
         ]

@@ -18,3 +18,7 @@ class ClientDocuments(models.Model):
     @property
     def type_term(self):
         return self.type.term
+
+    @property
+    def client_name(self):
+        return f"{self.client.first_name} {self.client.last_name}".strip()
