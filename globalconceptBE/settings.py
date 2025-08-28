@@ -13,9 +13,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Load environment variables from .env (for local dev)
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
 # Quick-start development settings - unsuitable for production
@@ -126,11 +134,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 #     }
 # }
 
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",  # local fallback
-        conn_max_age=600,  # keeps connections alive for performance
-        ssl_require=False   # Render handles SSL for internal DB
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True,  # ensures SSL for production DB
     )
 }
 
