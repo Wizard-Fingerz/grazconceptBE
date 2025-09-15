@@ -33,7 +33,7 @@ schema_view = get_schema_view(
 api_urlpatterns = [
     path('', include('account.urls')),
     # Add other app urls here, e.g.:
-    # path('app/', include('app.urls')),
+    path('app/', include('app.urls')),
     path('', include('definition.urls')),
 ]
 
