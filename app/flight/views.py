@@ -8,11 +8,11 @@ from .models import FlightBooking
 AVIATIONSTACK_BASE_URL = "https://api.aviationstack.com/v1/flightsFuture"
 
 
-
 @api_view(["POST"])
 def search_flights(request):
     """
     Handle flight booking search and persist booking.
+    The request user is set as the client for the booking.
     """
     data = request.data
     flight_type = data.get("flightType")
@@ -20,6 +20,22 @@ def search_flights(request):
     # Basic validation
     if flight_type not in ["Round Trip", "One Way", "Multi-city"]:
         return Response({"error": "Invalid flight type"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Ensure the user is authenticated
+    user = request.user
+    if not user.is_authenticated:
+        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Check if user is actually a Client instance (since Client extends User via multi-table inheritance)
+    print(user)
+    from account.client.models import Client
+    try:
+        # Try to get the related Client instance for this user
+        client = Client.objects.get(email=user)
+    except Client.DoesNotExist:
+        return Response({"error": "User is not a client"}, status=status.HTTP_403_FORBIDDEN)
+    except AttributeError:
+        return Response({"error": "User is not a client"}, status=status.HTTP_403_FORBIDDEN)
 
     try:
         flights_found = []
@@ -55,8 +71,9 @@ def search_flights(request):
                 res = requests.get(AVIATIONSTACK_BASE_URL, params=params)
                 flights_found.append(res.json())
 
-        # Save booking record
+        # Save booking record with the request user as client
         booking = FlightBooking.objects.create(
+            client=client,
             flight_type=flight_type,
             from_airport=data.get("from"),
             to_airport=data.get("to"),
