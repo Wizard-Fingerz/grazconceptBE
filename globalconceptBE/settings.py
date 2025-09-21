@@ -47,6 +47,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:8000",
     "https://grazconcept-fe.vercel.app", 
+    'http://localhost:5174',
 ]
 
 
