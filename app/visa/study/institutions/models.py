@@ -34,7 +34,7 @@ class ProgramType(models.Model):
 class Institution(models.Model):
     name = models.CharField(max_length=255)
     country = CountryField()
-    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='institutions')
+    city = models.CharField(max_length=100)
     email_address = models.EmailField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
