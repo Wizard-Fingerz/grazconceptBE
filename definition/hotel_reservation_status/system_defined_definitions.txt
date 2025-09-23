@@ -1,0 +1,7 @@
+Pending
+Searching
+Awaiting Response
+Offer Sent
+Awaiting User Confirmation
+Confirmed
+Cancelled

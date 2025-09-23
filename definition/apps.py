@@ -13,4 +13,5 @@ class DefinitionConfig(AppConfig):
         import definition.client_type.signals
         import definition.service_of_interest.signals
         import definition.document_type.signals
+        import definition.hotel_reservation_status.signals
 
