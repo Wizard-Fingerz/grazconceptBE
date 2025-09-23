@@ -1,9 +1,9 @@
 from rest_framework import viewsets, permissions
 
 from app.views import CustomPagination
-from .models import HotelBooking
+from .models import Hotel, HotelBooking
 from rest_framework.permissions import IsAuthenticated
-from .serializers import HotelBookingSerializer
+from .serializers import HotelBookingSerializer, HotelSerializer
 
 class HotelBookingViewSet(viewsets.ModelViewSet):
     """
@@ -11,6 +11,22 @@ class HotelBookingViewSet(viewsets.ModelViewSet):
     """
     queryset = HotelBooking.objects.all().order_by('-created_at')
     serializer_class = HotelBookingSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Map incoming camelCase keys to model fields if necessary
+        data = self.request.data.copy()
+       
+        serializer.save(**data)
+
+
+class HotelViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing hotel booking instances.
+    """
+    queryset = Hotel.objects.all().order_by('-created_at')
+    serializer_class = HotelSerializer
     pagination_class = CustomPagination
     permission_classes = [IsAuthenticated]
 
