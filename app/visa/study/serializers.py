@@ -13,6 +13,7 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'country',
             'institution',
             'course_of_study',
+            'program_type',
             'application_date',
             'status',
             'notes',
