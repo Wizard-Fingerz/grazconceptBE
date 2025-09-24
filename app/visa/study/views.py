@@ -16,9 +16,11 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        # Map incoming camelCase keys to model fields if necessary
-        data = self.request.data.copy()
-       
-        serializer.save(**data)
-
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['applicant'] = request.user.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)

@@ -8,10 +8,10 @@ from definition.models import TableDropDownDefinition
 
 class StudyVisaApplication(models.Model):
     applicant = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='visa_applicants')
-    passport_number = models.CharField(max_length=50)
+    passport_number = models.CharField(max_length=50, null = True, blank = True)
     country = CountryField()
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='visa_applications')
-    course_of_study = models.ForeignKey(CourseOfStudy, on_delete=models.CASCADE, related_name='visa_applications_course_of_study')
+    course_of_study = models.ForeignKey(CourseOfStudy, null = True, blank = True, on_delete=models.CASCADE, related_name='visa_applications_course_of_study')
     program_type = models.ForeignKey(ProgramType, on_delete=models.CASCADE, related_name='visa_applications_program_types')
     application_date = models.DateField(auto_now_add=True)
     status = models.ForeignKey(
