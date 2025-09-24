@@ -24,14 +24,6 @@ class ProgramTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
 
 class InstitutionSerializer(serializers.ModelSerializer):
-    country = CountrySerializer(read_only=True)
-    country_id = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(), source='country', write_only=True
-    )
-    city = CitySerializer(read_only=True)
-    city_id = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(), source='city', write_only=True
-    )
     program_types = ProgramTypeSerializer(many=True, read_only=True)
     program_type_ids = serializers.PrimaryKeyRelatedField(
         queryset=ProgramType.objects.all(), source='program_types', many=True, write_only=True, required=False
@@ -40,7 +32,7 @@ class InstitutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Institution
         fields = [
-            'id', 'name', 'country', 'country_id', 'city', 'city_id',
+            'id', 'name', 'country', 'city', 
             'email_address', 'address', 'website', 'program_types', 'program_type_ids'
         ]
 
