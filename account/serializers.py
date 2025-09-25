@@ -3,8 +3,10 @@ from django.contrib.auth import authenticate
 from .models import User
 
 
-
 class UserSerializer(serializers.ModelSerializer):
+    # Use source to directly get the string representation from the model property
+    country_of_residence = serializers.CharField(source="country_of_residence_str", read_only=True)
+    nationality = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -53,7 +55,11 @@ class UserSerializer(serializers.ModelSerializer):
             "gender_name",
         ]
 
-
+    def get_nationality(self, obj):
+        nationality = getattr(obj, "nationality", None)
+        if nationality:
+            return str(nationality)
+        return None
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -74,7 +80,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -87,7 +92,6 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User account is disabled.")
         data['user'] = user
         return data
-    
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
-

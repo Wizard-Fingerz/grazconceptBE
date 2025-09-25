@@ -14,11 +14,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=200)
     phone_number = models.CharField(max_length=17)
     date_of_birth = models.DateField(null=True, blank=True)
-    gender = models.ForeignKey(TableDropDownDefinition, on_delete=models.SET_NULL, null=True, blank=True, related_name='user_genders', limit_choices_to={'table_name': 'gender'})
+    gender = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_genders',
+        limit_choices_to={'table_name': 'gender'}
+    )
     current_address = models.TextField(blank=True, null=True)
     country_of_residence = CountryField(blank=True, null=True)
     nationality = CountryField(blank=True, null=True)
-    user_type = models.ForeignKey(TableDropDownDefinition, on_delete=models.CASCADE,related_name='user_types', limit_choices_to={'table_name': 'user_type'})
+    user_type = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.CASCADE,
+        related_name='user_types',
+        limit_choices_to={'table_name': 'user_type'}
+    )
     role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
     custom_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     profile_picture = models.ImageField(upload_to=generate_filename, blank=True, null=True)
@@ -31,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     modified_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_users')
     modified_date = models.DateTimeField(auto_now=True)
     last_login = models.DateTimeField(null=True, blank=True)
-    is_staff = models.BooleanField(default=False) 
+    is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -44,15 +56,35 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def full_name(self):
-        return f"{self.first_name} {self.middle_name or ''} {self.last_name}".strip()
-    
+        # Ensure no double spaces if middle_name is blank or None
+        names = [self.first_name]
+        if self.middle_name:
+            names.append(self.middle_name)
+        names.append(self.last_name)
+        return " ".join(filter(None, names)).strip()
+
     @property
     def profile_picture_url(self):
         if self.profile_picture:
-            return self.profile_picture.url
+            try:
+                return self.profile_picture.url
+            except ValueError:
+                return None
         return None
-    
+
     @property
     def gender_name(self):
         return self.gender.term if self.gender else None
 
+    @property
+    def country_of_residence_str(self):
+        # Always return a string or None for JSON serialization
+        if self.country_of_residence:
+            return str(self.country_of_residence)
+        return None
+
+    @property
+    def nationality_str(self):
+        if self.nationality:
+            return str(self.nationality)
+        return None

@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from .models import Client
-
 from django.contrib.auth.hashers import make_password
 
 class ClientSerializer(serializers.ModelSerializer):
     client_type_name = serializers.ReadOnlyField()
     service_of_interest_name = serializers.ReadOnlyField()
     assigned_to_teams_name = serializers.ReadOnlyField()
+    country = serializers.CharField(allow_blank=True, allow_null=True, required=False)
 
     class Meta:
         model = Client
@@ -38,22 +38,34 @@ class ClientSerializer(serializers.ModelSerializer):
             'is_superuser',
             'is_staff',
             'is_active',
-            'date_joined',
             'created_by',
             'client_type_name',
             'service_of_interest_name',
             'assigned_to_teams_name',
         ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Ensure country is always a string or None, not a Country object
+        country = getattr(instance, 'country', None)
+        if hasattr(country, 'code'):
+            data['country'] = str(country)
+        elif country is not None:
+            data['country'] = str(country)
+        else:
+            data['country'] = None
+        return data
 
     def create(self, validated_data):
-        # Hash the password before creating the Client instance
         password = validated_data.get('password')
         if password:
             validated_data['password'] = make_password(password)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # Hash the password if it's being updated
         password = validated_data.get('password')
         if password:
             validated_data['password'] = make_password(password)
