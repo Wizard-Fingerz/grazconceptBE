@@ -5,6 +5,7 @@ from account.utils import generate_filename
 from definition.models import TableDropDownDefinition
 from definition.permissions.models import UserPermissions
 from definition.roles.models import Roles
+from django_countries.fields import CountryField
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -14,6 +15,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=17)
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.ForeignKey(TableDropDownDefinition, on_delete=models.SET_NULL, null=True, blank=True, related_name='user_genders', limit_choices_to={'table_name': 'gender'})
+    current_address = models.TextField(blank=True, null=True)
+    country_of_residence = CountryField(blank=True, null=True)
+    nationality = CountryField(blank=True, null=True)
     user_type = models.ForeignKey(TableDropDownDefinition, on_delete=models.CASCADE,related_name='user_types', limit_choices_to={'table_name': 'user_type'})
     role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
     custom_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
