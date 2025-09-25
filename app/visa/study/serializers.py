@@ -3,6 +3,8 @@ from .models import StudyVisaApplication
 
 
 class StudyVisaApplicationSerializer(serializers.ModelSerializer):
+    country = serializers.CharField(source="country_str", read_only=True)
+    destination_country = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyVisaApplication
@@ -58,6 +60,12 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'notes',
         ]
         read_only_fields = ['application_date', 'status', 'submitted_at']
+
+    def get_destination_country(self, obj):
+        # Always return a string or None for JSON serialization
+        if obj.destination_country:
+            return str(obj.destination_country)
+        return None
 
     def create(self, validated_data):
         # status is handled in model save() if not provided

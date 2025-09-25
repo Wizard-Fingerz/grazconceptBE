@@ -67,6 +67,16 @@ class StudyVisaApplication(models.Model):
     )
     notes = models.TextField(blank=True, null=True)
 
+
+    @property
+    def country_str(self):
+        # Always return a string or None for JSON serialization
+        if self.country:
+            return str(self.country)
+        return None
+
+
+
     def save(self, *args, **kwargs):
         if self.status is None:
             try:
@@ -84,3 +94,4 @@ class StudyVisaApplication(models.Model):
 
     def __str__(self):
         return f"{self.first_name or self.applicant.first_name} {self.last_name or self.applicant.last_name} - {self.institution.name} ({self.status})"
+
