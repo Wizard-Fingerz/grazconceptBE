@@ -4,6 +4,8 @@ from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 
+from app.ad_banners.models import AdBanner
+
 from .hotels.models import Hotel, HotelBooking, Amenity
 from .flight.models import FlightBooking
 from .visa.study.institutions.models import Country, City, ProgramType, Institution, CourseOfStudy
@@ -54,6 +56,12 @@ class ProgramTypeResource(resources.ModelResource):
     class Meta:
         model = ProgramType
 
+
+
+class AdBannerResource(resources.ModelResource):
+    class Meta:
+        model = AdBanner
+
 class InstitutionResource(resources.ModelResource):
     class Meta:
         model = Institution
@@ -81,3 +89,8 @@ class InstitutionAdmin(ImportExportModelAdmin):
 @admin.register(CourseOfStudy)
 class CourseOfStudyAdmin(ImportExportModelAdmin):
     resource_class = CourseOfStudyResource
+
+
+@admin.register(AdBanner)
+class AdBannerAdmin(ImportExportModelAdmin):
+    resource_class = AdBannerResource

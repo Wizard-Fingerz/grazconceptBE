@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from app.ad_banners.views import AdBannerViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
 from .hotels.views import HotelBookingViewSet, HotelViewSet
@@ -21,6 +22,7 @@ router.register(r'program-types', ProgramTypeViewSet, basename='programtypes')
 router.register(r'institutions', InstitutionViewSet, basename='institutions')
 router.register(r'courses-of-study', CourseOfStudyViewSet, basename='coursesofstudy')
 router.register(r'study-visa-application', StudyVisaApplicationViewSet, basename='studyvisaapplication')
+router.register(r'ad-banner', AdBannerViewSet, basename='adbanner')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),
