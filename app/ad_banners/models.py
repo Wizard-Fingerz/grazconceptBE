@@ -1,4 +1,9 @@
 from django.db import models
+import os
+
+def ad_banner_image_upload_path(instance, filename):
+    # This will upload to MEDIA_ROOT/ad_banners/<filename>
+    return os.path.join('ad_banners', filename)
 
 class AdBanner(models.Model):
     POSITION_CHOICES = [
@@ -9,7 +14,7 @@ class AdBanner(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='ad_banners/')
+    image = models.ImageField(upload_to=ad_banner_image_upload_path)
     link_url = models.URLField(max_length=500, blank=True, null=True)
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, default='top')
     is_active = models.BooleanField(default=True)
