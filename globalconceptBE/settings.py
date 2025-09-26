@@ -15,16 +15,11 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
-
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Load environment variables from .env (for local dev)
 load_dotenv(os.path.join(BASE_DIR, ".env"))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -38,7 +33,6 @@ DEBUG = True
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['*']   
 
-
 # Allow all (development only)
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -49,7 +43,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://grazconcept-fe.vercel.app", 
     'http://localhost:5174',
 ]
-
 
 # Application definition
 
@@ -122,7 +115,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default Django backend
 ]
 
-
 # Let WhiteNoise compress and cache static files
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -135,7 +127,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -163,10 +154,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 
 AUTH_USER_MODEL = 'account.User'
 
@@ -178,11 +167,9 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -191,13 +178,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
 
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
 AMADEUS_CLIENT_ID = os.environ.get('AMADEUS_CLIENT_ID')
