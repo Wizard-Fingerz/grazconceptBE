@@ -6,8 +6,8 @@ from app.visa.study.views import StudyVisaApplicationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
 from .hotels.views import HotelBookingViewSet, HotelViewSet
 from .visa.study.institutions.views import (
-    CountryViewSet,
-    CityViewSet,
+    # CountryViewSet,
+    # CityViewSet,
     ProgramTypeViewSet,
     InstitutionViewSet,
     CourseOfStudyViewSet,
@@ -16,8 +16,8 @@ from .visa.study.institutions.views import (
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
 router.register(r'hotels', HotelViewSet, basename='hotels')
-router.register(r'countries', CountryViewSet, basename='countries')
-router.register(r'cities', CityViewSet, basename='cities')
+# router.register(r'countries', CountryViewSet, basename='countries')
+# router.register(r'cities', CityViewSet, basename='cities')
 router.register(r'program-types', ProgramTypeViewSet, basename='programtypes')
 router.register(r'institutions', InstitutionViewSet, basename='institutions')
 router.register(r'courses-of-study', CourseOfStudyViewSet, basename='coursesofstudy')

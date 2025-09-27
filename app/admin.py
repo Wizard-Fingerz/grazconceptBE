@@ -8,7 +8,7 @@ from app.ad_banners.models import AdBanner
 
 from .hotels.models import Hotel, HotelBooking, Amenity
 from .flight.models import FlightBooking
-from .visa.study.institutions.models import Country, City, ProgramType, Institution, CourseOfStudy
+from .visa.study.institutions.models import ProgramType, Institution, CourseOfStudy
 
 
 
@@ -44,13 +44,13 @@ class AmenityAdmin(ImportExportModelAdmin):
 class FlightBookingAdmin(ImportExportModelAdmin):
     resource_class = FlightBookingResource
 
-class CountryResource(resources.ModelResource):
-    class Meta:
-        model = Country
+# class CountryResource(resources.ModelResource):
+#     class Meta:
+#         model = Country
 
-class CityResource(resources.ModelResource):
-    class Meta:
-        model = City
+# class CityResource(resources.ModelResource):
+#     class Meta:
+#         model = City
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:
@@ -70,13 +70,13 @@ class CourseOfStudyResource(resources.ModelResource):
     class Meta:
         model = CourseOfStudy
 
-@admin.register(Country)
-class CountryAdmin(ImportExportModelAdmin):
-    resource_class = CountryResource
+# @admin.register(Country)
+# class CountryAdmin(ImportExportModelAdmin):
+#     resource_class = CountryResource
 
-@admin.register(City)
-class CityAdmin(ImportExportModelAdmin):
-    resource_class = CityResource
+# @admin.register(City)
+# class CityAdmin(ImportExportModelAdmin):
+#     resource_class = CityResource
 
 @admin.register(ProgramType)
 class ProgramTypeAdmin(ImportExportModelAdmin):

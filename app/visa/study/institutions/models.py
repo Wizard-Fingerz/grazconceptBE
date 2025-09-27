@@ -8,21 +8,21 @@ from django.db import models
 
 from django_countries.fields import CountryField
 
-class Country(models.Model):
-    code = CountryField(unique=True)
+# class Country(models.Model):
+#     code = CountryField(unique=True)
 
-    def __str__(self):
-        return self.code.name
+#     def __str__(self):
+#         return self.code.name
 
-class City(models.Model):
-    name = models.CharField(max_length=100)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
+# class City(models.Model):
+#     name = models.CharField(max_length=100)
+#     country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
 
-    class Meta:
-        unique_together = ('name', 'country')
+#     class Meta:
+#         unique_together = ('name', 'country')
 
-    def __str__(self):
-        return f"{self.name}, {self.country.name}"
+#     def __str__(self):
+#         return f"{self.name}, {self.country.name}"
 
 class ProgramType(models.Model):
     name = models.CharField(max_length=100, unique=True)

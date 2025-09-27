@@ -1,21 +1,21 @@
 from rest_framework import viewsets
 
-from .models import Country, City, ProgramType, Institution, CourseOfStudy
+from .models import ProgramType, Institution, CourseOfStudy
 from .serializers import (
-    CountrySerializer,
-    CitySerializer,
+    # CountrySerializer,
+    # CitySerializer,
     ProgramTypeSerializer,
     InstitutionSerializer,
     CourseOfStudySerializer,
 )
 
-class CountryViewSet(viewsets.ModelViewSet):
-    queryset = Country.objects.all()
-    serializer_class = CountrySerializer
+# class CountryViewSet(viewsets.ModelViewSet):
+#     queryset = Country.objects.all()
+#     serializer_class = CountrySerializer
 
-class CityViewSet(viewsets.ModelViewSet):
-    queryset = City.objects.all()
-    serializer_class = CitySerializer
+# class CityViewSet(viewsets.ModelViewSet):
+#     queryset = City.objects.all()
+#     serializer_class = CitySerializer
 
 class ProgramTypeViewSet(viewsets.ModelViewSet):
     queryset = ProgramType.objects.all()
