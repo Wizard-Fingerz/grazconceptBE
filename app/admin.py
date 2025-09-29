@@ -18,6 +18,9 @@ from .visa.work.organization.models import WorkOrganization
 # Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
 from .visa.vacation.offer.models import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
 
+# Import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage
+from .visa.pilgrimage.offer.models import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage
+
 class HotelResource(resources.ModelResource):
     class Meta:
         model = Hotel
@@ -66,6 +69,18 @@ class VacationOfferImageResource(resources.ModelResource):
     class Meta:
         model = VacationOfferImage
 
+class PilgrimageOfferResource(resources.ModelResource):
+    class Meta:
+        model = PilgrimageOffer
+
+class PilgrimageOfferIncludedItemResource(resources.ModelResource):
+    class Meta:
+        model = PilgrimageOfferIncludedItem
+
+class PilgrimageOfferImageResource(resources.ModelResource):
+    class Meta:
+        model = PilgrimageOfferImage
+
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
     resource_class = HotelResource
@@ -113,6 +128,18 @@ class VacationOfferIncludedItemAdmin(ImportExportModelAdmin):
 @admin.register(VacationOfferImage)
 class VacationOfferImageAdmin(ImportExportModelAdmin):
     resource_class = VacationOfferImageResource
+
+@admin.register(PilgrimageOffer)
+class PilgrimageOfferAdmin(ImportExportModelAdmin):
+    resource_class = PilgrimageOfferResource
+
+@admin.register(PilgrimageOfferIncludedItem)
+class PilgrimageOfferIncludedItemAdmin(ImportExportModelAdmin):
+    resource_class = PilgrimageOfferIncludedItemResource
+
+@admin.register(PilgrimageOfferImage)
+class PilgrimageOfferImageAdmin(ImportExportModelAdmin):
+    resource_class = PilgrimageOfferImageResource
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:
