@@ -15,6 +15,9 @@ from .visa.study.offers.models import StudyVisaOffer, StudyVisaOfferRequirement
 from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement
 from .visa.work.organization.models import WorkOrganization
 
+# Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
+from .visa.vacation.offer.models import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
+
 class HotelResource(resources.ModelResource):
     class Meta:
         model = Hotel
@@ -50,6 +53,18 @@ class WorkVisaOfferRequirementResource(resources.ModelResource):
 class WorkOrganizationResource(resources.ModelResource):
     class Meta:
         model = WorkOrganization
+
+class VacationOfferResource(resources.ModelResource):
+    class Meta:
+        model = VacationOffer
+
+class VacationOfferIncludedItemResource(resources.ModelResource):
+    class Meta:
+        model = VacationOfferIncludedItem
+
+class VacationOfferImageResource(resources.ModelResource):
+    class Meta:
+        model = VacationOfferImage
 
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
@@ -87,13 +102,17 @@ class WorkVisaOfferRequirementAdmin(ImportExportModelAdmin):
 class WorkOrganizationAdmin(ImportExportModelAdmin):
     resource_class = WorkOrganizationResource
 
-# class CountryResource(resources.ModelResource):
-#     class Meta:
-#         model = Country
+@admin.register(VacationOffer)
+class VacationOfferAdmin(ImportExportModelAdmin):
+    resource_class = VacationOfferResource
 
-# class CityResource(resources.ModelResource):
-#     class Meta:
-#         model = City
+@admin.register(VacationOfferIncludedItem)
+class VacationOfferIncludedItemAdmin(ImportExportModelAdmin):
+    resource_class = VacationOfferIncludedItemResource
+
+@admin.register(VacationOfferImage)
+class VacationOfferImageAdmin(ImportExportModelAdmin):
+    resource_class = VacationOfferImageResource
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:
@@ -110,14 +129,6 @@ class InstitutionResource(resources.ModelResource):
 class CourseOfStudyResource(resources.ModelResource):
     class Meta:
         model = CourseOfStudy
-
-# @admin.register(Country)
-# class CountryAdmin(ImportExportModelAdmin):
-#     resource_class = CountryResource
-
-# @admin.register(City)
-# class CityAdmin(ImportExportModelAdmin):
-#     resource_class = CityResource
 
 @admin.register(ProgramType)
 class ProgramTypeAdmin(ImportExportModelAdmin):
