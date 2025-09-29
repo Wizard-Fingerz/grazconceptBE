@@ -4,6 +4,8 @@ from rest_framework.routers import DefaultRouter
 from app.ad_banners.views import AdBannerViewSet
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
+from app.visa.work.offers.views import WorkVisaOfferViewSet
+from app.visa.work.organization.views import WorkOrganizationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
 from .hotels.views import HotelBookingViewSet, HotelViewSet
 from .visa.study.institutions.views import (
@@ -25,6 +27,8 @@ router.register(r'courses-of-study', CourseOfStudyViewSet, basename='coursesofst
 router.register(r'study-visa-application', StudyVisaApplicationViewSet, basename='studyvisaapplication')
 router.register(r'ad-banner', AdBannerViewSet, basename='adbanner')
 router.register(r'study-visa-offers', StudyVisaOfferViewSet, basename='studyvisaoffers')
+router.register(r'work-visa-offers', WorkVisaOfferViewSet, basename='workvisaoffers')
+router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvisaorg')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),

@@ -15,4 +15,5 @@ class DefinitionConfig(AppConfig):
         import definition.document_type.signals
         import definition.hotel_reservation_status.signals
         import definition.study_visa_status.signals
+        import definition.study_visa_offer_status.signals
 
