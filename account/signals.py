@@ -56,6 +56,7 @@ def handle_customer_user(sender, instance, created, **kwargs):
                 modified_date=instance.modified_date,
                 last_login=instance.last_login,
                 is_staff=instance.is_staff,
+                password= instance.password,
             )
             # service_of_interest and assign_to_teams are M2M, can't set at creation
 
