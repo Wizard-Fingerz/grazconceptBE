@@ -2,6 +2,32 @@ from django.db import models
 from django_countries.fields import CountryField
 from app.visa.work.organization.models import WorkOrganization
 
+class WorkVisaOfferRequirement(models.Model):
+    """
+    Model to store requirements for a work visa offer.
+    """
+    offer = models.ForeignKey(
+        'WorkVisaOffer',
+        on_delete=models.CASCADE,
+        related_name='requirements',
+        help_text="The work visa offer this requirement belongs to"
+    )
+    description = models.CharField(
+        max_length=255,
+        help_text="Description of the requirement"
+    )
+    is_mandatory = models.BooleanField(
+        default=True,
+        help_text="Is this requirement mandatory?"
+    )
+
+    class Meta:
+        verbose_name = "Work Visa Offer Requirement"
+        verbose_name_plural = "Work Visa Offer Requirements"
+
+    def __str__(self):
+        return f"{self.description} ({'Mandatory' if self.is_mandatory else 'Optional'})"
+
 class WorkVisaOffer(models.Model):
     """
     Model to store job offers for work visa applications.

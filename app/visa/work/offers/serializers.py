@@ -1,6 +1,18 @@
 from rest_framework import serializers
-from app.visa.work.offers.models import WorkVisaOffer
+from app.visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement
 from app.visa.work.organization.serializers import WorkOrganizationSerializer
+
+
+class WorkVisaOfferRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkVisaOfferRequirement
+        fields = [
+            'id',
+            'description',
+            'is_mandatory',
+        ]
+        read_only_fields = ['id']
+
 
 class WorkVisaOfferSerializer(serializers.ModelSerializer):
     organization = WorkOrganizationSerializer(read_only=True)
@@ -9,6 +21,7 @@ class WorkVisaOfferSerializer(serializers.ModelSerializer):
         source='organization',
         write_only=True
     )
+    requirements = WorkVisaOfferRequirementSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkVisaOffer
@@ -27,5 +40,6 @@ class WorkVisaOfferSerializer(serializers.ModelSerializer):
             'is_active',
             'created_at',
             'updated_at',
+            'requirements',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

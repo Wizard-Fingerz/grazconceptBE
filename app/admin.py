@@ -11,6 +11,9 @@ from .flight.models import FlightBooking
 from .visa.study.institutions.models import ProgramType, Institution, CourseOfStudy
 from .visa.study.offers.models import StudyVisaOffer, StudyVisaOfferRequirement
 
+# Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement
+from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement
+from .visa.work.organization.models import WorkOrganization
 
 class HotelResource(resources.ModelResource):
     class Meta:
@@ -36,6 +39,18 @@ class StudyVisaOfferRequirementResource(resources.ModelResource):
     class Meta:
         model = StudyVisaOfferRequirement
 
+class WorkVisaOfferResource(resources.ModelResource):
+    class Meta:
+        model = WorkVisaOffer
+
+class WorkVisaOfferRequirementResource(resources.ModelResource):
+    class Meta:
+        model = WorkVisaOfferRequirement
+
+class WorkOrganizationResource(resources.ModelResource):
+    class Meta:
+        model = WorkOrganization
+
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
     resource_class = HotelResource
@@ -59,6 +74,18 @@ class StudyVisaOfferAdmin(ImportExportModelAdmin):
 @admin.register(StudyVisaOfferRequirement)
 class StudyVisaOfferRequirementAdmin(ImportExportModelAdmin):
     resource_class = StudyVisaOfferRequirementResource
+
+@admin.register(WorkVisaOffer)
+class WorkVisaOfferAdmin(ImportExportModelAdmin):
+    resource_class = WorkVisaOfferResource
+
+@admin.register(WorkVisaOfferRequirement)
+class WorkVisaOfferRequirementAdmin(ImportExportModelAdmin):
+    resource_class = WorkVisaOfferRequirementResource
+
+@admin.register(WorkOrganization)
+class WorkOrganizationAdmin(ImportExportModelAdmin):
+    resource_class = WorkOrganizationResource
 
 # class CountryResource(resources.ModelResource):
 #     class Meta:
