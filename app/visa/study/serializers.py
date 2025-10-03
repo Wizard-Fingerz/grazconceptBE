@@ -12,6 +12,7 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'id',
             # 1️⃣ Personal Information
             'applicant',
+            'study_visa_offer',
             'passport_number',
             'country',
             'passport_expiry_date',
