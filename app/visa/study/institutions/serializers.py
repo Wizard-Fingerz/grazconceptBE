@@ -20,6 +20,7 @@ class InstitutionSerializer(serializers.ModelSerializer):
         queryset=ProgramType.objects.all(), source='program_types', many=True, write_only=True, required=False
     )
     courses = CourseOfStudySerializer(many=True, read_only=True)
+    country = serializers.SerializerMethodField()
 
     class Meta:
         model = Institution
@@ -27,6 +28,10 @@ class InstitutionSerializer(serializers.ModelSerializer):
             'id', 'name', 'country', 'city', 
             'email_address', 'address', 'website', 'program_types', 'program_type_ids', 'courses'
         ]
+
+    def get_country(self, obj):
+        # obj.country is a Country object from django-countries
+        return obj.country.name if obj.country else None
 
 class CourseOfStudyDetailSerializer(serializers.ModelSerializer):
     institution = InstitutionSerializer(read_only=True)
