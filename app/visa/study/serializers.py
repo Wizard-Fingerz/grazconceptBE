@@ -3,7 +3,8 @@ from .models import StudyVisaApplication
 
 
 class StudyVisaApplicationSerializer(serializers.ModelSerializer):
-    country = serializers.CharField(source="country_str", read_only=True)
+    country = serializers.SerializerMethodField()
+    # country = serializers.SerializerMethodField(source="country_str", read_only=True)
     destination_country = serializers.SerializerMethodField()
 
     class Meta:
@@ -59,17 +60,27 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'application_date',
             'status',
             'notes',
+            'institution_name',
+            'course_of_study_name',
+            'program_type_name',
+            'status_name',
         ]
         extra_kwargs = {
             'applicant': {'read_only': True},  # 👈 make it read-only
         }
-        read_only_fields = ['application_date', 'status', 'submitted_at']
+        read_only_fields = ['application_date', 'status', 'submitted_at', 
+            'institution_name',
+            'course_of_study_name',
+            'program_type_name',
+            'status_name',]
 
     def get_destination_country(self, obj):
-        # Always return a string or None for JSON serialization
-        if obj.destination_country:
-            return str(obj.destination_country)
-        return None
+        # obj.country is a Country object from django-countries
+        return obj.destination_country.name if obj.destination_country else None
+
+    def get_country(self, obj):
+        # obj.country is a Country object from django-countries
+        return obj.country.name if obj.country else None
 
     def create(self, validated_data):
         # status is handled in model save() if not provided

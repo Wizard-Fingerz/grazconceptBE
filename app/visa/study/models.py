@@ -103,6 +103,22 @@ class StudyVisaApplication(models.Model):
         default=None  # Will be set in save()
     )
     notes = models.TextField(blank=True, null=True)
+    
+    @property
+    def institution_name(self):
+        return self.institution.name if self.institution else None
+
+    @property
+    def course_of_study_name(self):
+        return self.course_of_study.name if self.course_of_study else None
+
+    @property
+    def program_type_name(self):
+        return self.program_type.name if self.program_type else None
+
+    @property
+    def status_name(self):
+        return self.status.term if self.status else None
 
     @property
     def country_str(self):
