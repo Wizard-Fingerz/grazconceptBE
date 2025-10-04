@@ -46,9 +46,7 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Always enforce applicant = current user's Client instance
         from account.client.models import Client
-        try:
-            client = Client.objects.get(pk=getattr(self.request.user, 'client_id', None))
-        except Client.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError("Authenticated user does not have an associated Client profile.")
+        # print(self.request.user)
+        client = Client.objects.get(pk=getattr(self.request.user, 'id', None))
+        # print(client)
         serializer.save(applicant=client)
