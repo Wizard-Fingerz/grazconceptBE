@@ -16,7 +16,7 @@ class StudyVisaApplication(models.Model):
     If 'study_visa_offer' is set, the application is for that offer; otherwise, it's a direct application to an institution.
     """
     # 1️⃣ Personal Information
-    applicant = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='visa_applicants')
+    applicant = models.ForeignKey('account.Client', on_delete=models.CASCADE, related_name='visa_applicants')
     # If the user is applying for a StudyVisaOffer, this is set; otherwise, it's null.
     study_visa_offer = models.ForeignKey(
         StudyVisaOffer,

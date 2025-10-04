@@ -60,6 +60,9 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'status',
             'notes',
         ]
+        extra_kwargs = {
+            'applicant': {'read_only': True},  # 👈 make it read-only
+        }
         read_only_fields = ['application_date', 'status', 'submitted_at']
 
     def get_destination_country(self, obj):

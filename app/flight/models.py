@@ -7,7 +7,7 @@ class FlightBooking(models.Model):
         ("Round Trip", "Round Trip"),
         ("Multi-city", "Multi-city"),
     ]
-    client = models.ForeignKey(Client, on_delete = models.CASCADE)
+    client = models.ForeignKey('account.Client', on_delete = models.CASCADE)
     flight_type = models.CharField(max_length=250, choices=FLIGHT_TYPES)
     from_airport = models.CharField(max_length=250, blank=True, null=True)
     to_airport = models.CharField(max_length=250, blank=True, null=True)
