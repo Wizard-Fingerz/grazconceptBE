@@ -44,3 +44,30 @@ class ClientViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=201, headers=headers)
+
+    def update_profile(self, request, *args, **kwargs):
+        """
+        Custom action for clients to update their own profile.
+        """
+        user = request.user
+        try:
+            client = Client.objects.get(id=user.id)
+        except Client.DoesNotExist:
+            return Response({"error": "Client not found."}, status=404)
+
+        serializer = self.get_serializer(client, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(modified_by=user)
+        return Response(serializer.data, status=200)
+
+    # Optionally, you can expose this as a route using @action if using DRF routers:
+    from rest_framework.decorators import action
+
+    @action(detail=False, methods=['put', 'patch'], url_path='update-profile', permission_classes=[IsAuthenticated])
+    def update_profile_action(self, request, *args, **kwargs):
+        """
+        Endpoint for the authenticated client to update their own profile.
+        """
+        return self.update_profile(request, *args, **kwargs)
+
+
