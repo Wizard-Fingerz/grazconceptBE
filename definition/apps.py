@@ -18,4 +18,5 @@ class DefinitionConfig(AppConfig):
         import definition.study_visa_offer_status.signals
         import definition.pilgrimage_type.signals
         import definition.pilgrimage_sponsorship_type.signals
+        import definition.partner_type.signals
 
