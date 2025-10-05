@@ -6,7 +6,7 @@ class ClientSerializer(serializers.ModelSerializer):
     client_type_name = serializers.ReadOnlyField()
     service_of_interest_name = serializers.ReadOnlyField()
     assigned_to_teams_name = serializers.ReadOnlyField()
-    country = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    country = serializers.SerializerMethodField()
 
     class Meta:
         model = Client
@@ -56,17 +56,21 @@ class ClientSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        # Ensure country is always a string or None, not a Country object
-        country = getattr(instance, 'country', None)
-        if hasattr(country, 'code'):
-            data['country'] = str(country)
-        elif country is not None:
-            data['country'] = str(country)
-        else:
-            data['country'] = None
-        return data
+    def get_country(self, obj):
+        # Return the full country name if available, else None
+        country = getattr(obj, 'country', None)
+        if country:
+            # If it's a django_countries Country object, use .name
+            name = getattr(country, 'name', None)
+            if name:
+                return name
+            # If it's a string code, try to get the name from django_countries
+            try:
+                from django_countries import countries
+                return dict(countries).get(str(country), str(country))
+            except ImportError:
+                return str(country)
+        return None
 
     def create(self, validated_data):
         password = validated_data.get('password')
