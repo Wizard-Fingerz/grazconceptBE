@@ -48,6 +48,7 @@ class ClientViewSet(viewsets.ModelViewSet):
     def update_profile(self, request, *args, **kwargs):
         """
         Custom action for clients to update their own profile.
+        Handles country_of_residence and nationality fields to accept country codes.
         """
         user = request.user
         try:
@@ -55,7 +56,29 @@ class ClientViewSet(viewsets.ModelViewSet):
         except Client.DoesNotExist:
             return Response({"error": "Client not found."}, status=404)
 
-        serializer = self.get_serializer(client, data=request.data, partial=True)
+        data = request.data.copy()
+
+        # Handle country_of_residence and nationality: accept country name or code, convert to code if needed
+        from django_countries import countries
+
+        def get_country_code(value):
+            if not value:
+                return value
+            # If already a valid country code, return as is
+            if value in dict(countries):
+                return value
+            # Try to find code by name (case-insensitive)
+            for code, name in countries:
+                if name.lower() == value.lower():
+                    return code
+            return value  # fallback, let serializer handle invalid
+
+        if "country_of_residence" in data:
+            data["country_of_residence"] = get_country_code(data["country_of_residence"])
+        if "nationality" in data:
+            data["nationality"] = get_country_code(data["nationality"])
+
+        serializer = self.get_serializer(client, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(modified_by=user)
         return Response(serializer.data, status=200)
