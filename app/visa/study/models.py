@@ -127,6 +127,48 @@ class StudyVisaApplication(models.Model):
             return str(self.country)
         return None
 
+    def all_required_fields_filled(self):
+        """
+        Returns True if all required fields for a 'Completed' application are filled, else False.
+        """
+        required_fields = [
+            self.passport_number,
+            self.passport_expiry_date,
+            self.country,
+            self.highest_qualification,
+            self.previous_university,
+            self.previous_course_of_study,
+            self.cgpa_grade,
+            self.year_of_graduation,
+            self.destination_country,
+            self.institution,
+            self.course_of_study,
+            self.program_type,
+            self.intended_start_date,
+            self.intended_end_date,
+            self.visa_type,
+            self.sponsorship_details,
+            self.passport_photo,
+            self.international_passport,
+            self.academic_transcripts,
+            self.admission_letter,
+            self.financial_statement,
+            self.english_proficiency_test,
+            self.emergency_contact_name,
+            self.emergency_contact_relationship,
+            self.emergency_contact_phone,
+            self.statement_of_purpose,
+        ]
+        # For BooleanField, previous_visa_applications is always set (default=False)
+        # previous_visa_details and travel_history are optional (text fields)
+        # If any required field is None or blank, return False
+        for value in required_fields:
+            if value is None:
+                return False
+            if isinstance(value, str) and value.strip() == "":
+                return False
+        return True
+
     def save(self, *args, **kwargs):
         # If applying for a StudyVisaOffer, auto-populate institution/course/program_type if not set
         if self.study_visa_offer:
@@ -140,14 +182,30 @@ class StudyVisaApplication(models.Model):
             if not self.destination_country:
                 self.destination_country = offer.country
 
-        if self.status is None:
-            try:
-                self.status = TableDropDownDefinition.objects.get(
-                    term='Pending',
-                    table_name='study_visa_status'
-                )
-            except TableDropDownDefinition.DoesNotExist:
-                self.status = None
+        # Determine status based on completeness
+        try:
+            completed_status = TableDropDownDefinition.objects.get(
+                term='Completed',
+                table_name='study_visa_status'
+            )
+        except TableDropDownDefinition.DoesNotExist:
+            completed_status = None
+
+        try:
+            draft_status = TableDropDownDefinition.objects.get(
+                term='Draft',
+                table_name='study_visa_status'
+            )
+        except TableDropDownDefinition.DoesNotExist:
+            draft_status = None
+
+        if self.all_required_fields_filled():
+            if completed_status:
+                self.status = completed_status
+        else:
+            if draft_status:
+                self.status = draft_status
+
         # Set submitted_at if just submitted
         if self.is_submitted and self.submitted_at is None:
             from django.utils import timezone
