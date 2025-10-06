@@ -170,6 +170,7 @@ class StudyVisaApplication(models.Model):
         return True
 
     def save(self, *args, **kwargs):
+        from django.utils import timezone
         # If applying for a StudyVisaOffer, auto-populate institution/course/program_type if not set
         if self.study_visa_offer:
             offer = self.study_visa_offer
@@ -199,6 +200,15 @@ class StudyVisaApplication(models.Model):
         except TableDropDownDefinition.DoesNotExist:
             draft_status = None
 
+        # Track status change
+        old_status_id = None
+        if self.pk:
+            try:
+                old = StudyVisaApplication.objects.get(pk=self.pk)
+                old_status_id = old.status_id
+            except StudyVisaApplication.DoesNotExist:
+                old_status_id = None
+
         if self.all_required_fields_filled():
             if completed_status:
                 self.status = completed_status
@@ -208,9 +218,17 @@ class StudyVisaApplication(models.Model):
 
         # Set submitted_at if just submitted
         if self.is_submitted and self.submitted_at is None:
-            from django.utils import timezone
             self.submitted_at = timezone.now()
         super().save(*args, **kwargs)
+
+        # Log status change if it changed, and include the date and time the status changed
+        if self.status_id != old_status_id:
+            StudyVisaApplicationStatusLog.objects.create(
+                application=self,
+                old_status_id=old_status_id,
+                new_status=self.status,
+                changed_at=timezone.now()
+            )
 
     def __str__(self):
         # Show offer title if applying for an offer, else show institution
@@ -221,3 +239,24 @@ class StudyVisaApplication(models.Model):
         else:
             institution_name = self.institution.name if self.institution else "N/A"
             return f"{self.applicant.first_name} {self.applicant.last_name} - {institution_name} ({self.status})"
+
+class StudyVisaApplicationStatusLog(models.Model):
+    application = models.ForeignKey(StudyVisaApplication, on_delete=models.CASCADE, related_name='status_logs')
+    old_status = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='old_study_visa_status_logs'
+    )
+    new_status = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='new_study_visa_status_logs'
+    )
+    changed_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"Application {self.application.id}: {self.old_status.term if self.old_status else 'None'} → {self.new_status.term if self.new_status else 'None'} at {self.changed_at}"
