@@ -2,7 +2,11 @@ Pending
 Approved
 Rejected
 Received Application 
+Pending From Student 
 Application Submitted to the Institution 
+Application on hold, Intake not yet open
+Case Closed
+Rejected By the institution 
 Conditional offer Received 
 Unconditional Offer received 
 Payment Received 
