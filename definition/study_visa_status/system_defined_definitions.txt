@@ -1,3 +1,10 @@
 Pending
 Approved
 Rejected
+Received Application 
+Application Submitted to the Institution 
+Conditional offer Received 
+Unconditional Offer received 
+Payment Received 
+Visa  granted 
+Visa Denied
