@@ -52,5 +52,5 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         # print(self.request.user)
         client = Client.objects.get(pk=getattr(self.request.user, 'id', None))
         # print(client)
-        serializer.save(applicant=client)
+        serializer.save(client=client)
 
