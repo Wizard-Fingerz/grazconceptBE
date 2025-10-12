@@ -14,6 +14,8 @@ class PilgrimageOfferImageSerializer(serializers.ModelSerializer):
 class PilgrimageOfferSerializer(serializers.ModelSerializer):
     included_items = PilgrimageOfferIncludedItemSerializer(many=True, read_only=True)
     images = PilgrimageOfferImageSerializer(many=True, read_only=True)
+    pilgrimage_type_display = serializers.ReadOnlyField()
+    sponsorship_display = serializers.ReadOnlyField()
 
     class Meta:
         model = PilgrimageOffer
@@ -22,6 +24,7 @@ class PilgrimageOfferSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'pilgrimage_type',
+            'pilgrimage_type_display',
             'destination',
             'city',
             'start_date',
@@ -29,6 +32,7 @@ class PilgrimageOfferSerializer(serializers.ModelSerializer):
             'price',
             'currency',
             'sponsorship',
+            'sponsorship_display',
             'sponsor_name',
             'seats_available',
             'per_seat',
@@ -38,4 +42,13 @@ class PilgrimageOfferSerializer(serializers.ModelSerializer):
             'updated_at',
             'included_items',
             'images',
+        ]
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at',
+            'included_items',
+            'images',
+            'pilgrimage_type_display',
+            'sponsorship_display',
         ]

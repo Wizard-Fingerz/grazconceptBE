@@ -39,6 +39,21 @@ class PilgrimageOffer(models.Model):
     def __str__(self):
         return f"{self.title} - {self.destination}"
 
+    @property
+    def pilgrimage_type_display(self):
+        """Returns a dictionary with id and term for the pilgrimage type dropdown."""
+        if self.pilgrimage_type:
+            return self.pilgrimage_type.term,
+        return None
+
+    @property
+    def sponsorship_display(self):
+        """Returns a dictionary with id and term for the sponsorship dropdown."""
+        if self.sponsorship:
+            return  self.sponsorship.term,
+            
+        return None
+
 class PilgrimageOfferIncludedItem(models.Model):
     offer = models.ForeignKey(PilgrimageOffer, related_name='included_items', on_delete=models.CASCADE)
     name = models.CharField(max_length=255, help_text="Name of the included item (e.g., Flight, Accommodation, Meals, Guided Tour)")
@@ -47,6 +62,16 @@ class PilgrimageOfferIncludedItem(models.Model):
     def __str__(self):
         return f"{self.name} for {self.offer.title}"
 
+    @property
+    def offer_display(self):
+        """Returns a simple dict for the related offer."""
+        if self.offer:
+            return {
+                "id": self.offer.id,
+                "title": self.offer.title,
+            }
+        return None
+
 class PilgrimageOfferImage(models.Model):
     offer = models.ForeignKey(PilgrimageOffer, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='pilgrimage_offers/gallery/')
@@ -54,3 +79,13 @@ class PilgrimageOfferImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.offer.title}"
+
+    @property
+    def offer_display(self):
+        """Returns a simple dict for the related offer."""
+        if self.offer:
+            return {
+                "id": self.offer.id,
+                "title": self.offer.title,
+            }
+        return None
