@@ -1,0 +1,13 @@
+Draft
+Application Received
+Pending Documents from Applicant
+Application Submitted to Employer/Agency
+Application on Hold
+Interview/Screening Scheduled
+Offer Letter Received
+Payment/Processing Fee Confirmed
+Work Permit/Approval in Progress
+Visa Application Submitted to Embassy
+Visa Granted
+Visa Denied
+Case Closed
