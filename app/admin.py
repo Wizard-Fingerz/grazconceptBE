@@ -12,8 +12,8 @@ from .visa.study.institutions.models import ProgramType, Institution, CourseOfSt
 from .visa.study.offers.models import StudyVisaOffer, StudyVisaOfferRequirement
 from .visa.study.models import StudyVisaApplication  # <-- Include StudyVisaApplication
 
-# Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement
-from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement
+# Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement and WorkVisaApplication
+from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement, WorkVisaApplication
 from .visa.work.organization.models import WorkOrganization
 
 # Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
@@ -57,6 +57,10 @@ class WorkVisaOfferResource(resources.ModelResource):
 class WorkVisaOfferRequirementResource(resources.ModelResource):
     class Meta:
         model = WorkVisaOfferRequirement
+
+class WorkVisaApplicationResource(resources.ModelResource):
+    class Meta:
+        model = WorkVisaApplication
 
 class WorkOrganizationResource(resources.ModelResource):
     class Meta:
@@ -121,6 +125,10 @@ class WorkVisaOfferAdmin(ImportExportModelAdmin):
 @admin.register(WorkVisaOfferRequirement)
 class WorkVisaOfferRequirementAdmin(ImportExportModelAdmin):
     resource_class = WorkVisaOfferRequirementResource
+
+@admin.register(WorkVisaApplication)
+class WorkVisaApplicationAdmin(ImportExportModelAdmin):
+    resource_class = WorkVisaApplicationResource
 
 @admin.register(WorkOrganization)
 class WorkOrganizationAdmin(ImportExportModelAdmin):

@@ -4,9 +4,7 @@ from app.visa.work.organization.models import WorkOrganization
 from account.client.models import Client
 from definition.models import TableDropDownDefinition
 
-
 def get_default_work_visa_status():
-    # Tries to fetch the TableDropDownDefinition with term "Draft" for work_visa_application_statuses
     try:
         return TableDropDownDefinition.objects.get(
             term="Draft",
@@ -112,7 +110,6 @@ class WorkVisaOffer(models.Model):
     def __str__(self):
         return f"{self.job_title} at {self.organization.name}"
 
-
 class WorkVisaApplication(models.Model):
     """
     Model to store a client's application for a specific work visa job offer.
@@ -130,35 +127,181 @@ class WorkVisaApplication(models.Model):
         related_name="applications",
         help_text="The specific job offer the client is applying to"
     )
-    # Job-specific information (CV/resume, cover letter, etc.)
-    resume = models.FileField(
-        upload_to='work_visa_applications/resume/',
-        blank=True,
-        null=True,
-        help_text="Resume or CV document"
-    )
-    cover_letter = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Cover letter for the job application"
-    )
-    # Visa-required information (passport, etc.)
+
+    # Step 1: Personal Information
+    # applicant is 'client' foreign key, already present above.
     passport_number = models.CharField(
         max_length=50,
         blank=True,
         null=True,
         help_text="Applicant's passport number"
     )
-    passport_document = models.FileField(
-        upload_to='work_visa_applications/passport/',
+    country = CountryField(
         blank=True,
         null=True,
-        help_text="Scanned passport document"
+        help_text="Applicant's nationality country"
     )
-    nationality = CountryField(
+    passport_expiry_date = models.DateField(
         blank=True,
         null=True,
-        help_text="Applicant's nationality"
+        help_text="Passport expiry date"
+    )
+
+    # Step 2: Job Background
+    highest_degree = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        help_text="Applicant's highest degree obtained"
+    )
+    years_of_experience = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Total years of work experience"
+    )
+    previous_employer = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        help_text="Previous employer name"
+    )
+    previous_job_title = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        help_text="Job title at previous employer"
+    )
+    year_left_previous_job = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Year applicant left previous job"
+    )
+
+    # Step 3: Work Visa Details
+    intended_start_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Intended start date for work visa"
+    )
+    intended_end_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Intended end date for work visa"
+    )
+    visa_type = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        help_text="Requested visa type"
+    )
+    sponsorship_details = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Details about sponsorship (if applicable)"
+    )
+
+    # Step 4: Document Uploads
+    passport_photo = models.FileField(
+        upload_to="work_visa_applications/passport_photo/",
+        blank=True,
+        null=True,
+        help_text="Passport sized recent photo"
+    )
+    international_passport = models.FileField(
+        upload_to="work_visa_applications/international_passport/",
+        blank=True,
+        null=True,
+        help_text="Scanned international passport document"
+    )
+    updated_resume = models.FileField(
+        upload_to="work_visa_applications/resume/",
+        blank=True,
+        null=True,
+        help_text="Updated Resume/CV"
+    )
+    reference_letter = models.FileField(
+        upload_to="work_visa_applications/reference_letter/",
+        blank=True,
+        null=True,
+        help_text="Reference letter upload"
+    )
+    employment_letter = models.FileField(
+        upload_to="work_visa_applications/employment_letter/",
+        blank=True,
+        null=True,
+        help_text="Employment letter upload"
+    )
+    financial_statement = models.FileField(
+        upload_to="work_visa_applications/financial_statement/",
+        blank=True,
+        null=True,
+        help_text="Financial/bank statement"
+    )
+    english_proficiency_test = models.FileField(
+        upload_to="work_visa_applications/english_proficiency/",
+        blank=True,
+        null=True,
+        help_text="Proof of English language proficiency"
+    )
+
+    # Step 5: Additional Information
+    previous_visa_applications = models.BooleanField(
+        blank=True,
+        null=True,
+        help_text="Has applicant previously applied for a visa?"
+    )
+    previous_visa_details = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Details about previous visa applications"
+    )
+    travel_history = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Brief travel history"
+    )
+    emergency_contact_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Emergency contact name"
+    )
+    emergency_contact_relationship = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Relationship to emergency contact"
+    )
+    emergency_contact_phone = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="Emergency contact phone number"
+    )
+    statement_of_purpose = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Applicant's statement of purpose for application"
+    )
+
+    # Deprecated/legacy fields or moved fields
+    # The following are still kept for backward compatibility if needed
+    resume = models.FileField(
+        upload_to='work_visa_applications/legacy_resume/',
+        blank=True,
+        null=True,
+        help_text="(Legacy) Resume or CV document"
+    )
+    cover_letter = models.TextField(
+        blank=True,
+        null=True,
+        help_text="(Legacy) Cover letter for the job application"
+    )
+    passport_document = models.FileField(
+        upload_to='work_visa_applications/legacy_passport/',
+        blank=True,
+        null=True,
+        help_text="(Legacy) Scanned passport document"
     )
     date_of_birth = models.DateField(
         blank=True,
@@ -171,6 +314,7 @@ class WorkVisaApplication(models.Model):
         null=True,
         help_text="Applicant's contact phone number"
     )
+
     # Application state
     submitted_at = models.DateTimeField(
         auto_now_add=True,
