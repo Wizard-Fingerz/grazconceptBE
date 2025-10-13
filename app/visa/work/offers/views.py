@@ -4,6 +4,10 @@ from app.views import CustomPagination
 from app.visa.work.offers.models import WorkVisaOffer, WorkVisaApplication
 from app.visa.work.offers.serializers import WorkVisaOfferSerializer, WorkVisaApplicationSerializer
 
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from rest_framework import status
+
 
 class WorkVisaOfferViewSet(viewsets.ModelViewSet):
     queryset = WorkVisaOffer.objects.all()
@@ -12,12 +16,12 @@ class WorkVisaOfferViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
 
+
 class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
     queryset = WorkVisaApplication.objects.all()
     serializer_class = WorkVisaApplicationSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
-
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -40,17 +44,31 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        """
+        Ensure that the client is injected from the authenticated user.
+        If the user is not authenticated as a client, raise the required error in the correct format.
+        """
+        data = request.data.copy()
+        from account.client.models import Client
+
+        # Ensure the user is authenticated and mapped to a Client
+        client_id = getattr(request.user, 'id', None)
+        if not client_id:
+            # Matches the backend error format {"client":["This field is required."]}
+            raise ValidationError({'client': ['This field is required.']})
+
+        try:
+            client = Client.objects.get(user_ptr=client_id)
+        except Client.DoesNotExist:
+            raise ValidationError({'client': ['This field is required.']})
+        data['client'] = client.id  # Inject client into request data
+
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)   # applicant injected below
+        serializer.save(client=client)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_create(self, serializer):
-        # Always enforce applicant = current user's Client instance
-        from account.client.models import Client
-        # print(self.request.user)
-        client = Client.objects.get(pk=getattr(self.request.user, 'id', None))
-        # print(client)
-        serializer.save(client=client)
+
+    # Remove perform_create override, no longer needed since handled in create
 

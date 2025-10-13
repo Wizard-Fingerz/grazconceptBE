@@ -66,6 +66,9 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
         allow_null=True
     )
 
+    # Serialize the country as a string (code), not as the Country object itself.
+    country = serializers.SerializerMethodField()
+
     class Meta:
         model = WorkVisaApplication
         fields = [
@@ -130,3 +133,20 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
                 'term': obj.status.term
             }
         return None
+
+    def get_country(self, obj):
+        # Return the country code as a string, or None if not set.
+        if obj.country:
+            return str(obj.country)
+        return None
+
+    def to_internal_value(self, data):
+        """
+        This override ensures that 'country' can be accepted as a string code in input.
+        """
+        ret = super().to_internal_value(data)
+        country_value = data.get('country')
+        if country_value is not None:
+            ret['country'] = country_value
+        return ret
+
