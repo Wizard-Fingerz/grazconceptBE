@@ -1,0 +1,14 @@
+Draft
+Application Received
+Pending Documents from Applicant
+Application Submitted to Embassy/Authority
+Application on Hold
+Payment Confirmed
+Visa Application Submitted
+Visa Granted
+Visa Denied
+Flight & Accommodation Confirmed
+Orientation/Briefing Completed
+Pilgrimage in Progress
+Return Completed
+Case Closed

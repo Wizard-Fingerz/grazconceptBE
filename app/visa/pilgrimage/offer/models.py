@@ -123,6 +123,16 @@ class PilgrimageVisaApplication(models.Model):
     emergency_contact_name = models.CharField(max_length=255)
     emergency_contact_phone = models.CharField(max_length=30)
     emergency_contact_relationship = models.CharField(max_length=100)
+    # New: status field, default to first active status with table_name=pilgrimage_application_status (or set via admin)
+    status = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.PROTECT,
+        limit_choices_to={'table_name': 'pilgrimage_application_status', 'is_active': True},
+        related_name='pilgrimage_visa_applications_status',
+        help_text="Status of the pilgrimage visa application",
+        null=True,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -132,4 +142,11 @@ class PilgrimageVisaApplication(models.Model):
 
     def __str__(self):
         return f"{self.applicant.get_full_name() or self.applicant.user.username} - {self.offer.title}"
+
+    @property
+    def status_display(self):
+        """Returns display string for this application's status dropdown."""
+        if self.status:
+            return self.status.term
+        return None
 

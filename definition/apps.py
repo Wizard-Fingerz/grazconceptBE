@@ -20,4 +20,5 @@ class DefinitionConfig(AppConfig):
         import definition.pilgrimage_sponsorship_type.signals
         import definition.partner_type.signals
         import definition.work_visa_application_statuses.signals
+        import definition.pilgrimage_application_status.signals
 
