@@ -99,6 +99,7 @@ def pilgrimage_medical_certificate_upload_to(instance, filename):
 class PilgrimageVisaApplication(models.Model):
     """
     Represents a user's application for a pilgrimage visa offer.
+    Only fields unique to the application (not duplicated from the Offer model) are included here.
     """
     offer = models.ForeignKey(
         PilgrimageOffer,
@@ -115,18 +116,6 @@ class PilgrimageVisaApplication(models.Model):
     )
     passport_number = models.CharField(max_length=50)
     date_of_birth = models.DateField()
-    pilgrimage_type = models.ForeignKey(
-        TableDropDownDefinition,
-        on_delete=models.PROTECT,
-        limit_choices_to={'table_name': 'pilgrimage_type', 'is_active': True},
-        related_name='pilgrimage_type_applications'
-    )
-    accommodation_type = models.ForeignKey(
-        TableDropDownDefinition,
-        on_delete=models.PROTECT,
-        limit_choices_to={'table_name': 'pilgrimage_accommodation_type', 'is_active': True},
-        related_name='accommodation_type_applications'
-    )
     preferred_travel_date = models.DateField()
     group_travel = models.BooleanField(default=False)
     passport_photo = models.FileField(upload_to=pilgrimage_passport_photo_upload_to)
