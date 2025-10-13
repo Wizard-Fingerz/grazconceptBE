@@ -1,6 +1,13 @@
 from rest_framework import serializers
-from .models import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
+from .models import (
+    VacationOffer,
+    VacationOfferIncludedItem,
+    VacationOfferImage,
+    VacationVisaApplication,
+)
 from django_countries.serializers import CountryFieldMixin
+from definition.models import TableDropDownDefinition
+from account.client.models import Client
 
 class VacationOfferIncludedItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,3 +54,72 @@ class VacationOfferSerializer(CountryFieldMixin, serializers.ModelSerializer):
             'images',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+# ---- Vacation Visa Application Serializer ----
+
+class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    # Display applicant info and offer info if required
+    applicant = serializers.PrimaryKeyRelatedField(queryset=Client.objects.all())
+    offer = serializers.PrimaryKeyRelatedField(queryset=VacationOffer.objects.all())
+    status = serializers.PrimaryKeyRelatedField(
+        queryset=TableDropDownDefinition.objects.filter(
+            table_name='vacation_application_status',
+            is_active=True
+        ),
+        required=False,
+        allow_null=True,
+        default=None
+    )
+    status_display = serializers.CharField(source='status_display', read_only=True)
+
+    class Meta:
+        model = VacationVisaApplication
+        fields = [
+            'id',
+            'offer',
+            'applicant',
+            'passport_number',
+            'date_of_birth',
+            'destination',
+            'travel_date',
+            'number_of_people',
+            'accommodation_type',
+            'identification_document',
+            'emergency_contact_name',
+            'emergency_contact_phone',
+            'emergency_contact_relationship',
+            'status',
+            'status_display',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'status_display']
+
+    def create(self, validated_data):
+        # The model handles default 'Draft' status if status not provided,
+        # but you can enforce it here as well
+        if 'status' not in validated_data or validated_data['status'] is None:
+            try:
+                draft_status = TableDropDownDefinition.objects.filter(
+                    table_name='vacation_application_status',
+                    is_active=True,
+                    term="Draft"
+                ).first()
+                validated_data['status'] = draft_status
+            except Exception:
+                validated_data['status'] = None
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        """
+        Optionally, override to add more details (e.g., applicant/basic offer data).
+        """
+        rep = super().to_representation(instance)
+        # Add applicant info (limited to username & id for privacy)
+        rep['applicant_detail'] = {
+            'id': instance.applicant.id,
+            'name': getattr(instance.applicant, 'get_full_name', lambda: None)() or getattr(instance.applicant.user, 'username', None)
+        } if instance.applicant else None
+        # Add offer title for quick reference
+        rep['offer_title'] = instance.offer.title if instance.offer else None
+        return rep

@@ -1,0 +1,14 @@
+Draft
+Application Received
+Pending Documents from Applicant
+Application Submitted to Travel Partner/Embassy
+Application on Hold
+Payment Confirmed
+Visa Application Submitted
+Visa Granted
+Visa Denied
+Flight Booking Confirmed
+Accommodation Reserved
+Trip in Progress
+Trip Completed
+Case Closed
