@@ -28,7 +28,7 @@ class PilgrimageOffer(models.Model):
     sponsor_name = models.CharField(max_length=255, blank=True, null=True, help_text="Name of sponsor if applicable")
     seats_available = models.PositiveIntegerField(default=0)
     per_seat = models.BooleanField(default=True, help_text="Is the price per seat?")
-    image = models.ImageField(upload_to='pilgrimage_offers/main/', null=True, blank=True, help_text="Main image for the offer")
+    image = models.URLField(max_length=500, null=True, blank=True, help_text="Main image URL for the offer")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -74,7 +74,7 @@ class PilgrimageOfferIncludedItem(models.Model):
 
 class PilgrimageOfferImage(models.Model):
     offer = models.ForeignKey(PilgrimageOffer, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='pilgrimage_offers/gallery/')
+    image = models.URLField(max_length=500)
     caption = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):

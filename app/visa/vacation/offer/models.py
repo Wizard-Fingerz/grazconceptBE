@@ -11,7 +11,7 @@ class VacationOffer(models.Model):
     currency = models.CharField(max_length=10, default="USD")
     per_seat = models.BooleanField(default=True, help_text="Is the price per seat?")
     hotel_stars = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Hotel star rating if included")
-    image = models.ImageField(upload_to='vacation_offers/main/', null=True, blank=True, help_text="Main image for the offer")
+    image = models.URLField(max_length=500, null=True, blank=True, help_text="Main image URL for the offer")
     # For multiple images, use a related model below
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,7 +33,7 @@ class VacationOfferIncludedItem(models.Model):
 
 class VacationOfferImage(models.Model):
     offer = models.ForeignKey(VacationOffer, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='vacation_offers/gallery/')
+    image = models.URLField(max_length=500)
     caption = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
