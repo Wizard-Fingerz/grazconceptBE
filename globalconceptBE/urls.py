@@ -1,5 +1,5 @@
 """
-URL configuration for globalconceptBE project.
+URL configuration for GrazConceptBE project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -24,9 +24,9 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="GlobalConcept API",
+      title="GrazConcept API",
       default_version='v1',
-      description="API documentation for GlobalConcept",
+      description="API documentation for GrazConcept",
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),

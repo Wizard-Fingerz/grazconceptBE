@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from account.client.documents.views import ClientDocumentsViewSet
-from .views import SignUpView, UserProfileView, MyTokenObtainPairView
+from .views import SignUpView, UserProfileView, MyTokenObtainPairView, UserViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from account.client.views import ClientViewSet
@@ -10,7 +10,7 @@ from account.client.views import ClientViewSet
 router = DefaultRouter()
 router.register(r'clients', ClientViewSet, basename='client')
 router.register(r'clients-document', ClientDocumentsViewSet, basename='client_documents')
-
+router.register(r'users', UserViewSet, basename='user')  # Added UserViewSet to the router
 
 urlpatterns = [
     path('users/register/', SignUpView.as_view(), name='register'),
