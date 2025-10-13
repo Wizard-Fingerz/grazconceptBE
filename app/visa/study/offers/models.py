@@ -52,6 +52,10 @@ class StudyVisaOffer(models.Model):
         default=None
     )
 
+    @property
+    def status_name(self):
+        return self.status.name
+
     def __str__(self):
         return f"{self.offer_title} - {self.institution.name} ({self.course_of_study.name})"
 

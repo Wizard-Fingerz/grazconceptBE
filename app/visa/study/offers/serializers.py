@@ -47,4 +47,10 @@ class StudyVisaOfferSerializer(serializers.ModelSerializer):
             'status',
             'status_display',
             'requirements',
+            'status_name',
+        ]
+
+        read_only_fields = [
+            'status_name',
+
         ]
