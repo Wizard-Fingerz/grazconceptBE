@@ -11,8 +11,13 @@ from .visa.study.models import StudyVisaApplication  # <-- Include StudyVisaAppl
 # Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement and WorkVisaApplication
 from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement, WorkVisaApplication
 from .visa.work.organization.models import WorkOrganization
-# Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
-from .visa.vacation.offer.models import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
+# Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage, VacationVisaApplication
+from .visa.vacation.offer.models import (
+    VacationOffer,
+    VacationOfferIncludedItem,
+    VacationOfferImage,
+    VacationVisaApplication,  # <-- Include VacationVisaApplication
+)
 
 # Import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage, PilgrimageVisaApplication
 from .visa.pilgrimage.offer.models import (
@@ -77,6 +82,10 @@ class VacationOfferIncludedItemResource(resources.ModelResource):
 class VacationOfferImageResource(resources.ModelResource):
     class Meta:
         model = VacationOfferImage
+
+class VacationVisaApplicationResource(resources.ModelResource):
+    class Meta:
+        model = VacationVisaApplication
 
 class PilgrimageOfferResource(resources.ModelResource):
     class Meta:
@@ -149,6 +158,10 @@ class VacationOfferIncludedItemAdmin(ImportExportModelAdmin):
 @admin.register(VacationOfferImage)
 class VacationOfferImageAdmin(ImportExportModelAdmin):
     resource_class = VacationOfferImageResource
+
+@admin.register(VacationVisaApplication)
+class VacationVisaApplicationAdmin(ImportExportModelAdmin):
+    resource_class = VacationVisaApplicationResource
 
 @admin.register(PilgrimageOffer)
 class PilgrimageOfferAdmin(ImportExportModelAdmin):
