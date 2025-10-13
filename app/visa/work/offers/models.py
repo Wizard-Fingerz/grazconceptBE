@@ -110,10 +110,12 @@ class WorkVisaOffer(models.Model):
     def __str__(self):
         return f"{self.job_title} at {self.organization.name}"
 
+
 class WorkVisaApplication(models.Model):
     """
     Model to store a client's application for a specific work visa job offer.
     The application can collect both job-related and visa-related info.
+    The 'country' (nationality) is automatically filled from the client model's country.
     """
     client = models.ForeignKey(
         Client,
@@ -129,7 +131,6 @@ class WorkVisaApplication(models.Model):
     )
 
     # Step 1: Personal Information
-    # applicant is 'client' foreign key, already present above.
     passport_number = models.CharField(
         max_length=50,
         blank=True,
@@ -139,7 +140,7 @@ class WorkVisaApplication(models.Model):
     country = CountryField(
         blank=True,
         null=True,
-        help_text="Applicant's nationality country"
+        help_text="Applicant's nationality country (auto filled from client)"
     )
     passport_expiry_date = models.DateField(
         blank=True,
@@ -285,7 +286,6 @@ class WorkVisaApplication(models.Model):
     )
 
     # Deprecated/legacy fields or moved fields
-    # The following are still kept for backward compatibility if needed
     resume = models.FileField(
         upload_to='work_visa_applications/legacy_resume/',
         blank=True,
@@ -345,3 +345,11 @@ class WorkVisaApplication(models.Model):
 
     def __str__(self):
         return f"Application of {self.client} for {self.offer}"
+
+    def save(self, *args, **kwargs):
+        # Auto-fill country from the client if possible
+        if self.client and hasattr(self.client, "country"):
+            if not self.country or self.country != self.client.country:
+                self.country = self.client.country
+        super().save(*args, **kwargs)
+
