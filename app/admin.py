@@ -1,26 +1,26 @@
 from django.contrib import admin
-
 # Register your models here.
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-
 from app.ad_banners.models import AdBanner
-
 from .hotels.models import Hotel, HotelBooking, Amenity
 from .flight.models import FlightBooking
 from .visa.study.institutions.models import ProgramType, Institution, CourseOfStudy
 from .visa.study.offers.models import StudyVisaOffer, StudyVisaOfferRequirement
 from .visa.study.models import StudyVisaApplication  # <-- Include StudyVisaApplication
-
 # Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement and WorkVisaApplication
 from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement, WorkVisaApplication
 from .visa.work.organization.models import WorkOrganization
-
 # Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
 from .visa.vacation.offer.models import VacationOffer, VacationOfferIncludedItem, VacationOfferImage
 
-# Import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage
-from .visa.pilgrimage.offer.models import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage
+# Import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage, PilgrimageVisaApplication
+from .visa.pilgrimage.offer.models import (
+    PilgrimageOffer,
+    PilgrimageOfferIncludedItem,
+    PilgrimageOfferImage,
+    PilgrimageVisaApplication,  # Include PilgrimageVisaApplication
+)
 
 class HotelResource(resources.ModelResource):
     class Meta:
@@ -90,6 +90,10 @@ class PilgrimageOfferImageResource(resources.ModelResource):
     class Meta:
         model = PilgrimageOfferImage
 
+class PilgrimageVisaApplicationResource(resources.ModelResource):
+    class Meta:
+        model = PilgrimageVisaApplication
+
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
     resource_class = HotelResource
@@ -157,6 +161,10 @@ class PilgrimageOfferIncludedItemAdmin(ImportExportModelAdmin):
 @admin.register(PilgrimageOfferImage)
 class PilgrimageOfferImageAdmin(ImportExportModelAdmin):
     resource_class = PilgrimageOfferImageResource
+
+@admin.register(PilgrimageVisaApplication)
+class PilgrimageVisaApplicationAdmin(ImportExportModelAdmin):
+    resource_class = PilgrimageVisaApplicationResource
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:

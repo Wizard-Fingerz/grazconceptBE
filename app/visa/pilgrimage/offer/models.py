@@ -123,7 +123,7 @@ class PilgrimageVisaApplication(models.Model):
     emergency_contact_name = models.CharField(max_length=255)
     emergency_contact_phone = models.CharField(max_length=30)
     emergency_contact_relationship = models.CharField(max_length=100)
-    # New: status field, default to first active status with table_name=pilgrimage_application_status (or set via admin)
+    # Status field: default to "Draft" application status if available
     status = models.ForeignKey(
         TableDropDownDefinition,
         on_delete=models.PROTECT,
@@ -132,6 +132,7 @@ class PilgrimageVisaApplication(models.Model):
         help_text="Status of the pilgrimage visa application",
         null=True,
         blank=True,
+        default=None,  # this remains None for migrations, default logic enforced in save
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -150,3 +151,15 @@ class PilgrimageVisaApplication(models.Model):
             return self.status.term
         return None
 
+    def save(self, *args, **kwargs):
+        # Make default application status "Draft", if not already set
+        if self.status is None:
+            try:
+                self.status = TableDropDownDefinition.objects.filter(
+                    table_name='pilgrimage_application_status',
+                    is_active=True,
+                    term="Draft"
+                ).first()
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
