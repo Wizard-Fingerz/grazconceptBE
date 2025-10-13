@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'import_export',
     'rest_framework.authtoken',
+    'wallet',
 
 ]
 
