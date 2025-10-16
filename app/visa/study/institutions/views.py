@@ -25,15 +25,17 @@ class InstitutionViewSet(viewsets.ModelViewSet):
     queryset = Institution.objects.all()
     serializer_class = InstitutionSerializer
 
+
+
 class CourseOfStudyViewSet(viewsets.ModelViewSet):
     queryset = CourseOfStudy.objects.all()
     serializer_class = CourseOfStudySerializer
 
-
     def get_queryset(self):
         """
-        Optionally restricts the returned offers by filtering against
+        Optionally restricts the returned CourseOfStudy objects by filtering against
         query parameters in the URL. Supports 'limit' param for limiting results.
+        The filters expect IDs as input.
         """
         queryset = super().get_queryset()
         program_type = self.request.query_params.get('program_type')
@@ -41,9 +43,17 @@ class CourseOfStudyViewSet(viewsets.ModelViewSet):
         limit = self.request.query_params.get('limit')
 
         if program_type:
-            queryset = queryset.filter(program_type=program_type)
+            try:
+                program_type_id = int(program_type)
+                queryset = queryset.filter(program_type_id=program_type_id)
+            except (ValueError, TypeError):
+                pass  # Ignore invalid ids
         if institution:
-            queryset = queryset.filter(institution=institution)
+            try:
+                institution_id = int(institution)
+                queryset = queryset.filter(institution_id=institution_id)
+            except (ValueError, TypeError):
+                pass  # Ignore invalid ids
         if limit is not None:
             try:
                 limit_value = int(limit)
