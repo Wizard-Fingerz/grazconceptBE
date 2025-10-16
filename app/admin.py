@@ -206,6 +206,7 @@ class InstitutionAdmin(ImportExportModelAdmin):
 @admin.register(CourseOfStudy)
 class CourseOfStudyAdmin(ImportExportModelAdmin):
     resource_class = CourseOfStudyResource
+    list_filter = ['institution', 'program_type']  # Add filters for related institution and program type
 
 @admin.register(AdBanner)
 class AdBannerAdmin(ImportExportModelAdmin):
