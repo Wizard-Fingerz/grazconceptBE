@@ -32,7 +32,7 @@ class ProgramType(models.Model):
         return self.name
 
 class Institution(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique = True)
     country = CountryField()
     city = models.CharField(max_length=100)
     email_address = models.EmailField(blank=True, null=True)
