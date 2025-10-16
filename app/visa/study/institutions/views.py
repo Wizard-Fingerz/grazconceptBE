@@ -29,3 +29,27 @@ class CourseOfStudyViewSet(viewsets.ModelViewSet):
     queryset = CourseOfStudy.objects.all()
     serializer_class = CourseOfStudySerializer
 
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned offers by filtering against
+        query parameters in the URL. Supports 'limit' param for limiting results.
+        """
+        queryset = super().get_queryset()
+        program_type = self.request.query_params.get('program_type')
+        institution = self.request.query_params.get('institution')
+        limit = self.request.query_params.get('limit')
+
+        if program_type:
+            queryset = queryset.filter(program_type=program_type)
+        if institution:
+            queryset = queryset.filter(institution=institution)
+        if limit is not None:
+            try:
+                limit_value = int(limit)
+                if limit_value > 0:
+                    queryset = queryset[:limit_value]
+            except (ValueError, TypeError):
+                pass  # Ignore invalid limit values
+        return queryset
+

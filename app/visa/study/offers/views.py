@@ -41,3 +41,5 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
             except (ValueError, TypeError):
                 pass  # Ignore invalid limit values
         return queryset
+
+
