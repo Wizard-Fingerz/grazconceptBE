@@ -5,8 +5,8 @@ from .models import Wallet
 from wallet.payment_gateway.models import PaymentGateway, PaymentGatewayCallbackLog
 from wallet.saving_plans.models import SavingsPlan
 
-# Register LoanApplication and LoanRepayment from wallet.loan.models
-from wallet.loan.models import LoanApplication, LoanRepayment
+# Import LoanOffer, LoanApplication, LoanRepayment from wallet.loan.models (fix: include LoanOffer)
+from wallet.loan.models import LoanOffer, LoanApplication, LoanRepayment
 
 class WalletResource(resources.ModelResource):
     class Meta:
@@ -62,15 +62,29 @@ class SavingsPlanAdmin(ImportExportModelAdmin):
     search_fields = ('user__email', 'name', 'wallet__id')
     list_filter = ('currency', 'status', 'is_recurring')
 
-# Register LoanApplication and LoanRepayment with default ModelAdmin
+# Register LoanOffer, LoanApplication and LoanRepayment in the admin site.
+
+@admin.register(LoanOffer)
+class LoanOfferAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'name', 'loan_type', 'min_amount', 'max_amount', 'currency', 'interest_rate', 'duration_months',
+        'is_active', 'created_at', 'updated_at'
+    )
+    search_fields = ('name', 'loan_type', 'currency')
+    list_filter = ('loan_type', 'currency', 'is_active')
+
 @admin.register(LoanApplication)
 class LoanApplicationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'loan_type', 'amount', 'currency', 'status', 'created_at', 'updated_at')
-    search_fields = ('user__email', 'loan_type', 'status')
-    list_filter = ('currency', 'loan_type', 'status')
+    list_display = (
+        'id', 'user', 'loan_offer', 'amount', 'currency', 'status', 'created_at', 'updated_at'
+    )
+    search_fields = ('user__email', 'loan_offer__name', 'status')
+    list_filter = ('currency', 'status', 'loan_offer')
 
 @admin.register(LoanRepayment)
 class LoanRepaymentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'loan_application', 'user', 'amount', 'currency', 'payment_date', 'reference')
+    list_display = (
+        'id', 'loan_application', 'user', 'amount', 'currency', 'payment_date', 'reference'
+    )
     search_fields = ('user__email', 'loan_application__id', 'reference')
     list_filter = ('currency',)
