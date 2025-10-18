@@ -3,7 +3,10 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .models import Wallet
 from wallet.payment_gateway.models import PaymentGateway, PaymentGatewayCallbackLog
-from wallet.saving_plans.models import SavingsPlan  # include savig plan
+from wallet.saving_plans.models import SavingsPlan
+
+# Register LoanApplication and LoanRepayment from wallet.loan.models
+from wallet.loan.models import LoanApplication, LoanRepayment
 
 class WalletResource(resources.ModelResource):
     class Meta:
@@ -14,7 +17,7 @@ class WalletResource(resources.ModelResource):
 class WalletAdmin(ImportExportModelAdmin):
     resource_class = WalletResource
     list_display = ('id', 'user', 'balance', 'currency', 'is_active', 'created_at', 'updated_at')
-    search_fields = ('user__username', 'user__email', 'currency')
+    search_fields = ('user__email', 'currency')
     list_filter = ('currency', 'is_active')
 
 class PaymentGatewayResource(resources.ModelResource):
@@ -41,7 +44,6 @@ class PaymentGatewayCallbackLogAdmin(ImportExportModelAdmin):
     list_filter = ('processed', 'payment_gateway')
     search_fields = ('wallet_transaction__reference',)
 
-# Include SavingsPlan in admin
 class SavingsPlanResource(resources.ModelResource):
     class Meta:
         model = SavingsPlan
@@ -57,5 +59,18 @@ class SavingsPlanAdmin(ImportExportModelAdmin):
         'id', 'user', 'wallet', 'name', 'target_amount', 'amount_saved', 'currency', 'status', 'is_recurring',
         'start_date', 'end_date', 'created_at'
     )
-    search_fields = ('user__username', 'user__email', 'name', 'wallet__id')
+    search_fields = ('user__email', 'name', 'wallet__id')
     list_filter = ('currency', 'status', 'is_recurring')
+
+# Register LoanApplication and LoanRepayment with default ModelAdmin
+@admin.register(LoanApplication)
+class LoanApplicationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'loan_type', 'amount', 'currency', 'status', 'created_at', 'updated_at')
+    search_fields = ('user__email', 'loan_type', 'status')
+    list_filter = ('currency', 'loan_type', 'status')
+
+@admin.register(LoanRepayment)
+class LoanRepaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'loan_application', 'user', 'amount', 'currency', 'payment_date', 'reference')
+    search_fields = ('user__email', 'loan_application__id', 'reference')
+    list_filter = ('currency',)
