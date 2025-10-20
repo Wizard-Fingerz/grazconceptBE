@@ -8,8 +8,6 @@ from .models import TableDropDownDefinition
 class TableDropDownDefinitionAdmin(admin.ModelAdmin):
     list_display = ('table_name', 'term', 'is_active', 'is_system_defined', 'created_at')
     search_fields = ('table_name', 'term', 'is_active', 'is_system_defined')
-    ordering = ('table_name',)
+    ordering = ('table_name','term')
     list_filter = ('table_name', 'created_at')
 
-    ordering = ('term',)
-    list_filter = ('created_at',)
