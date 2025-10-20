@@ -1,8 +1,9 @@
 from rest_framework import viewsets
 from rest_framework import permissions
 from app.views import CustomPagination
-from app.visa.work.offers.models import WorkVisaOffer, WorkVisaApplication, InterviewFAQ, WorkVisaInterview
+from app.visa.work.offers.models import CVSubmission, WorkVisaOffer, WorkVisaApplication, InterviewFAQ, WorkVisaInterview
 from app.visa.work.offers.serializers import (
+    CVSubmissionSerializer,
     WorkVisaOfferSerializer,
     WorkVisaApplicationSerializer,
     InterviewFAQSerializer,
@@ -86,3 +87,28 @@ class WorkVisaInterviewViewSet(viewsets.ModelViewSet):
     serializer_class = WorkVisaInterviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
+
+
+class CVSubmissionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing CV Submissions for work visa offers.
+    """
+    queryset = CVSubmission.objects.all()
+    serializer_class = CVSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
+
+    def perform_create(self, serializer):
+        # Optionally, link user or add additional logic here
+        serializer.save()
+
+    def get_queryset(self):
+        """
+        Optionally filter CV Submissions based on the current user or via query parameters.
+        """
+        queryset = super().get_queryset()
+        job_id = self.request.query_params.get('job')
+        if job_id:
+            queryset = queryset.filter(job_id=job_id)
+        return queryset
+

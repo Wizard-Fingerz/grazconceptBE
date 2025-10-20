@@ -12,6 +12,7 @@ from app.visa.work.offers.views import (
     WorkVisaApplicationViewSet,
     InterviewFAQViewSet,
     WorkVisaInterviewViewSet,
+    CVSubmissionViewSet,
 )
 from app.visa.work.organization.views import WorkOrganizationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
@@ -54,6 +55,7 @@ router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, 
 # --- Register Work Visa Interview & FAQ endpoints ---
 router.register(r'work-visa-interviews', WorkVisaInterviewViewSet, basename='workvisainterviews')
 router.register(r'work-visa-faq', InterviewFAQViewSet, basename='workvisafaq')
+router.register(r'cv-submission', CVSubmissionViewSet, basename='cvsubmission')
 # ----------------------------------------------------
 
 # --- Register Education/Exam Fee endpoints ---

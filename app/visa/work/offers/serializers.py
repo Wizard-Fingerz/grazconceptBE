@@ -5,6 +5,7 @@ from app.visa.work.offers.models import (
     WorkVisaApplication,
     InterviewFAQ,
     WorkVisaInterview,
+    CVSubmission,
 )
 from app.visa.work.organization.serializers import WorkOrganizationSerializer
 from definition.models import TableDropDownDefinition
@@ -181,3 +182,28 @@ class WorkVisaInterviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+
+class CVSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CVSubmission
+        fields = [
+            'id',
+            'full_name',
+            'email',
+            'phone',
+            'country',
+            'job',
+            'job_title_freeform',
+            'skills',
+            'other_skills',
+            'cv_file',
+            'cover_letter',
+            'submitted_at',
+            'updated_at',
+            'is_processed',
+        ]
+        read_only_fields = [
+            'id',
+            'submitted_at',
+            'updated_at',
+        ]

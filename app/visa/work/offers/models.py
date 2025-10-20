@@ -420,3 +420,50 @@ class WorkVisaInterview(models.Model):
     def __str__(self):
         return f"{self.application.client} | {self.country} | {self.job} | {self.interview_date} {self.interview_time} ({self.status})"
 
+
+class CVSubmission(models.Model):
+    """
+    Stores applicant's CV submissions for work visa jobs.
+    """
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40)
+    country = CountryField(help_text="Country the applicant is applying for")
+    job = models.ForeignKey(
+        WorkVisaOffer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cv_submissions",
+        help_text="The job the candidate is applying for (optional if open application)",
+    )
+    job_title_freeform = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="If no job is selected, applicant-supplied job name/title"
+    )
+    skills = models.ManyToManyField(
+        TableDropDownDefinition,
+        blank=True,
+        limit_choices_to={'table_name': 'skills'},
+        related_name="cv_submissions_with_skill",
+        help_text="Skills selected from system skills list"
+    )
+    other_skills = models.CharField(
+        max_length=400, blank=True,
+        help_text="Comma separated list if applicant filled in 'other' or unlisted skills"
+    )
+    cv_file = models.FileField(upload_to='cv_uploads/%Y/%m/', help_text="CV file uploaded by the user")
+    cover_letter = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_processed = models.BooleanField(default=False, help_text="Has staff reviewed this application")
+
+    class Meta:
+        verbose_name = "CV Submission"
+        verbose_name_plural = "CV Submissions"
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.full_name} - {self.email} ({self.country}) [{self.job or self.job_title_freeform}]"
+
