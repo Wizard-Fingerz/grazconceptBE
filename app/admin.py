@@ -7,25 +7,24 @@ from .hotels.models import Hotel, HotelBooking, Amenity
 from .flight.models import FlightBooking
 from .visa.study.institutions.models import ProgramType, Institution, CourseOfStudy
 from .visa.study.offers.models import StudyVisaOffer, StudyVisaOfferRequirement
-from .visa.study.models import StudyVisaApplication  # <-- Include StudyVisaApplication
-# Import WorkVisaOffer, WorkOrganization, and WorkVisaOfferRequirement and WorkVisaApplication
+from .visa.study.models import StudyVisaApplication
 from .visa.work.offers.models import WorkVisaOffer, WorkVisaOfferRequirement, WorkVisaApplication
 from .visa.work.organization.models import WorkOrganization
-# Import VacationOffer, VacationOfferIncludedItem, VacationOfferImage, VacationVisaApplication
 from .visa.vacation.offer.models import (
     VacationOffer,
     VacationOfferIncludedItem,
     VacationOfferImage,
-    VacationVisaApplication,  # <-- Include VacationVisaApplication
+    VacationVisaApplication,
 )
-
-# Import PilgrimageOffer, PilgrimageOfferIncludedItem, PilgrimageOfferImage, PilgrimageVisaApplication
 from .visa.pilgrimage.offer.models import (
     PilgrimageOffer,
     PilgrimageOfferIncludedItem,
     PilgrimageOfferImage,
-    PilgrimageVisaApplication,  # Include PilgrimageVisaApplication
+    PilgrimageVisaApplication,
 )
+
+# --- European Citizenship Admin Imports ---
+from .citizenship.european.models import EuropeanCitizenshipOffer
 
 class HotelResource(resources.ModelResource):
     class Meta:
@@ -103,6 +102,11 @@ class PilgrimageVisaApplicationResource(resources.ModelResource):
     class Meta:
         model = PilgrimageVisaApplication
 
+# --- European Citizenship Resource ---
+class EuropeanCitizenshipOfferResource(resources.ModelResource):
+    class Meta:
+        model = EuropeanCitizenshipOffer
+
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
     resource_class = HotelResource
@@ -178,6 +182,11 @@ class PilgrimageOfferImageAdmin(ImportExportModelAdmin):
 @admin.register(PilgrimageVisaApplication)
 class PilgrimageVisaApplicationAdmin(ImportExportModelAdmin):
     resource_class = PilgrimageVisaApplicationResource
+
+# --- European Citizenship Admin Registration ---
+@admin.register(EuropeanCitizenshipOffer)
+class EuropeanCitizenshipOfferAdmin(ImportExportModelAdmin):
+    resource_class = EuropeanCitizenshipOfferResource
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:

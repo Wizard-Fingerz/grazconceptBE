@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from app.ad_banners.views import AdBannerViewSet
+from app.citizenship.european.views import EuropeanCitizenshipOfferViewSet
 from app.visa.pilgrimage.offer.views import PilgrimageOfferViewSet, PilgrimageVisaApplicationViewSet
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
@@ -35,6 +36,7 @@ router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvi
 router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offer')
 router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimageoffer')
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
+router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
 
 
 urlpatterns = [
