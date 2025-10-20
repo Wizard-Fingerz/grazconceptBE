@@ -19,6 +19,14 @@ from .visa.study.institutions.views import (
     CourseOfStudyViewSet,
 )
 
+# --- Import Education/Exam Fee ViewSets ---
+from app.services.edu_and_exam_fee.views import (
+    EducationFeeProviderViewSet,
+    EducationFeeTypeViewSet,
+    EducationFeePaymentViewSet,
+)
+# ----------------------------------------
+
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
 router.register(r'hotels', HotelViewSet, basename='hotels')
@@ -38,6 +46,11 @@ router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimag
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
 router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
 
+# --- Register Education/Exam Fee endpoints ---
+router.register(r'education-fee-providers', EducationFeeProviderViewSet, basename='educationfeecproviders')
+router.register(r'education-fee-types', EducationFeeTypeViewSet, basename='educationfeetypes')
+router.register(r'education-fee-payments', EducationFeePaymentViewSet, basename='educationfeepayments')
+# --------------------------------------------
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),

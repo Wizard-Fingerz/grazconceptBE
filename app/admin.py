@@ -26,6 +26,13 @@ from .visa.pilgrimage.offer.models import (
 # --- European Citizenship Admin Imports ---
 from .citizenship.european.models import EuropeanCitizenshipOffer
 
+# --- Education/Exam Fee Admin Imports ---
+from .services.edu_and_exam_fee.models import (
+    EducationFeeProvider,
+    EducationFeeType,
+    EducationFeePayment,
+)
+
 class HotelResource(resources.ModelResource):
     class Meta:
         model = Hotel
@@ -106,6 +113,19 @@ class PilgrimageVisaApplicationResource(resources.ModelResource):
 class EuropeanCitizenshipOfferResource(resources.ModelResource):
     class Meta:
         model = EuropeanCitizenshipOffer
+
+# --- Education/Exam Fee Resources ---
+class EducationFeeProviderResource(resources.ModelResource):
+    class Meta:
+        model = EducationFeeProvider
+
+class EducationFeeTypeResource(resources.ModelResource):
+    class Meta:
+        model = EducationFeeType
+
+class EducationFeePaymentResource(resources.ModelResource):
+    class Meta:
+        model = EducationFeePayment
 
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
@@ -220,3 +240,16 @@ class CourseOfStudyAdmin(ImportExportModelAdmin):
 @admin.register(AdBanner)
 class AdBannerAdmin(ImportExportModelAdmin):
     resource_class = AdBannerResource
+
+# --- Education/Exam Fee Admin Registration ---
+@admin.register(EducationFeeProvider)
+class EducationFeeProviderAdmin(ImportExportModelAdmin):
+    resource_class = EducationFeeProviderResource
+
+@admin.register(EducationFeeType)
+class EducationFeeTypeAdmin(ImportExportModelAdmin):
+    resource_class = EducationFeeTypeResource
+
+@admin.register(EducationFeePayment)
+class EducationFeePaymentAdmin(ImportExportModelAdmin):
+    resource_class = EducationFeePaymentResource

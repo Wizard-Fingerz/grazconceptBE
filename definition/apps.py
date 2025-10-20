@@ -22,4 +22,5 @@ class DefinitionConfig(AppConfig):
         import definition.work_visa_application_statuses.signals
         import definition.pilgrimage_application_status.signals
         import definition.vacation_visa_applications_status.signals
+        import definition.education_fee_providers.signals
 
