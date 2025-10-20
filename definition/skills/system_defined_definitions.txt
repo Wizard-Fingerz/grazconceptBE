@@ -1,0 +1,272 @@
+Python
+Java
+JavaScript
+TypeScript
+C
+C++
+C#
+Go
+Rust
+Ruby
+Swift
+Kotlin
+Dart
+PHP
+Perl
+Scala
+Objective-C
+Shell
+Bash
+Powershell
+R
+MATLAB
+SQL
+PL/SQL
+NoSQL
+GraphQL
+HTML
+CSS
+SASS
+LESS
+Haskell
+Erlang
+Elixir
+Clojure
+Groovy
+F#
+Visual Basic
+Assembly
+COBOL
+Fortran
+Pascal
+Delphi
+Lua
+VHDL
+Verilog
+Prolog
+Lisp
+Scheme
+Julia
+Solidity
+Apex
+ABAP
+SAS
+Awk
+Racket
+Smalltalk
+OCaml
+Crystal
+Elm
+Blockly
+Scratch
+Tcl
+VBScript
+LabVIEW
+Ada
+XSLT
+ColdFusion
+D
+Nim
+CoffeeScript
+ActionScript
+Q#
+Eiffel
+FoxPro
+MQL4
+MQL5
+AutoHotkey
+Golang
+OpenCL
+CMake
+CUDA
+Objective-J
+Pike
+Simula
+Machine Learning
+Data Analysis
+Data Science
+Artificial Intelligence
+Deep Learning
+Natural Language Processing
+Computer Vision
+Data Mining
+Big Data
+Data Engineering
+ETL
+Business Intelligence
+Frontend Development
+Backend Development
+Full Stack Development
+API Development
+REST
+gRPC
+GraphQL API
+Unit Testing
+Integration Testing
+Test Automation
+TDD
+CI/CD
+DevOps
+Version Control
+Git
+SVN
+Mercurial
+Cloud Computing
+AWS
+Azure
+GCP
+Heroku
+Cloudflare
+DigitalOcean
+Firebase
+Containerization
+Docker
+Kubernetes
+OpenShift
+Microservices
+Monolith Architecture
+Event-driven Architecture
+Mobile Development
+Android
+iOS
+React Native
+Flutter
+Xamarin
+Cordova
+Ionic
+Progressive Web Apps
+Game Development
+Unity
+Unreal Engine
+Godot
+GameMaker Studio
+CryEngine
+LibGDX
+Construct
+Embedded Systems
+IoT
+Arduino
+Raspberry Pi
+FPGA
+Network Programming
+Socket Programming
+TCP/IP
+UDP
+Bluetooth
+WebSockets
+Security
+Encryption
+Penetration Testing
+Vulnerability Assessment
+Agile Methodology
+Scrum
+Kanban
+XP
+Project Management
+JIRA
+Trello
+Operating Systems
+Linux
+Windows
+Mac OS
+Unix
+FreeBSD
+Web Development
+Django
+Flask
+FastAPI
+Spring
+Express.js
+NestJS
+Next.js
+Nuxt.js
+Vue.js
+React.js
+Angular
+Svelte
+Meteor
+ASP.NET
+Laravel
+Symfony
+Ruby on Rails
+Phoenix
+CakePHP
+Zend
+Database Management
+MySQL
+PostgreSQL
+SQLite
+MongoDB
+Redis
+Cassandra
+DynamoDB
+Firebase Realtime Database
+Firestore
+Oracle Database
+MariaDB
+Elasticsearch
+Neo4j
+ArangoDB
+CouchDB
+Realm
+Configuration Management
+Ansible
+Puppet
+Chef
+SaltStack
+Terraform
+Monitoring
+Prometheus
+Grafana
+Datadog
+ELK Stack
+Splunk
+Automation
+Selenium
+Appium
+UI/UX
+Adobe XD
+Figma
+Sketch
+Photoshop
+Illustrator
+Wireframing
+Prototyping
+CRM
+Salesforce
+HubSpot
+ERP
+SAP
+E-commerce
+Shopify
+Magento
+WooCommerce
+BigCommerce
+Blockchain
+Ethereum
+Hyperledger
+Distributed Systems
+Concurrency
+Parallel Programming
+Virtualization
+VMware
+VirtualBox
+Hyper-V
+Algorithm Design
+Data Structures
+Software Architecture
+Requirement Analysis
+System Design
+Debugging
+Documentation
+Technical Writing
+Customer Support
+Localization
+Teaching/Training
+Mentoring
+Revamping Legacy Code
+Reverse Engineering
+Refactoring
+Performance Optimization
+Accessibility Design (a11y)
+Typography
