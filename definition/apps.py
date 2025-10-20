@@ -23,4 +23,5 @@ class DefinitionConfig(AppConfig):
         import definition.pilgrimage_application_status.signals
         import definition.vacation_visa_applications_status.signals
         import definition.education_fee_providers.signals
+        import definition.job_roles.signals
 

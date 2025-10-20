@@ -1,8 +1,13 @@
 from rest_framework import viewsets
 from rest_framework import permissions
 from app.views import CustomPagination
-from app.visa.work.offers.models import WorkVisaOffer, WorkVisaApplication
-from app.visa.work.offers.serializers import WorkVisaOfferSerializer, WorkVisaApplicationSerializer
+from app.visa.work.offers.models import WorkVisaOffer, WorkVisaApplication, InterviewFAQ, WorkVisaInterview
+from app.visa.work.offers.serializers import (
+    WorkVisaOfferSerializer,
+    WorkVisaApplicationSerializer,
+    InterviewFAQSerializer,
+    WorkVisaInterviewSerializer,
+)
 
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -14,7 +19,6 @@ class WorkVisaOfferViewSet(viewsets.ModelViewSet):
     serializer_class = WorkVisaOfferSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
-
 
 
 class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
@@ -70,5 +74,15 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-    # Remove perform_create override, no longer needed since handled in create
+class InterviewFAQViewSet(viewsets.ModelViewSet):
+    queryset = InterviewFAQ.objects.all()
+    serializer_class = InterviewFAQSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
 
+
+class WorkVisaInterviewViewSet(viewsets.ModelViewSet):
+    queryset = WorkVisaInterview.objects.all()
+    serializer_class = WorkVisaInterviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination

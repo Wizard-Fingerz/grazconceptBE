@@ -353,3 +353,70 @@ class WorkVisaApplication(models.Model):
                 self.country = self.client.country
         super().save(*args, **kwargs)
 
+
+
+class InterviewFAQ(models.Model):
+    """
+    Frequently asked questions and answers for work visa interviews.
+    """
+    question = models.CharField(max_length=250)
+    answer = models.TextField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Interview FAQ"
+        verbose_name_plural = "Interview FAQs"
+
+    def __str__(self):
+        return self.question
+
+
+
+class WorkVisaInterview(models.Model):
+    """
+    Stores an interview appointment for a work visa application.
+    """
+    STATUS_CHOICES = [
+        ("Scheduled", "Scheduled"),
+        ("Attending", "Attending"),
+        ("Completed", "Completed"),
+        ("Cancelled", "Cancelled"),
+    ]
+
+    application = models.ForeignKey(
+        'WorkVisaApplication',
+        on_delete=models.CASCADE,
+        related_name='interviews',
+        help_text="The work visa application this interview is linked to"
+    )
+    job_role = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="scheduled_interviews",
+        limit_choices_to={'table_name': 'job_roles'},
+        help_text="Job role for this interview"
+    )
+    country = CountryField(
+        help_text="Country of the interview/job"
+    )
+    interview_date = models.DateField()
+    interview_time = models.TimeField()
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="Scheduled",
+        help_text="Current interview status"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Work Visa Interview"
+        verbose_name_plural = "Work Visa Interviews"
+        ordering = ['-interview_date', '-interview_time']
+
+    def __str__(self):
+        return f"{self.application.client} | {self.country} | {self.job} | {self.interview_date} {self.interview_time} ({self.status})"
+

@@ -7,7 +7,12 @@ from app.visa.pilgrimage.offer.views import PilgrimageOfferViewSet, PilgrimageVi
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
 from app.visa.vacation.offer.views import VacationOfferViewSet
-from app.visa.work.offers.views import WorkVisaOfferViewSet, WorkVisaApplicationViewSet
+from app.visa.work.offers.views import (
+    WorkVisaOfferViewSet,
+    WorkVisaApplicationViewSet,
+    InterviewFAQViewSet,
+    WorkVisaInterviewViewSet,
+)
 from app.visa.work.organization.views import WorkOrganizationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
 from .hotels.views import HotelBookingViewSet, HotelViewSet
@@ -45,6 +50,11 @@ router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offe
 router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimageoffer')
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
 router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
+
+# --- Register Work Visa Interview & FAQ endpoints ---
+router.register(r'work-visa-interviews', WorkVisaInterviewViewSet, basename='workvisainterviews')
+router.register(r'work-visa-faq', InterviewFAQViewSet, basename='workvisafaq')
+# ----------------------------------------------------
 
 # --- Register Education/Exam Fee endpoints ---
 router.register(r'education-fee-providers', EducationFeeProviderViewSet, basename='educationfeecproviders')

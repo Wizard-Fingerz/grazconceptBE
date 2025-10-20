@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from app.visa.work.offers.models import (
-    WorkVisaOffer, 
+    WorkVisaOffer,
     WorkVisaOfferRequirement,
     WorkVisaApplication,
+    InterviewFAQ,
+    WorkVisaInterview,
 )
 from app.visa.work.organization.serializers import WorkOrganizationSerializer
 from definition.models import TableDropDownDefinition
@@ -149,4 +151,33 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
         if country_value is not None:
             ret['country'] = country_value
         return ret
+
+
+class InterviewFAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterviewFAQ
+        fields = [
+            'id',
+            'question',
+            'answer',
+            'is_active',
+        ]
+        read_only_fields = ['id']
+
+
+class WorkVisaInterviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkVisaInterview
+        fields = [
+            'id',
+            'application',
+            'job_role',
+            'country',
+            'interview_date',
+            'interview_time',
+            'status',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
