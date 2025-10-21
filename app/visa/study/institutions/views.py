@@ -1,5 +1,7 @@
 from rest_framework import viewsets
 
+from app.views import CustomPagination
+
 from .models import ProgramType, Institution, CourseOfStudy
 from .serializers import (
     # CountrySerializer,
@@ -18,16 +20,19 @@ from .serializers import (
 #     serializer_class = CitySerializer
 
 class ProgramTypeViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
     queryset = ProgramType.objects.all()
     serializer_class = ProgramTypeSerializer
 
 class InstitutionViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
     queryset = Institution.objects.all()
     serializer_class = InstitutionSerializer
 
 
 
 class CourseOfStudyViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPagination
     queryset = CourseOfStudy.objects.all()
     serializer_class = CourseOfStudySerializer
 
