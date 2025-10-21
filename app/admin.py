@@ -253,6 +253,7 @@ class ProgramTypeAdmin(ImportExportModelAdmin):
 @admin.register(Institution)
 class InstitutionAdmin(ImportExportModelAdmin):
     resource_class = InstitutionResource
+    list_filter = ['city', 'country']  # Add city and country filtering
 
 @admin.register(CourseOfStudy)
 class CourseOfStudyAdmin(ImportExportModelAdmin):
