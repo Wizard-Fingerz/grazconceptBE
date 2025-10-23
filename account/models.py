@@ -6,7 +6,23 @@ from definition.models import TableDropDownDefinition
 from definition.permissions.models import UserPermissions
 from definition.roles.models import Roles
 from django_countries.fields import CountryField
+import string
+import random
 
+def generate_unique_custom_id():
+    """
+    Generates a unique 7-character alphanumeric custom_id for User.
+    Retries up to 10 times in case of collision (very low probability).
+    """
+    from account.models import User  # Import inside to avoid circular import
+
+    attempts = 0
+    while attempts < 10:
+        custom_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
+        if not User.objects.filter(custom_id=custom_id).exists():
+            return custom_id
+        attempts += 1
+    raise ValueError("Unable to generate unique custom_id after several attempts")
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=200)
@@ -32,7 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         limit_choices_to={'table_name': 'user_type'}
     )
     role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
-    custom_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    custom_id = models.CharField(max_length=7, unique=True, null=True, blank=True)
     profile_picture = models.ImageField(upload_to=generate_filename, blank=True, null=True)
     email = models.EmailField(unique=True)
     extra_permissions = models.ManyToManyField(UserPermissions, related_name='extra_user_permissions', blank=True)
@@ -49,6 +65,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = UserManager()
+
+    def save(self, *args, **kwargs):
+        if not self.custom_id:
+            self.custom_id = generate_unique_custom_id()
+        super().save(*args, **kwargs)
 
     @property
     def user_type_name(self):
