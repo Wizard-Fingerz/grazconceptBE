@@ -73,6 +73,41 @@ class CourseOfStudyViewSet(viewsets.ModelViewSet):
     queryset = CourseOfStudy.objects.all()
     serializer_class = CourseOfStudySerializer
 
+    def get_paginate_by(self, request):
+        # Deprecated, but here for Django compatibility; not used in DRF
+        return 100
+
+    def get_page_size(self, request):
+        # Not called by DRF, but placed here for completeness
+        return 100
+
+    def get_queryset(self):
+        # No custom filtering; return all as in original
+        return super().get_queryset()
+
+    def paginate_queryset(self, queryset):
+        """
+        Override to force the page size to 100 regardless of the query param.
+        """
+        # Set the page_size before calling DRF's built-in pagination
+        self.pagination_class.page_size = 100
+        return super().paginate_queryset(queryset)
+
+    def get_pagination_class(self):
+        """
+        Optionally override pagination class to always use a page size of 100.
+        """
+        class CustomPageSize100(CustomPagination):
+            page_size = 100
+            max_page_size = 100
+            page_size_choices = [100]
+
+            def get_page_size(self, request):
+                return 100
+
+        return CustomPageSize100
+
+
     def get_queryset(self):
         """
         Optionally restricts the returned CourseOfStudy objects by filtering against
