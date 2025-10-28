@@ -1,10 +1,19 @@
 from django.db import models
 from django_countries.fields import CountryField
+from definition.models import TableDropDownDefinition
 
 class EuropeanCitizenshipOffer(models.Model):
     country = CountryField(help_text="Country offering the citizenship program")
     quote = models.TextField(blank=True, help_text="A brief promotional or descriptive quote about this program")
-    type = models.CharField(max_length=100, help_text="Type or category of citizenship offer (e.g., Investment, Ancestry, Naturalization)")
+    type = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.PROTECT,
+        blank = True,
+        null = True,
+        limit_choices_to={"table_name": "citizen_type"},
+        related_name="european_citizenship_offers",
+        help_text="Type or category of citizenship offer (e.g., Investment, Ancestry, Naturalization)"
+    )
     description = models.TextField(blank=True, help_text="Detailed description about the process and benefits of the citizenship offer")
     minimum_investment = models.CharField(max_length=100, help_text="Minimum investment required, if applicable. E.g., '€250,000' or 'N/A'")
     visa_free_access = models.CharField(max_length=200, help_text="Number or list of countries accessible visa-free")
@@ -26,5 +35,5 @@ class EuropeanCitizenshipOffer(models.Model):
         verbose_name_plural = "European Citizenship Offers"
 
     def __str__(self):
-        return f"{self.country} - {self.type}"
+        return f"{self.country} - {self.type.term}"
 

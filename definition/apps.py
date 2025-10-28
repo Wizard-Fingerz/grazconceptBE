@@ -25,4 +25,5 @@ class DefinitionConfig(AppConfig):
         import definition.education_fee_providers.signals
         import definition.job_roles.signals
         import definition.skills.signals
+        import definition.citizen_type.signals
 
