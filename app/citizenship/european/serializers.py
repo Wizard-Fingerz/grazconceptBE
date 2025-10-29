@@ -16,6 +16,7 @@ class InvestmentOptionSerializer(serializers.ModelSerializer):
 
 class EuropeanCitizenshipOfferSerializer(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
+    investment_options = InvestmentOptionSerializer()
 
     class Meta:
         model = EuropeanCitizenshipOffer
