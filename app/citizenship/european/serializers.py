@@ -1,5 +1,18 @@
 from rest_framework import serializers
-from .models import EuropeanCitizenshipOffer
+from .models import EuropeanCitizenshipOffer, InvestmentOption
+
+
+class InvestmentOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestmentOption
+        fields = [
+            "id",
+            "type",
+            "min_amount",
+            "amount_field",
+            "amount_label",
+        ]
+
 
 class EuropeanCitizenshipOfferSerializer(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()

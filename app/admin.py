@@ -30,7 +30,7 @@ from .visa.pilgrimage.offer.models import (
 )
 
 # --- European Citizenship Admin Imports ---
-from .citizenship.european.models import EuropeanCitizenshipOffer
+from .citizenship.european.models import EuropeanCitizenshipOffer, InvestmentOption
 
 # --- Education/Exam Fee Admin Imports ---
 from .services.edu_and_exam_fee.models import (
@@ -127,6 +127,10 @@ class PilgrimageVisaApplicationResource(resources.ModelResource):
 class EuropeanCitizenshipOfferResource(resources.ModelResource):
     class Meta:
         model = EuropeanCitizenshipOffer
+
+class InvestmentOptionResource(resources.ModelResource):
+    class Meta:
+        model = InvestmentOption
 
 # --- Education/Exam Fee Resources ---
 class EducationFeeProviderResource(resources.ModelResource):
@@ -229,6 +233,10 @@ class PilgrimageVisaApplicationAdmin(ImportExportModelAdmin):
 @admin.register(EuropeanCitizenshipOffer)
 class EuropeanCitizenshipOfferAdmin(ImportExportModelAdmin):
     resource_class = EuropeanCitizenshipOfferResource
+
+@admin.register(InvestmentOption)
+class InvestmentOptionAdmin(ImportExportModelAdmin):
+    resource_class = InvestmentOptionResource
 
 class ProgramTypeResource(resources.ModelResource):
     class Meta:

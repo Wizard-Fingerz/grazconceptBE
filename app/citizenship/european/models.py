@@ -37,3 +37,25 @@ class EuropeanCitizenshipOffer(models.Model):
     def __str__(self):
         return f"{self.country} - {self.type.term}"
 
+
+
+class InvestmentOption(models.Model):
+  
+    type = models.CharField(max_length=100)
+    min_amount = models.PositiveIntegerField(help_text="Minimum required investment amount in €")
+    amount_field = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="The field name capturing the precise investment value if applicable"
+    )
+    amount_label = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Label for the extra amount input, if there is an extra field"
+    )
+
+    def __str__(self):
+        return f"{self.type} (min €{self.min_amount})"
+
