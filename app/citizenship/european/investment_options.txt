@@ -1,0 +1,22 @@
+Malta Citizenship|600000|extra_property_value|Property Value (€)
+Austria Citizenship|3000000|special_contribution|Contribution (€)
+Portugal Golden Visa|500000||
+Greece Golden Visa|250000||
+Cyprus Residency|300000|donation_amount|Donation (€)
+Spain Golden Visa|500000||
+Italy Investor Visa|250000||
+Ireland Immigrant Investor Program|1000000|donation_amount|Donation (€)
+Bulgaria Investor Program|512000||
+Latvia Golden Visa|250000||
+Switzerland Residence Program|1000000||
+Belgium Investor Visa|350000||
+Luxembourg Investor Visa|500000||
+Monaco Residency|1000000||
+Turkey Citizenship by Investment|400000||
+Montenegro Citizenship by Investment|350000||
+North Macedonia Citizenship by Investment|200000||
+Moldova Citizenship by Investment|100000||
+Slovakia Investment Option|300000||
+Hungary Guest Investor Visa|250000||
+France Talent Passport|300000||
+Netherlands Investor Visa|1250000||

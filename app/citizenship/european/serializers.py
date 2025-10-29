@@ -37,6 +37,7 @@ class EuropeanCitizenshipOfferSerializer(serializers.ModelSerializer):
             "gradient",
             "created_at",
             "updated_at",
+            "investment_options",
         ]
 
     def get_country(self, obj):

@@ -29,6 +29,12 @@ class EuropeanCitizenshipOffer(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    investment_options = models.ManyToManyField(
+        'InvestmentOption',
+        blank=True,
+        related_name='citizenship_offers',
+        help_text="Investment options applicable to this citizenship offer"
+    )
 
     class Meta:
         verbose_name = "European Citizenship Offer"
