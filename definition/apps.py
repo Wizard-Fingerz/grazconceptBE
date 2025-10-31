@@ -26,4 +26,5 @@ class DefinitionConfig(AppConfig):
         import definition.job_roles.signals
         import definition.skills.signals
         import definition.citizen_type.signals
+        import definition.study_sponsorship_type.signals
 
