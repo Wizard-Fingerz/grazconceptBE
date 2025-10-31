@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+
+from wallet.serializers import WalletSerializer
 from .models import User
 
 
@@ -7,6 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Use source to directly get the string representation from the model property
     country_of_residence = serializers.CharField(source="country_of_residence_str", read_only=True)
     nationality = serializers.SerializerMethodField()
+    wallet = WalletSerializer()
 
     class Meta:
         model = User

@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from wallet.serializers import WalletSerializer
 from .models import Client
 from django.contrib.auth.hashers import make_password
 
@@ -7,6 +9,7 @@ class ClientSerializer(serializers.ModelSerializer):
     service_of_interest_name = serializers.ReadOnlyField()
     assigned_to_teams_name = serializers.ReadOnlyField()
     country = serializers.SerializerMethodField()
+    wallet = WalletSerializer()
 
     class Meta:
         model = Client
