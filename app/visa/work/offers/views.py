@@ -42,11 +42,22 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         limit = request.query_params.get('limit')
+        queryset = self.filter_queryset(self.get_queryset())
         if limit is not None:
-            queryset = self.filter_queryset(self.get_queryset())
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
-        return super().list(request, *args, **kwargs)
+            try:
+                limit = int(limit)
+                if limit > 0:
+                    queryset = queryset[:limit]
+            except (ValueError, TypeError):
+                pass
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         """
