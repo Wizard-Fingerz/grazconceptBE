@@ -6,7 +6,7 @@ from app.citizenship.european.views import EuropeanCitizenshipOfferViewSet, Inve
 from app.visa.pilgrimage.offer.views import PilgrimageOfferViewSet, PilgrimageVisaApplicationViewSet
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
-from app.visa.vacation.offer.views import VacationOfferViewSet
+from app.visa.vacation.offer.views import VacationOfferViewSet, VacationVisaApplicationViewSet
 from app.visa.work.offers.views import (
     WorkVisaOfferViewSet,
     WorkVisaApplicationViewSet,
@@ -48,6 +48,7 @@ router.register(r'work-visa-offers', WorkVisaOfferViewSet, basename='workvisaoff
 router.register(r'work-visa-application', WorkVisaApplicationViewSet, basename='workvisaapplication')
 router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvisaorg')
 router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offer')
+router.register(r'vacation-application', VacationVisaApplicationViewSet, basename='vacationapplication')
 router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimageoffer')
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
 router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
