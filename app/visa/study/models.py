@@ -39,8 +39,7 @@ class StudyVisaApplication(models.Model):
     year_of_graduation = models.PositiveIntegerField(blank=True, null=True)
 
     # 3️⃣ Visa & Study Details
-    destination_country = CountryField(blank=True, null=True)
-    # If applying for a StudyVisaOffer, institution/course/program_type can be null and inferred from the offer.
+
     institution = models.ForeignKey(
         Institution,
         on_delete=models.CASCADE,
@@ -67,8 +66,24 @@ class StudyVisaApplication(models.Model):
     )
     intended_start_date = models.DateField(blank=True, null=True)
     intended_end_date = models.DateField(blank=True, null=True)
-    visa_type = models.CharField(max_length=50, blank=True, null=True)  # e.g., Student, Exchange, Research
-    sponsorship_details = models.CharField(max_length=100, blank=True, null=True)  # Self-funded / Sponsored
+    visa_type = models.ForeignKey(
+        'definition.TableDropDownDefinition',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='study_visa_visa_types',
+        limit_choices_to={'table_name': 'study_visa_type'},
+        help_text="Visa type (e.g., Student, Exchange, Research) from TableDropDownDefinition."
+    )
+    sponsorship_details = models.ForeignKey(
+        'definition.TableDropDownDefinition',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='study_visa_sponsorship_details',
+        limit_choices_to={'table_name': 'study_sponsorship_type'},
+        help_text="Sponsorship details (e.g., Self-funded, Sponsored) from TableDropDownDefinition."
+    )
 
     # 4️⃣ Document Uploads
     passport_photo = models.ImageField(upload_to='study_visa/passport_photos/', blank=True, null=True)
@@ -122,10 +137,22 @@ class StudyVisaApplication(models.Model):
 
     @property
     def country_str(self):
-        # Always return a string or None for JSON serialization
         if self.country:
             return str(self.country)
         return None
+
+    @property
+    def destination_country(self):
+        if self.institution and hasattr(self.institution, 'country'):
+            return self.institution.country
+        elif (
+            self.study_visa_offer
+            and self.study_visa_offer.institution
+            and hasattr(self.study_visa_offer.institution, 'country')
+        ):
+            return self.study_visa_offer.institution.country
+        else:
+            return None
 
     def all_required_fields_filled(self):
         """
@@ -140,6 +167,7 @@ class StudyVisaApplication(models.Model):
             self.previous_course_of_study,
             self.cgpa_grade,
             self.year_of_graduation,
+            # destination_country is property; treat as required field
             self.destination_country,
             self.institution,
             self.course_of_study,
@@ -159,9 +187,6 @@ class StudyVisaApplication(models.Model):
             self.emergency_contact_phone,
             self.statement_of_purpose,
         ]
-        # For BooleanField, previous_visa_applications is always set (default=False)
-        # previous_visa_details and travel_history are optional (text fields)
-        # If any required field is None or blank, return False
         for value in required_fields:
             if value is None:
                 return False
@@ -171,6 +196,7 @@ class StudyVisaApplication(models.Model):
 
     def save(self, *args, **kwargs):
         from django.utils import timezone
+
         # If applying for a StudyVisaOffer, auto-populate institution/course/program_type if not set
         if self.study_visa_offer:
             offer = self.study_visa_offer
@@ -180,8 +206,6 @@ class StudyVisaApplication(models.Model):
                 self.course_of_study = offer.course_of_study
             if not self.program_type:
                 self.program_type = offer.program_type
-            if not self.destination_country:
-                self.destination_country = offer.country
 
         # Determine status based on completeness
         try:
@@ -231,7 +255,6 @@ class StudyVisaApplication(models.Model):
             )
 
     def __str__(self):
-        # Show offer title if applying for an offer, else show institution
         if self.study_visa_offer:
             offer_title = self.study_visa_offer.offer_title
             institution_name = self.study_visa_offer.institution.name
