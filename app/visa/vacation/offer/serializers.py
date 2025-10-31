@@ -70,7 +70,8 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
         allow_null=True,
         default=None
     )
-    status_display = serializers.CharField(source='status_display', read_only=True)
+    # Fix: remove redundant source kwarg per DRF error (source='status_display' is unnecessary)
+    status_display = serializers.CharField(read_only=True)
 
     class Meta:
         model = VacationVisaApplication
