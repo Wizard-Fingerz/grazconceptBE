@@ -65,35 +65,43 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally restricts applicant to their own applications.
-        Can filter by offer, status, etc.
+        Filters vacation visa applications.
+        If the user is a client (user.role.term == "client"), restrict to their own applications.
+        Allows filtering by offer, applicant, and status.
         """
         queryset = super().get_queryset()
         offer = self.request.query_params.get('offer')
         applicant = self.request.query_params.get('applicant')
         status = self.request.query_params.get('status')
 
+        user = self.request.user
+
+        # Check if the user is a client based on role.term
+        is_client = hasattr(user, 'role') and getattr(user.role, 'term', None) == 'client'
+        if is_client:
+            # If user is client, restrict to their own applications
+            client = getattr(user, 'client', None)
+            if client:
+                queryset = queryset.filter(applicant=client)
+            else:
+                # Defensive: No client object for this user, return empty queryset
+                return queryset.none()
+        else:
+            # Only allow general filtering by applicant if user is not a client
+            if applicant:
+                queryset = queryset.filter(applicant_id=applicant)
+
         if offer:
             queryset = queryset.filter(offer_id=offer)
-        if applicant:
-            queryset = queryset.filter(applicant_id=applicant)
-        else:
-            # Optionally, by default, filter to the current user only:
-            if self.request.user.is_authenticated:
-                try:
-                    client = getattr(self.request.user, 'client', None)
-                    if client:
-                        queryset = queryset.filter(applicant=client)
-                except Exception:
-                    pass
         if status:
             queryset = queryset.filter(status=status)
         return queryset
 
-    # Optional: Override perform_create to set applicant automatically if desired
     def perform_create(self, serializer):
-        if not serializer.validated_data.get('applicant') and hasattr(self.request.user, 'client'):
-            serializer.save(applicant=self.request.user.client)
+        user = self.request.user
+        is_client = hasattr(user, 'role') and getattr(user.role, 'term', None) == 'client'
+        if is_client and hasattr(user, "client") and user.client:
+            serializer.save(applicant=user.client)
         else:
             serializer.save()
 
