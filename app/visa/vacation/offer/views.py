@@ -66,8 +66,8 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Filters vacation visa applications.
-        If the user is a client (user.role.term == "client"), restrict to their own applications.
-        Allows filtering by offer, applicant, and status.
+        If the user's user_type.term is "Customer", restrict to their own applications only.
+        Allows filtering by offer, applicant, and status for others.
         """
         queryset = super().get_queryset()
         offer = self.request.query_params.get('offer')
@@ -76,18 +76,16 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        # Check if the user is a client based on role.term
-        is_client = hasattr(user, 'role') and getattr(user.role, 'term', None) == 'client'
-        if is_client:
-            # If user is client, restrict to their own applications
+        # Enforce: If the user.user_type.term is "Customer", return only their own applications
+        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer':
             client = getattr(user, 'client', None)
             if client:
                 queryset = queryset.filter(applicant=client)
             else:
-                # Defensive: No client object for this user, return empty queryset
+                # No client object for this user; return none.
                 return queryset.none()
         else:
-            # Only allow general filtering by applicant if user is not a client
+            # Only allow filtering by applicant if user is NOT a "Customer"
             if applicant:
                 queryset = queryset.filter(applicant_id=applicant)
 
@@ -99,8 +97,9 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        is_client = hasattr(user, 'role') and getattr(user.role, 'term', None) == 'client'
-        if is_client and hasattr(user, "client") and user.client:
+        # Always ensure applicant is set to user.client if user is a Customer
+        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer' \
+            and hasattr(user, "client") and user.client:
             serializer.save(applicant=user.client)
         else:
             serializer.save()
