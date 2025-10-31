@@ -40,6 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "profile_picture_url",
             "gender_name",
+            "wallet",
         ]
         read_only_fields = [
             "id",
@@ -52,6 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_type_name",
             "full_name",
             "profile_picture_url",
+            "wallet",
             "gender_name",
         ]
 

@@ -39,7 +39,9 @@ class ClientSerializer(serializers.ModelSerializer):
             'client_type_name',
             'service_of_interest_name',
             'assigned_to_teams_name',
-            "is_prospect"
+            "is_prospect",
+            "wallet",
+
         ]
         read_only_fields = [
             'id',
@@ -51,6 +53,7 @@ class ClientSerializer(serializers.ModelSerializer):
             'client_type_name',
             'service_of_interest_name',
             'assigned_to_teams_name',
+            "wallet",
         ]
         extra_kwargs = {
             'password': {'write_only': True},

@@ -109,3 +109,27 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.nationality:
             return str(self.nationality)
         return None
+
+    @property
+    def wallet(self):
+        """
+        Returns the wallet details related to this user.
+        If there is no related wallet, returns None.
+        Assumes a one-to-one or foreign key relationship from Wallet to User with related_name='user'.
+        """
+        # Attempt to import here to avoid circular imports
+        try:
+            from wallet.models import Wallet
+        except ImportError:
+            return None
+
+        try:
+            wallet = Wallet.objects.get(user=self)
+            # You may want to serialize this explicitly using a serializer, but for now, return model data as a dict
+            fields = [f.name for f in wallet._meta.fields]
+            wallet_data = {field: getattr(wallet, field) for field in fields}
+            return wallet_data
+        except Wallet.DoesNotExist:
+            return None
+        except Exception:
+            return None
