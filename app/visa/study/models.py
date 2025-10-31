@@ -167,21 +167,20 @@ class StudyVisaApplication(models.Model):
             self.previous_course_of_study,
             self.cgpa_grade,
             self.year_of_graduation,
-            # destination_country is property; treat as required field
-            self.destination_country,
+            self.destination_country,  # property
             self.institution,
             self.course_of_study,
             self.program_type,
             self.intended_start_date,
             self.intended_end_date,
             self.visa_type,
-            self.sponsorship_details,
+            self.sponsorship,  # fixed from sponsorship_details
             self.passport_photo,
-            self.international_passport,
-            self.academic_transcripts,
+            self.passport_document,  # fixed from international_passport
+            self.academic_transcript,  # fixed from academic_transcripts
             self.admission_letter,
             self.financial_statement,
-            self.english_proficiency_test,
+            self.english_test_result,  # fixed from english_proficiency_test
             self.emergency_contact_name,
             self.emergency_contact_relationship,
             self.emergency_contact_phone,
