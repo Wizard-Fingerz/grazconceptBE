@@ -75,7 +75,7 @@ class StudyVisaApplication(models.Model):
         limit_choices_to={'table_name': 'study_visa_type'},
         help_text="Visa type (e.g., Student, Exchange, Research) from TableDropDownDefinition."
     )
-    sponsorship_details = models.ForeignKey(
+    sponsorship = models.ForeignKey(
         'definition.TableDropDownDefinition',
         on_delete=models.SET_NULL,
         null=True,
@@ -87,11 +87,11 @@ class StudyVisaApplication(models.Model):
 
     # 4️⃣ Document Uploads
     passport_photo = models.ImageField(upload_to='study_visa/passport_photos/', blank=True, null=True)
-    international_passport = models.FileField(upload_to='study_visa/international_passports/', blank=True, null=True)
-    academic_transcripts = models.FileField(upload_to='study_visa/academic_transcripts/', blank=True, null=True)
+    passport_document = models.FileField(upload_to='study_visa/international_passports/', blank=True, null=True)
+    academic_transcript = models.FileField(upload_to='study_visa/academic_transcripts/', blank=True, null=True)
     admission_letter = models.FileField(upload_to='study_visa/admission_letters/', blank=True, null=True)
     financial_statement = models.FileField(upload_to='study_visa/financial_statements/', blank=True, null=True)
-    english_proficiency_test = models.FileField(upload_to='study_visa/english_proficiency/', blank=True, null=True)
+    english_test_result = models.FileField(upload_to='study_visa/english_proficiency/', blank=True, null=True)
 
     # 5️⃣ Additional Information
     previous_visa_applications = models.BooleanField(default=False)

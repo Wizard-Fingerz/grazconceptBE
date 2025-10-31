@@ -33,15 +33,15 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'intended_start_date',
             'intended_end_date',
             'visa_type',
-            'sponsorship_details',
+            'sponsorship',
 
             # 4️⃣ Document Uploads
             'passport_photo',
-            'international_passport',
-            'academic_transcripts',
+            'passport_document',
+            'academic_transcript',
             'admission_letter',
             'financial_statement',
-            'english_proficiency_test',
+            'english_test_result',
 
             # 5️⃣ Additional Information
             'previous_visa_applications',
