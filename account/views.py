@@ -1,3 +1,4 @@
+from app.views import CustomPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -29,7 +30,8 @@ class SignUpView(APIView):
 
     @swagger_auto_schema(
         request_body=UserRegistrationSerializer,
-        responses={201: openapi.Response('Created', UserRegistrationSerializer)},
+        responses={201: openapi.Response(
+            'Created', UserRegistrationSerializer)},
     )
     def post(self, request):
         data = request.data.copy()
@@ -38,7 +40,8 @@ class SignUpView(APIView):
         referred_by_custom_id = data.get('referred_by')
         if referred_by_custom_id:
             try:
-                referred_by_user = User.objects.get(custom_id=referred_by_custom_id)
+                referred_by_user = User.objects.get(
+                    custom_id=referred_by_custom_id)
                 data['referred_by'] = referred_by_user.id
             except User.DoesNotExist:
                 return Response(
@@ -144,12 +147,14 @@ class UserProfileView(APIView):
 
         # GetMyRefeerees endpoint: returns all users referred by the authenticated user
 
+
 class GetMyRefeereesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
         referees = User.objects.filter(referred_by=user)
-        serializer = UserSerializer(referees, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+        paginator = CustomPagination()
+        paginated_referees = paginator.paginate_queryset(referees, request)
+        serializer = UserSerializer(paginated_referees, many=True)
+        return paginator.get_paginated_response(serializer.data)
