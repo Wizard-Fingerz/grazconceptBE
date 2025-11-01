@@ -35,8 +35,8 @@ class StudyVisaApplication(models.Model):
     highest_qualification = models.CharField(max_length=255, blank=True, null=True)
     previous_university = models.CharField(max_length=255, blank=True, null=True)
     previous_course_of_study = models.CharField(max_length=255, blank=True, null=True)
-    cgpa_grade = models.CharField(max_length=20, blank=True, null=True)
-    year_of_graduation = models.PositiveIntegerField(blank=True, null=True)
+    cgpa = models.CharField(max_length=20, blank=True, null=True)
+    graduation_year = models.PositiveIntegerField(blank=True, null=True)
 
     # 3️⃣ Visa & Study Details
 
@@ -104,7 +104,7 @@ class StudyVisaApplication(models.Model):
 
     # 6️⃣ Review & Submit
     is_submitted = models.BooleanField(default=False)
-    submitted_at = models.DateTimeField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add= True, blank=True, null=True)
 
     # System fields
     application_date = models.DateField(auto_now_add=True)
@@ -165,8 +165,8 @@ class StudyVisaApplication(models.Model):
             self.highest_qualification,
             self.previous_university,
             self.previous_course_of_study,
-            self.cgpa_grade,
-            self.year_of_graduation,
+            self.cgpa,
+            self.graduation_year,
             self.destination_country,  # property
             self.institution,
             self.course_of_study,

@@ -22,8 +22,8 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
             'highest_qualification',
             'previous_university',
             'previous_course_of_study',
-            'cgpa_grade',
-            'year_of_graduation',
+            'cgpa',
+            'graduation_year',
 
             # 3️⃣ Visa & Study Details
             'destination_country',
