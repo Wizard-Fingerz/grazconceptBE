@@ -74,22 +74,28 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'user_type', 'password', "referred_by",]
+        fields = ['email', 'first_name', 'last_name', 'user_type', 'password', 'referred_by']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        referred_by = validated_data.get('referred_by', None)
+        referred_by = validated_data.pop('referred_by', None)
 
-        # If referred_by is present and is not a User instance, try converting to a User instance by pk
-        if referred_by and not isinstance(referred_by, User):
-            try:
-                referred_by_user = User.objects.get(pk=referred_by)
-            except User.DoesNotExist:
-                referred_by_user = None
-            validated_data['referred_by'] = referred_by_user
+        # Properly resolve referred_by to a User instance if provided (as pk)
+        if referred_by:
+            if isinstance(referred_by, User):
+                valid_referred_by = referred_by
+            else:
+                try:
+                    valid_referred_by = User.objects.get(pk=referred_by)
+                except User.DoesNotExist:
+                    valid_referred_by = None
+        else:
+            valid_referred_by = None
 
         user = User(**validated_data)
         user.set_password(password)
+        if valid_referred_by is not None:
+            user.referred_by = valid_referred_by
         user.save()
         return user
 
