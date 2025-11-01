@@ -39,7 +39,7 @@ class SignUpView(APIView):
         if referred_by_custom_id:
             try:
                 referred_by_user = User.objects.get(custom_id=referred_by_custom_id)
-                data['referred_by'] = referred_by_user.pk
+                data['referred_by'] = referred_by_user.id
             except User.DoesNotExist:
                 return Response(
                     {"error": "Invalid referred_by custom_id."},
@@ -55,12 +55,19 @@ class SignUpView(APIView):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
+            # Serialize referred_by as custom_id (if present)
+            if user.referred_by:
+                referred_by_val = user.referred_by.custom_id
+            else:
+                referred_by_val = None
+
             return Response(
                 {
                     "user_id": user.id,
                     "email": user.email,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
+                    "referred_by": referred_by_val,
                     "user_type": user.user_type.term if user.user_type else None,
                     "access": access_token,
                     "refresh": refresh_token,

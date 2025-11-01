@@ -77,16 +77,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'last_name', 'user_type', 'password', "referred_by",]
 
     def create(self, validated_data):
-        # pop password from validated_data to handle it securely
         password = validated_data.pop('password')
+        referred_by = validated_data.get('referred_by', None)
+
+        # If referred_by is present and is not a User instance, try converting to a User instance by pk
+        if referred_by and not isinstance(referred_by, User):
+            try:
+                referred_by_user = User.objects.get(pk=referred_by)
+            except User.DoesNotExist:
+                referred_by_user = None
+            validated_data['referred_by'] = referred_by_user
+
         user = User(**validated_data)
-        print(
-            f"Creating user with email: {user.email}, first name: {user.first_name}, last name: {user.last_name}")
-        user.set_password(password)  # hashes the password
-        print('Password', user.password)
+        user.set_password(password)
         user.save()
         return user
-
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
