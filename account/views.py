@@ -141,3 +141,15 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+        # GetMyRefeerees endpoint: returns all users referred by the authenticated user
+
+class GetMyRefeereesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        referees = User.objects.filter(referred_by=user)
+        serializer = UserSerializer(referees, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
