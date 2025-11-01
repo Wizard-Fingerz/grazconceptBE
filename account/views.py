@@ -131,13 +131,44 @@ class UserProfileView(APIView):
         # GetMyRefeerees endpoint: returns all users referred by the authenticated user
 
 
+from account.client.models import Client
+from account.client.serializers import ClientSerializer
+
 class GetMyRefeereesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        referees = User.objects.filter(referred_by=user)
+        # Get referees from User model (those whose 'referred_by' = this user's custom_id)
+        user_referees = User.objects.filter(referred_by=user.custom_id)
+        # Get referees from Client model (those whose 'referred_by' = this user's custom_id)
+        client_referees = Client.objects.filter(referred_by=user.custom_id)
+
+        # Combine both querysets as a list, tagging them for serialization
+        combined = (
+            [{'type': 'user', 'instance': u} for u in user_referees] +
+            [{'type': 'client', 'instance': c} for c in client_referees]
+        )
+
+        # Sort combined by created_date descending, assuming both models have this field,
+        # if not, fallback as-is
+        try:
+            combined.sort(key=lambda x: getattr(x['instance'], 'created_date', None), reverse=True)
+        except Exception:
+            pass
+
         paginator = CustomPagination()
-        paginated_referees = paginator.paginate_queryset(referees, request)
-        serializer = UserSerializer(paginated_referees, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        paginated_combined = paginator.paginate_queryset(combined, request)
+
+        # Serialize keeping type info
+        results = []
+        for item in paginated_combined:
+            if item['type'] == 'user':
+                data = UserSerializer(item['instance']).data
+                data['referee_type'] = 'user'
+            else:
+                data = ClientSerializer(item['instance']).data
+                data['referee_type'] = 'client'
+            results.append(data)
+
+        return paginator.get_paginated_response(results)
