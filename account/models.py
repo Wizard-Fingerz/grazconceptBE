@@ -63,12 +63,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Referred by field: to track which user referred this client.
     # Accepts null/blank, sets related_name to "referred" for reverse lookup.
     # Will store the actual User instance (typically via its PK).
-    referred_by = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
+    referred_by = models.CharField(
+        max_length = 200,
         blank=True,
         null=True,
-        related_name="referred",
         help_text="The user who referred the client"
     )
 

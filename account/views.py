@@ -36,19 +36,7 @@ class SignUpView(APIView):
     def post(self, request):
         data = request.data.copy()
 
-        # Handle referred_by: expect a custom_id (as 'referred_by'), lookup user and set pk
-        referred_by_custom_id = data.get('referred_by')
-        if referred_by_custom_id:
-            try:
-                referred_by_user = User.objects.get(
-                    custom_id=referred_by_custom_id)
-                data['referred_by'] = referred_by_user.id
-            except User.DoesNotExist:
-                return Response(
-                    {"error": "Invalid referred_by custom_id."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+        
         serializer = UserRegistrationSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
@@ -58,11 +46,6 @@ class SignUpView(APIView):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
-            # Serialize referred_by as custom_id (if present)
-            if user.referred_by:
-                referred_by_val = user.referred_by.custom_id
-            else:
-                referred_by_val = None
 
             return Response(
                 {
@@ -70,7 +53,7 @@ class SignUpView(APIView):
                     "email": user.email,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
-                    "referred_by": referred_by_val,
+                    "referred_by": user.referred_by,
                     "user_type": user.user_type.term if user.user_type else None,
                     "access": access_token,
                     "refresh": refresh_token,
