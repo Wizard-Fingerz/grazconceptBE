@@ -7,7 +7,8 @@ from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     # Use source to directly get the string representation from the model property
-    country_of_residence = serializers.CharField(source="country_of_residence_str", read_only=True)
+    country_of_residence = serializers.CharField(
+        source="country_of_residence_str", read_only=True)
     nationality = serializers.SerializerMethodField()
     wallet = WalletSerializer()
 
@@ -73,13 +74,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'user_type', 'password']
+        fields = ['email', 'first_name', 'last_name', 'user_type', 'password',"referred_by",]
 
     def create(self, validated_data):
         # pop password from validated_data to handle it securely
         password = validated_data.pop('password')
         user = User(**validated_data)
-        print(f"Creating user with email: {user.email}, first name: {user.first_name}, last name: {user.last_name}")
+        print(
+            f"Creating user with email: {user.email}, first name: {user.first_name}, last name: {user.last_name}")
         user.set_password(password)  # hashes the password
         print('Password', user.password)
         user.save()
@@ -98,6 +100,7 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User account is disabled.")
         data['user'] = user
         return data
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
