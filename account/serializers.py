@@ -74,7 +74,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'user_type', 'password',"referred_by",]
+        fields = ['email', 'first_name', 'last_name', 'user_type', 'password', "referred_by",]
 
     def create(self, validated_data):
         # pop password from validated_data to handle it securely
