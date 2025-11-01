@@ -44,6 +44,7 @@ class ClientSerializer(serializers.ModelSerializer):
             'assigned_to_teams_name',
             "is_prospect",
             "wallet",
+            "referred_by",
 
         ]
         read_only_fields = [

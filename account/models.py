@@ -60,6 +60,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     modified_date = models.DateTimeField(auto_now=True)
     last_login = models.DateTimeField(null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    # Referred by field: to track which user referred this client.
+    # Accepts null/blank, sets related_name to "referred" for reverse lookup.
+    # Will store the actual User instance (typically via its PK).
+    referred_by = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="referred",
+        help_text="The user who referred the client"
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -108,6 +119,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def nationality_str(self):
         if self.nationality:
             return str(self.nationality)
+        return None
+
+    @property
+    def referred_by_email(self):
+        """Returns the email of the user who referred this user, or None if not set."""
+        if self.referred_by:
+            return self.referred_by.email
         return None
 
     @property

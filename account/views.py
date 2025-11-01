@@ -32,7 +32,21 @@ class SignUpView(APIView):
         responses={201: openapi.Response('Created', UserRegistrationSerializer)},
     )
     def post(self, request):
-        serializer = UserRegistrationSerializer(data=request.data)
+        data = request.data.copy()
+
+        # Handle referred_by: expect a custom_id (as 'referred_by'), lookup user and set pk
+        referred_by_custom_id = data.get('referred_by')
+        if referred_by_custom_id:
+            try:
+                referred_by_user = User.objects.get(custom_id=referred_by_custom_id)
+                data['referred_by'] = referred_by_user.pk
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "Invalid referred_by custom_id."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = UserRegistrationSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
 
@@ -54,6 +68,7 @@ class SignUpView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

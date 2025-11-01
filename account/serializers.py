@@ -43,6 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "profile_picture_url",
             "gender_name",
+            "referred_by",
             "wallet",
         ]
         read_only_fields = [

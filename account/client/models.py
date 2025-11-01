@@ -37,6 +37,7 @@ class Client(User):
         help_text="Only set for clients who are partners"
     )
 
+
     @property
     def client_type_name(self):
         return self.client_type.term
@@ -52,4 +53,8 @@ class Client(User):
     @property
     def partner_type_name(self):
         return self.partner_type.term if self.partner_type else None
+
+    @property
+    def referred_by_email(self):
+        return self.referred_by.email if self.referred_by else None
 
