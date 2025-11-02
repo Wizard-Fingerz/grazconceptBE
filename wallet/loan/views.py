@@ -7,6 +7,8 @@ from rest_framework import viewsets, permissions
 from .models import LoanApplication, LoanRepayment, LoanOffer
 from .serializers import LoanApplicationSerializer, LoanRepaymentSerializer, LoanOfferSerializer
 
+# Import actual model for loan_type
+from definition.models import TableDropDownDefinition
 
 class LoanOfferViewSet(viewsets.ModelViewSet):
     """
@@ -33,11 +35,17 @@ class LoanOfferViewSet(viewsets.ModelViewSet):
     def study_loans(self, request):
         """
         Return only loan offers of type 'Study Loan'.
-        Assumes corresponding TableDropDownDefinition.label is 'Study Loan'.
+        Assumes corresponding TableDropDownDefinition.term is 'Study Loan'.
         """
-        study_loans = self.queryset.filter(
-            loan_type__label__iexact='Study Loan'
-        )
+        # Find the TableDropDownDefinition object with term="Study Loan"
+        study_loan_type = TableDropDownDefinition.objects.filter(term__iexact='Study Loan').first()
+        if not study_loan_type:
+            # No study loan type found, return empty response
+            study_loans = LoanOffer.objects.none()
+        else:
+            study_loans = self.queryset.filter(
+                loan_type=study_loan_type
+            )
         is_active = request.query_params.get('is_active')
         if is_active is not None:
             study_loans = study_loans.filter(is_active=is_active.lower() in ['true', '1'])
@@ -53,11 +61,15 @@ class LoanOfferViewSet(viewsets.ModelViewSet):
     def civil_servant_loans(self, request):
         """
         Return only loan offers of type 'Civil Servant Loan'.
-        Assumes corresponding TableDropDownDefinition.label is 'Civil Servant Loan'.
+        Assumes corresponding TableDropDownDefinition.term is 'Civil Servant Loan'.
         """
-        civil_servant_loans = self.queryset.filter(
-            loan_type__label__iexact='Civil Servant Loan'
-        )
+        civil_servant_type = TableDropDownDefinition.objects.filter(term__iexact='Civil Servant').first()
+        if not civil_servant_type:
+            civil_servant_loans = LoanOffer.objects.none()
+        else:
+            civil_servant_loans = self.queryset.filter(
+                loan_type=civil_servant_type
+            )
         is_active = request.query_params.get('is_active')
         if is_active is not None:
             civil_servant_loans = civil_servant_loans.filter(is_active=is_active.lower() in ['true', '1'])
