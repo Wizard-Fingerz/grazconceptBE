@@ -3,6 +3,8 @@ from app.visa.study.institutions.models import Institution, CourseOfStudy, Progr
 from django_countries.fields import CountryField
 from definition.models import TableDropDownDefinition
 
+
+
 class StudyVisaOffer(models.Model):
     """
     Represents a study visa offer available to applicants, including its requirements.
@@ -58,6 +60,8 @@ class StudyVisaOffer(models.Model):
 
     def __str__(self):
         return f"{self.offer_title} - {self.institution.name} ({self.course_of_study.name})"
+
+
 
 class StudyVisaOfferRequirement(models.Model):
     """
