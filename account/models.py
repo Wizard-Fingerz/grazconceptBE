@@ -62,7 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     # referred_by is only meant to save the custom id of the referrer, so it's a CharField, not a FK.
     referred_by = models.CharField(
-        max_length=7,
+        max_length=20,
         blank=True,
         null=True,
         db_column='referred_by',
