@@ -120,7 +120,7 @@ class LoanRepaymentViewSet(viewsets.ModelViewSet):
 class LoanAnalyticsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for returning loan analytics for the current user: 
-    total loan amount, total amount paid, and wallet balance.
+    total loan amount, total amount paid, wallet balance, and recent transactions.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -131,22 +131,70 @@ class LoanAnalyticsViewSet(viewsets.ViewSet):
         # Total loan amount applied for and approved/disbursed/repaid, etc.
         total_loan_amount = LoanApplication.objects.filter(user=user).aggregate(
             total=models.Sum('amount')
-        )['total'] or 0
+        )['total'] or 0.00
 
         # Total amount paid across all repayments
         total_paid = LoanRepayment.objects.filter(user=user).aggregate(
             total=models.Sum('amount')
-        )['total'] or 0
+        )['total'] or 0.00
 
         # Wallet balance (if wallet exists)
         wallet = getattr(user, 'wallet', None)
-        wallet_balance = wallet.balance if wallet else 0
+        wallet_balance = wallet.balance if wallet else 0.00
 
         currency = wallet.currency if wallet else "NGN"
 
+        # Fetch the recent loan application (most recent one)
+        recent_loan_application = (
+            LoanApplication.objects.filter(user=user).order_by('-created_at').first()
+        )
+        recent_loan_application_data = None
+        if recent_loan_application:
+            recent_loan_application_data = {
+                'id': recent_loan_application.id,
+                'amount': float(recent_loan_application.amount),
+                'status': getattr(recent_loan_application, 'status', None),
+                'created_at': recent_loan_application.created_at,
+            }
+
+        # Fetch the recent loan repayment (most recent one)
+        recent_loan_repayment = (
+            LoanRepayment.objects.filter(user=user).order_by('-created_at').first()
+        )
+        recent_loan_repayment_data = None
+        if recent_loan_repayment:
+            recent_loan_repayment_data = {
+                'id': recent_loan_repayment.id,
+                'amount': float(recent_loan_repayment.amount),
+                'status': getattr(recent_loan_repayment, 'status', None),
+                'created_at': recent_loan_repayment.created_at,
+            }
+
+        # Fetch the most recent wallet transaction, if model is available
+        recent_wallet_transaction_data = None
+        try:
+            from wallet.transactions.models import WalletTransaction
+            recent_wallet_transaction = (
+                WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at').first()
+                if wallet else None
+            )
+            if recent_wallet_transaction:
+                recent_wallet_transaction_data = {
+                    'id': recent_wallet_transaction.id,
+                    'amount': float(getattr(recent_wallet_transaction, 'amount', 0)),
+                    'type': getattr(recent_wallet_transaction, 'transaction_type', None),
+                    'created_at': recent_wallet_transaction.created_at,
+                    'status': getattr(recent_wallet_transaction, 'status', None),
+                }
+        except Exception:
+            recent_wallet_transaction_data = None
+
         return Response({
-            'total_loan_amount': total_loan_amount,
-            'total_amount_paid': total_paid,
-            'wallet_balance': wallet_balance,
+            'total_loan_amount': float(total_loan_amount),
+            'total_amount_paid': float(total_paid),
+            'wallet_balance': float(wallet_balance),
             'currency': currency,
+            'recent_loan_application': recent_loan_application_data,
+            'recent_loan_repayment': recent_loan_repayment_data,
+            'recent_wallet_transaction': recent_wallet_transaction_data
         })
