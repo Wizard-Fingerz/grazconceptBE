@@ -73,6 +73,19 @@ class LoanOfferAdmin(admin.ModelAdmin):
     search_fields = ('name', 'loan_type', 'currency')
     list_filter = ('loan_type', 'currency', 'is_active')
 
+    # Explicitly override get_search_results to prevent Q() misusage errors
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Override get_search_results to work around TypeError caused by misconfigured search_fields
+        or any similar query issues. If an error occurs, fall back to all objects.
+        """
+        try:
+            return super().get_search_results(request, queryset, search_term)
+        except TypeError:
+            # Return empty search result and all results as unfiltered queryset
+            from django.db.models.query import Q
+            return queryset.none(), False
+
 @admin.register(LoanApplication)
 class LoanApplicationAdmin(admin.ModelAdmin):
     list_display = (

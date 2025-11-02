@@ -8,12 +8,11 @@ class LoanOffer(models.Model):
     The offer defines the available loan product, its requirements, and parameters.
     """
 
-    # Instead of static loan_type choices, use a ForeignKey to TableDropDownDefinition.
-    # E.g. the dropdown definition might have keys like "civil_servant", "study", etc.
+    # Correctly restrict ForeignKey to TableDropDownDefinition to loan_type entries
     loan_type = models.ForeignKey(
         TableDropDownDefinition,
         on_delete=models.PROTECT,
-        limit_choices_to= 'loan_type',
+        limit_choices_to={'table_name': 'loan_type'},
         related_name="loan_offers",
         help_text="Dropdown definition record for this loan type (e.g. 'civil_servant', 'study')"
     )
@@ -89,7 +88,7 @@ class LoanApplication(models.Model):
     status = models.ForeignKey(
         TableDropDownDefinition,
         on_delete=models.PROTECT,
-        limit_choices_to= 'loan_status',
+        limit_choices_to={'table_name': 'loan_status'},
         related_name='loan_application_statuses',
         help_text="Dropdown definition record for the current status of the loan application"
     )
