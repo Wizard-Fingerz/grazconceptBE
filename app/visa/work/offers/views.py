@@ -29,20 +29,25 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        """
+        Filters work visa applications.
+        If the user's user_type.term is "Customer", restrict to their own applications only.
+        Allows filtering by ?limit= query parameter for limiting results.
+        """
         queryset = super().get_queryset()
-        limit = self.request.query_params.get('limit')
-        if limit is not None:
-            try:
-                limit = int(limit)
-                if limit > 0:
-                    return queryset[:limit]
-            except (ValueError, TypeError):
-                pass
-        return queryset
+        user = self.request.user
 
-    def list(self, request, *args, **kwargs):
-        limit = request.query_params.get('limit')
-        queryset = self.filter_queryset(self.get_queryset())
+        # Enforce: If the user's user_type.term is "Customer", return only their own applications
+        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer'
+        if is_customer:
+            client = getattr(user, 'client', None)
+            if client:
+                queryset = queryset.filter(client=client)
+            else:
+                # No client object for this user; return none.
+                return queryset.none()
+
+        limit = self.request.query_params.get('limit')
         if limit is not None:
             try:
                 limit = int(limit)
@@ -50,14 +55,7 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
                     queryset = queryset[:limit]
             except (ValueError, TypeError):
                 pass
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         """
