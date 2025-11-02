@@ -78,10 +78,24 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
+        # Accept referred_by as a string (custom_id), can be empty
+        referred_by = validated_data.pop('referred_by', None)
+        # If referred_by is None, set it to empty string (matches model CharField default)
+        if referred_by is None:
+            referred_by = ""
+
+        # Ensure referred_by is a string (even if user sends null/None)
+        referred_by = str(referred_by) if referred_by is not None else ""
+
         user = User(**validated_data)
         user.set_password(password)
+        user.referred_by = referred_by
         user.save()
         return user
+
+
+
+
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

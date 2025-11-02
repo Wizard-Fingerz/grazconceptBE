@@ -60,14 +60,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     modified_date = models.DateTimeField(auto_now=True)
     last_login = models.DateTimeField(null=True, blank=True)
     is_staff = models.BooleanField(default=False)
-    # Referred by field: to track which user referred this client.
-    # Accepts null/blank, sets related_name to "referred" for reverse lookup.
-    # Will store the actual User instance (typically via its PK).
+    # referred_by is only meant to save the custom id of the referrer, so it's a CharField, not a FK.
     referred_by = models.CharField(
-        max_length = 200,
+        max_length=7,
         blank=True,
         null=True,
-        help_text="The user who referred the client"
+        db_column='referred_by',
+        help_text="The custom_id of the user who referred this client",
+        verbose_name="Referred By"
     )
 
     USERNAME_FIELD = 'email'
@@ -76,6 +76,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def save(self, *args, **kwargs):
+        # Prevent a user from setting themselves as their own referrer
+        if self.referred_by and self.custom_id and self.referred_by == self.custom_id:
+            raise ValueError("A user cannot refer themselves.")
         if not self.custom_id:
             self.custom_id = generate_unique_custom_id()
         super().save(*args, **kwargs)
@@ -120,10 +123,28 @@ class User(AbstractBaseUser, PermissionsMixin):
         return None
 
     @property
-    def referred_by_email(self):
-        """Returns the email of the user who referred this user, or None if not set."""
+    def referred_by_code(self):
+        """
+        Return the custom_id (refer code) of the user that referred this user,
+        or None if not set.
+        """
         if self.referred_by:
-            return self.referred_by.email
+            return self.referred_by
+        return None
+
+    @property
+    def referred_by_email(self):
+        """
+        Returns the email address of the user who referred this user, or None if not set/invalid.
+        """
+        if self.referred_by:
+            try:
+                # Only return user if it's not self
+                ref_user = User.objects.get(custom_id=self.referred_by)
+                if ref_user.pk != self.pk:
+                    return ref_user.email
+            except User.DoesNotExist:
+                return None
         return None
 
     @property
