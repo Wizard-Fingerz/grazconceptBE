@@ -6,6 +6,7 @@ from app.views import CustomPagination
 from django.db.models import Q
 from django.core.exceptions import FieldError
 
+
 class StudyVisaOfferViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Study Visa Offers to be viewed or edited.
@@ -122,3 +123,5 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
                 pass
 
         return queryset
+
+
