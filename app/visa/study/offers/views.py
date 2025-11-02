@@ -38,18 +38,22 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
         if country:
             queryset = queryset.filter(country__iexact=country)
         if institution:
-            queryset = queryset.filter(institution__iexact=institution)
+            # If the institution is a string (e.g., institution name or pk), 
+            # try to filter by either name (FK) or pk (int). 
+            try:
+                # Try integer: institution pk
+                institution_pk = int(institution)
+                queryset = queryset.filter(institution__pk=institution_pk)
+            except (ValueError, TypeError):
+                # Not an int; filter by FK name
+                queryset = queryset.filter(institution__name__icontains=institution)
         if institution_name:
-            # Only apply __icontains if the institution field is a CharField or TextField,
-            # not a ForeignKey. If it's a ForeignKey, support searching on the related model's name.
-            # We'll assume 'institution' is a ForeignKey to a model with a 'name' field.
             queryset = queryset.filter(institution__name__icontains=institution_name)
         if program:
             queryset = queryset.filter(program__icontains=program)
         if course_of_study:
             queryset = queryset.filter(course_of_study__icontains=course_of_study)
         if is_active is not None:
-            # Accept 'true', '1', 'false', '0', case-insensitive, as boolean
             true_values = ['true', '1']
             false_values = ['false', '0']
             is_active_val = is_active.strip().lower()
@@ -57,18 +61,17 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(is_active=True)
             elif is_active_val in false_values:
                 queryset = queryset.filter(is_active=False)
-            # else: ignore invalid is_active value
         if status:
             queryset = queryset.filter(status=status)
 
         if search_term:
-            # Search over several fields, case-insensitive, contains
+            # Remove icontains filtering on any FK that isn't a text field; search only text fields and related FK "name" field
             queryset = queryset.filter(
-                Q(institution__name__icontains=search_term) |   # institution as a related model name
-                Q(country__icontains=search_term) |
-                Q(status__icontains=search_term) |
-                Q(program__icontains=search_term) |
-                Q(course_of_study__icontains=search_term)
+                Q(institution__name__icontains=search_term)
+                | Q(country__icontains=search_term)
+                | Q(status__icontains=search_term)
+                | Q(program__icontains=search_term)
+                | Q(course_of_study__icontains=search_term)
             )
 
         if limit is not None:
