@@ -4,6 +4,8 @@ from app.visa.study.offers.serializers import StudyVisaOfferSerializer
 from app.views import CustomPagination
 
 
+from django.db.models import Q
+
 class StudyVisaOfferViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Study Visa Offers to be viewed or edited.
@@ -16,7 +18,12 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Optionally restricts the returned offers by filtering against
-        query parameters in the URL. Supports 'limit' param for limiting results.
+        query parameters in the URL. 
+        Supports filtering by country, institution, is_active, status,
+        institution_name (case-insensitive, partial), program, course_of_study,
+        and free-text search ('search') over institution, country, program,
+        course_of_study, etc.
+        Supports 'limit' param for limiting results.
         """
         queryset = super().get_queryset()
         country = self.request.query_params.get('country')
@@ -24,15 +31,44 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
         is_active = self.request.query_params.get('is_active')
         status = self.request.query_params.get('status')
         limit = self.request.query_params.get('limit')
+        institution_name = self.request.query_params.get('institution_name')
+        search_term = self.request.query_params.get('search')
+        program = self.request.query_params.get('program')
+        course_of_study = self.request.query_params.get('course_of_study')
 
         if country:
-            queryset = queryset.filter(country=country)
+            queryset = queryset.filter(country__iexact=country)
         if institution:
-            queryset = queryset.filter(institution=institution)
+            queryset = queryset.filter(institution__iexact=institution)
+        if institution_name:
+            queryset = queryset.filter(institution__icontains=institution_name)
+        if program:
+            queryset = queryset.filter(program__icontains=program)
+        if course_of_study:
+            queryset = queryset.filter(course_of_study__icontains=course_of_study)
         if is_active is not None:
-            queryset = queryset.filter(is_active=is_active.lower() in ['true', '1'])
+            # Accept 'true', '1', 'false', '0', case-insensitive, as boolean
+            true_values = ['true', '1']
+            false_values = ['false', '0']
+            is_active_val = is_active.strip().lower()
+            if is_active_val in true_values:
+                queryset = queryset.filter(is_active=True)
+            elif is_active_val in false_values:
+                queryset = queryset.filter(is_active=False)
+            # else: ignore invalid is_active value
         if status:
             queryset = queryset.filter(status=status)
+
+        if search_term:
+            # Search over several fields, case-insensitive, contains
+            queryset = queryset.filter(
+                Q(institution__icontains=search_term) |
+                Q(country__icontains=search_term) |
+                Q(status__icontains=search_term) |
+                Q(program__icontains=search_term) |
+                Q(course_of_study__icontains=search_term)
+            )
+
         if limit is not None:
             try:
                 limit_value = int(limit)
@@ -41,5 +77,4 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
             except (ValueError, TypeError):
                 pass  # Ignore invalid limit values
         return queryset
-
 
