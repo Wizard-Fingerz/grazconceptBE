@@ -1,26 +1,25 @@
 from django.db import models
 from django.conf import settings
+from definition.models import TableDropDownDefinition
 
 class LoanOffer(models.Model):
     """
     Model representing a loan offer that users can apply for.
     The offer defines the available loan product, its requirements, and parameters.
     """
-    LOAN_TYPE_CIVIL_SERVANT = "civil_servant"
-    LOAN_TYPE_STUDY = "study"
-    LOAN_TYPE_CHOICES = [
-        (LOAN_TYPE_CIVIL_SERVANT, "Civil Servant"),
-        (LOAN_TYPE_STUDY, "Study"),
-    ]
+
+    # Instead of static loan_type choices, use a ForeignKey to TableDropDownDefinition.
+    # E.g. the dropdown definition might have keys like "civil_servant", "study", etc.
+    loan_type = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.PROTECT,
+        limit_choices_to= 'loan_type',
+        related_name="loan_offers",
+        help_text="Dropdown definition record for this loan type (e.g. 'civil_servant', 'study')"
+    )
 
     name = models.CharField(max_length=100, unique=True, help_text="Name of the loan offer")
     description = models.TextField(blank=True, help_text="Description or details about the loan product")
-    loan_type = models.CharField(
-        max_length=30,
-        choices=LOAN_TYPE_CHOICES,
-        default=LOAN_TYPE_CIVIL_SERVANT,
-        help_text="Type of loan offer: Civil Servant or Study"
-    )
     min_amount = models.DecimalField(
         max_digits=18, decimal_places=2,
         help_text="Minimum allowed amount for this loan offer"
@@ -53,7 +52,9 @@ class LoanOffer(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} ({self.get_loan_type_display()})"
+        # Show the dropdown label, fallback to id if needed
+        loan_type_label = getattr(self.loan_type, 'label', None) or str(self.loan_type)
+        return f"{self.name} ({loan_type_label})"
 
 
 class LoanApplication(models.Model):
@@ -61,19 +62,6 @@ class LoanApplication(models.Model):
     Model representing a user's application for a given loan offer.
     Users fill required information and details when applying for a specific loan offer.
     """
-
-    STATUS_PENDING = "pending"
-    STATUS_APPROVED = "approved"
-    STATUS_REJECTED = "rejected"
-    STATUS_DISBURSED = "disbursed"
-    STATUS_REPAID = "repaid"
-    STATUS_CHOICES = [
-        (STATUS_PENDING, "Pending"),
-        (STATUS_APPROVED, "Approved"),
-        (STATUS_REJECTED, "Rejected"),
-        (STATUS_DISBURSED, "Disbursed"),
-        (STATUS_REPAID, "Repaid"),
-    ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -98,10 +86,12 @@ class LoanApplication(models.Model):
         blank=True,
         help_text="Purpose or description of the loan"
     )
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default=STATUS_PENDING
+    status = models.ForeignKey(
+        TableDropDownDefinition,
+        on_delete=models.PROTECT,
+        limit_choices_to= 'loan_status',
+        related_name='loan_application_statuses',
+        help_text="Dropdown definition record for the current status of the loan application"
     )
     # You might collect additional info per application:
     filled_details = models.JSONField(
@@ -113,7 +103,8 @@ class LoanApplication(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"LoanApplication #{self.id} for {self.loan_offer.name} by {self.user} - {self.status}"
+        status_label = getattr(self.status, 'label', None) or str(self.status)
+        return f"LoanApplication #{self.id} for {self.loan_offer.name} by {self.user} - {status_label}"
 
 class LoanRepayment(models.Model):
     """

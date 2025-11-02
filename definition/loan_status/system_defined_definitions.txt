@@ -1,0 +1,5 @@
+Pending
+Approved
+Rejected
+Disbursed
+Repaid
