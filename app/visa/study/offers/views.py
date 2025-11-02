@@ -3,7 +3,6 @@ from app.visa.study.offers.models import StudyVisaOffer
 from app.visa.study.offers.serializers import StudyVisaOfferSerializer
 from app.views import CustomPagination
 
-
 from django.db.models import Q
 
 class StudyVisaOfferViewSet(viewsets.ModelViewSet):
@@ -41,7 +40,10 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
         if institution:
             queryset = queryset.filter(institution__iexact=institution)
         if institution_name:
-            queryset = queryset.filter(institution__icontains=institution_name)
+            # Only apply __icontains if the institution field is a CharField or TextField,
+            # not a ForeignKey. If it's a ForeignKey, support searching on the related model's name.
+            # We'll assume 'institution' is a ForeignKey to a model with a 'name' field.
+            queryset = queryset.filter(institution__name__icontains=institution_name)
         if program:
             queryset = queryset.filter(program__icontains=program)
         if course_of_study:
@@ -62,7 +64,7 @@ class StudyVisaOfferViewSet(viewsets.ModelViewSet):
         if search_term:
             # Search over several fields, case-insensitive, contains
             queryset = queryset.filter(
-                Q(institution__icontains=search_term) |
+                Q(institution__name__icontains=search_term) |   # institution as a related model name
                 Q(country__icontains=search_term) |
                 Q(status__icontains=search_term) |
                 Q(program__icontains=search_term) |
