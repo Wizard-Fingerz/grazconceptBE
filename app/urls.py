@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from app.ad_banners.views import AdBannerViewSet
 from app.citizenship.european.views import EuropeanCitizenshipOfferViewSet, InvestmentOptionViewSet
+from app.help_center.support_ticket.views import SupportTicketViewSet
 from app.visa.pilgrimage.offer.views import PilgrimageOfferViewSet, PilgrimageVisaApplicationViewSet
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
@@ -31,6 +32,10 @@ from app.services.edu_and_exam_fee.views import (
     EducationFeeTypeViewSet,
     EducationFeePaymentViewSet,
 )
+# ----------------------------------------
+
+# --- Import Knowledge Base FAQ ViewSet ---
+from app.help_center.knowledge_base.views import FaqArticleViewSet
 # ----------------------------------------
 
 router = DefaultRouter()
@@ -64,6 +69,11 @@ router.register(r'cv-submission', CVSubmissionViewSet, basename='cvsubmission')
 router.register(r'education-fee-providers', EducationFeeProviderViewSet, basename='educationfeecproviders')
 router.register(r'education-fee-types', EducationFeeTypeViewSet, basename='educationfeetypes')
 router.register(r'education-fee-payments', EducationFeePaymentViewSet, basename='educationfeepayments')
+# --------------------------------------------
+
+# --- Register Knowledge Base FAQ endpoints ---
+router.register(r'faq-articles', FaqArticleViewSet, basename='faqarticles')
+router.register(r'support-ticket', SupportTicketViewSet, basename='supportticket')
 # --------------------------------------------
 
 urlpatterns = [

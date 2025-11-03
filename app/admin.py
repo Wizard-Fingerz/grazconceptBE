@@ -39,6 +39,12 @@ from .services.edu_and_exam_fee.models import (
     EducationFeePayment,
 )
 
+# --- Support Ticket Admin Imports ---
+from .help_center.support_ticket.models import SupportTicket, SupportTicketMessage
+
+# --- FAQ Admin Imports ---
+from .help_center.knowledge_base.models import FaqArticle
+
 class HotelResource(resources.ModelResource):
     class Meta:
         model = Hotel
@@ -144,6 +150,20 @@ class EducationFeeTypeResource(resources.ModelResource):
 class EducationFeePaymentResource(resources.ModelResource):
     class Meta:
         model = EducationFeePayment
+
+# --- Support Ticket Admin Resources ---
+class SupportTicketResource(resources.ModelResource):
+    class Meta:
+        model = SupportTicket
+
+class SupportTicketMessageResource(resources.ModelResource):
+    class Meta:
+        model = SupportTicketMessage
+
+# --- FAQ Admin Resource ---
+class FaqArticleResource(resources.ModelResource):
+    class Meta:
+        model = FaqArticle
 
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
@@ -284,3 +304,26 @@ class EducationFeeTypeAdmin(ImportExportModelAdmin):
 @admin.register(EducationFeePayment)
 class EducationFeePaymentAdmin(ImportExportModelAdmin):
     resource_class = EducationFeePaymentResource
+
+# --- Support Ticket Admin Registration ---
+@admin.register(SupportTicket)
+class SupportTicketAdmin(ImportExportModelAdmin):
+    resource_class = SupportTicketResource
+    list_display = ["id", "user", "subject", "status", "created_at", "last_reply"]
+    list_filter = ["status", "created_at", "user"]
+    search_fields = ["id", "user__username", "subject"]
+
+@admin.register(SupportTicketMessage)
+class SupportTicketMessageAdmin(ImportExportModelAdmin):
+    resource_class = SupportTicketMessageResource
+    list_display = ["id", "ticket", "sender", "timestamp"]
+    list_filter = ["sender", "timestamp", "ticket"]
+    search_fields = ["ticket__subject", "text"]
+
+# --- FAQ Article Admin Registration ---
+@admin.register(FaqArticle)
+class FaqArticleAdmin(ImportExportModelAdmin):
+    resource_class = FaqArticleResource
+    list_display = ["id", "question", "category", "is_active", "created_at", "updated_at"]
+    list_filter = ["category", "is_active", "created_at"]
+    search_fields = ["id", "question", "answer"]

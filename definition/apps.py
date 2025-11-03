@@ -29,4 +29,6 @@ class DefinitionConfig(AppConfig):
         import definition.study_sponsorship_type.signals
         import definition.study_visa_type.signals
         import definition.loan_type.signals
+        import definition.faq_category.signals
+        import definition.support_ticket_status.signals
 
