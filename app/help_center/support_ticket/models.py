@@ -3,6 +3,13 @@ from django.conf import settings
 
 from definition.models import TableDropDownDefinition
 
+def get_default_open_status():
+    # Lazy import to avoid circular import issues
+    # Assumes 'open' is the value of TableDropDownDefinition.code or similar field identifying open status
+    return TableDropDownDefinition.objects.filter(
+        table_name='support_ticket_status', term='Open'
+    ).first()
+
 class SupportTicket(models.Model):
 
     user = models.ForeignKey(
@@ -16,7 +23,8 @@ class SupportTicket(models.Model):
         TableDropDownDefinition,
         on_delete=models.PROTECT,
         limit_choices_to={"table_name": "support_ticket_status"},
-        help_text="The status of this ticket"
+        help_text="The status of this ticket",
+        default=get_default_open_status,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_reply = models.DateTimeField(auto_now=True)
