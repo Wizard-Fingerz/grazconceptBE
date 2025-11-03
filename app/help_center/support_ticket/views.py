@@ -2,6 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
+
+from app.views import CustomPagination
 from .models import SupportTicket
 from .serializers import SupportTicketSerializer
 from .serializers import SupportTicketMessageSerializer
@@ -18,6 +20,7 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
     queryset = SupportTicket.objects.all().select_related("user", "status").prefetch_related("messages")
     serializer_class = SupportTicketSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         # Only return tickets created by the current user (or support agents, if needed)

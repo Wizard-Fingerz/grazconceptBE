@@ -10,14 +10,13 @@ class SupportTicketMessageSerializer(serializers.ModelSerializer):
         model = SupportTicketMessage
         fields = ["id", "sender", "text", "timestamp"]
 
+
 class SupportTicketSerializer(serializers.ModelSerializer):
     messages = SupportTicketMessageSerializer(many=True, read_only=True)
     status = TableDropDownDefinitionSerializer(read_only=True)
-    status_id = serializers.PrimaryKeyRelatedField(
-        queryset=TableDropDownDefinition.objects.filter(table_name="support_ticket_status"),
-        source="status",
-        write_only=True
-    )
+    # status is only read-only, no status_id field for writing
+    # (user cannot set status at creation or update via serializer)
+
     class Meta:
         model = SupportTicket
         fields = [
@@ -25,7 +24,6 @@ class SupportTicketSerializer(serializers.ModelSerializer):
             "user",
             "subject",
             "status",
-            "status_id",
             "created_at",
             "last_reply",
             "messages"
