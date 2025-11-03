@@ -355,20 +355,20 @@ class WorkVisaApplication(models.Model):
 
 
 
-class InterviewFAQ(models.Model):
-    """
-    Frequently asked questions and answers for work visa interviews.
-    """
-    question = models.CharField(max_length=250)
-    answer = models.TextField()
-    is_active = models.BooleanField(default=True)
+# class InterviewFAQ(models.Model):
+#     """
+#     Frequently asked questions and answers for work visa interviews.
+#     """
+#     question = models.CharField(max_length=250)
+#     answer = models.TextField()
+#     is_active = models.BooleanField(default=True)
 
-    class Meta:
-        verbose_name = "Interview FAQ"
-        verbose_name_plural = "Interview FAQs"
+#     class Meta:
+#         verbose_name = "Interview FAQ"
+#         verbose_name_plural = "Interview FAQs"
 
-    def __str__(self):
-        return self.question
+#     def __str__(self):
+#         return self.question
 
 
 

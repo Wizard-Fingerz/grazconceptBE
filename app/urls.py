@@ -11,7 +11,7 @@ from app.visa.vacation.offer.views import VacationOfferViewSet, VacationVisaAppl
 from app.visa.work.offers.views import (
     WorkVisaOfferViewSet,
     WorkVisaApplicationViewSet,
-    InterviewFAQViewSet,
+    # InterviewFAQViewSet,
     WorkVisaInterviewViewSet,
     CVSubmissionViewSet,
 )
@@ -61,7 +61,7 @@ router.register(r'investment-options', InvestmentOptionViewSet, basename='invest
 
 # --- Register Work Visa Interview & FAQ endpoints ---
 router.register(r'work-visa-interviews', WorkVisaInterviewViewSet, basename='workvisainterviews')
-router.register(r'work-visa-faq', InterviewFAQViewSet, basename='workvisafaq')
+# router.register(r'work-visa-faq', InterviewFAQViewSet, basename='workvisafaq')
 router.register(r'cv-submission', CVSubmissionViewSet, basename='cvsubmission')
 # ----------------------------------------------------
 

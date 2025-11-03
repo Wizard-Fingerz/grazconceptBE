@@ -3,7 +3,7 @@ from app.visa.work.offers.models import (
     WorkVisaOffer,
     WorkVisaOfferRequirement,
     WorkVisaApplication,
-    InterviewFAQ,
+    # InterviewFAQ,
     WorkVisaInterview,
     CVSubmission,
 )
@@ -154,16 +154,16 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
         return ret
 
 
-class InterviewFAQSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterviewFAQ
-        fields = [
-            'id',
-            'question',
-            'answer',
-            'is_active',
-        ]
-        read_only_fields = ['id']
+# class InterviewFAQSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = InterviewFAQ
+#         fields = [
+#             'id',
+#             'question',
+#             'answer',
+#             'is_active',
+#         ]
+#         read_only_fields = ['id']
 
 
 class WorkVisaInterviewSerializer(serializers.ModelSerializer):

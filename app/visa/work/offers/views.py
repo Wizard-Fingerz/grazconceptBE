@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 from rest_framework import permissions
 from app.views import CustomPagination
-from app.visa.work.offers.models import CVSubmission, WorkVisaOffer, WorkVisaApplication, InterviewFAQ, WorkVisaInterview
+from app.visa.work.offers.models import CVSubmission, WorkVisaOffer, WorkVisaApplication, WorkVisaInterview
 from app.visa.work.offers.serializers import (
     CVSubmissionSerializer,
     WorkVisaOfferSerializer,
     WorkVisaApplicationSerializer,
-    InterviewFAQSerializer,
+    # InterviewFAQSerializer,
     WorkVisaInterviewSerializer,
 )
 
@@ -84,11 +84,11 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterviewFAQViewSet(viewsets.ModelViewSet):
-    queryset = InterviewFAQ.objects.all()
-    serializer_class = InterviewFAQSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = CustomPagination
+# class InterviewFAQViewSet(viewsets.ModelViewSet):
+#     queryset = InterviewFAQ.objects.all()
+#     serializer_class = InterviewFAQSerializer
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#     pagination_class = CustomPagination
 
 
 class WorkVisaInterviewViewSet(viewsets.ModelViewSet):

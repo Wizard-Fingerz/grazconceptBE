@@ -12,7 +12,7 @@ from .visa.work.offers.models import (
     WorkVisaOffer,
     WorkVisaOfferRequirement,
     WorkVisaApplication,
-    InterviewFAQ,
+    # InterviewFAQ,
     WorkVisaInterview,
 )
 from .visa.work.organization.models import WorkOrganization
@@ -85,9 +85,9 @@ class WorkVisaApplicationResource(resources.ModelResource):
     class Meta:
         model = WorkVisaApplication
 
-class InterviewFAQResource(resources.ModelResource):
-    class Meta:
-        model = InterviewFAQ
+# class InterviewFAQResource(resources.ModelResource):
+#     class Meta:
+#         model = InterviewFAQ
 
 class WorkVisaInterviewResource(resources.ModelResource):
     class Meta:
@@ -205,9 +205,9 @@ class WorkVisaOfferRequirementAdmin(ImportExportModelAdmin):
 class WorkVisaApplicationAdmin(ImportExportModelAdmin):
     resource_class = WorkVisaApplicationResource
 
-@admin.register(InterviewFAQ)
-class InterviewFAQAdmin(ImportExportModelAdmin):
-    resource_class = InterviewFAQResource
+# @admin.register(InterviewFAQ)
+# class InterviewFAQAdmin(ImportExportModelAdmin):
+#     resource_class = InterviewFAQResource
 
 @admin.register(WorkVisaInterview)
 class WorkVisaInterviewAdmin(ImportExportModelAdmin):
