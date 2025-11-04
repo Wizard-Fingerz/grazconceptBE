@@ -61,10 +61,11 @@ class WalletTransaction(models.Model):
         if self.status != 'successful':
             raise ValueError("Only successful transactions can be processed for wallet funding.")
 
+        # Make sure to always add to the existing wallet balance, not overwrite
         with db_transaction.atomic():
             wallet = Wallet.objects.select_for_update().get(pk=self.wallet.pk)
             wallet.balance = wallet.balance + self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_withdrawal(self):
         if self.transaction_type != 'withdrawal':
@@ -77,7 +78,7 @@ class WalletTransaction(models.Model):
             if wallet.balance < self.amount:
                 raise ValueError("Insufficient funds in wallet for withdrawal.")
             wallet.balance = wallet.balance - self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_transfer(self):
         if self.transaction_type != 'transfer':
@@ -90,7 +91,7 @@ class WalletTransaction(models.Model):
             if wallet.balance < self.amount:
                 raise ValueError("Insufficient funds in wallet for transfer.")
             wallet.balance = wallet.balance - self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_payment(self):
         if self.transaction_type != 'payment':
@@ -103,7 +104,7 @@ class WalletTransaction(models.Model):
             if wallet.balance < self.amount:
                 raise ValueError("Insufficient funds in wallet for payment.")
             wallet.balance = wallet.balance - self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_refund(self):
         if self.transaction_type != 'refund':
@@ -114,7 +115,7 @@ class WalletTransaction(models.Model):
         with db_transaction.atomic():
             wallet = Wallet.objects.select_for_update().get(pk=self.wallet.pk)
             wallet.balance = wallet.balance + self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_savings_funding(self):
         if self.transaction_type != 'savings_funding':
@@ -127,7 +128,7 @@ class WalletTransaction(models.Model):
             if wallet.balance < self.amount:
                 raise ValueError("Insufficient funds in wallet for savings funding.")
             wallet.balance = wallet.balance - self.amount
-            wallet.save()
+            wallet.save(update_fields=['balance'])
 
     def process_transaction(self):
         if self.status != 'successful':
@@ -187,4 +188,3 @@ class WalletTransaction(models.Model):
             models.Index(fields=['user']),
             models.Index(fields=['reference']),
         ]
-
