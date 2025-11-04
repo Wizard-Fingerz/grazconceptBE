@@ -1,6 +1,9 @@
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework import viewsets, permissions
 from .models import Notification
 from .serializers import NotificationSerializer
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """
@@ -16,3 +19,49 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Automatically assign the notification to the current user
         serializer.save(user=self.request.user)
+
+
+# views.py
+
+
+@api_view(['GET'])
+def websocket_info(request):
+    """
+    WebSocket connection details.
+    ---
+    description: |
+        Connect via WebSocket to receive real-time notifications.
+
+        **WebSocket URL:** `wss://yourdomain.com/ws/notifications/`
+
+        Once connected, messages will arrive in this format:
+        ```json
+        {
+          "type": "notification",
+          "message": "New comment added."
+        }
+        ```
+
+        You can also send pings or control messages via the WebSocket.
+    """
+    return Response({
+        "websocket_url": "wss://yourdomain.com/ws/notifications/"
+    })
+
+
+from drf_yasg.utils import extend_schema_view, extend_schema
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@extend_schema(
+    operation_id="WebSocket Notifications",
+    description=(
+        "This is a WebSocket endpoint for receiving live notifications.\n\n"
+        "**URL:** `wss://yourdomain.com/ws/notifications/`\n\n"
+        "**Protocol:** JSON messages."
+    ),
+    responses=None,
+)
+@api_view(['GET'])
+def websocket_doc(request):
+    return Response({"message": "WebSocket endpoint documentation only."})
