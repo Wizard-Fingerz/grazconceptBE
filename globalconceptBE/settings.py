@@ -56,9 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'account',
-    
-    
+    'account',    
     'app',
     'definition',
     'drf_yasg',
@@ -69,7 +67,6 @@ INSTALLED_APPS = [
     'wallet',
     'notification',
     'channels',
-
 ]
 
 MIDDLEWARE = [
@@ -116,16 +113,27 @@ REST_FRAMEWORK = {
     ),
 }
 
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.getenv("REDIS_URL")],
+# CHANNEL_LAYERS needs a working REDIS_URL set as an environment variable for the project to start.
+# If REDIS_URL is not defined, Channels will error out on startup (e.g., with Daphne); see error in file_context_0.
+# The following fallback allows server start even if REDIS_URL is not set,
+# but disables websocket functionality until REDIS_URL is properly configured.
+REDIS_URL = os.getenv("REDIS_URL", None)
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
         },
-    },
-}
-
+    }
+else:
+    # Dummy backend prevents crashes but disables channels for development
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 
 AUTHENTICATION_BACKENDS = [
     'account.backends.EmailBackend',  # Custom email authentication backend
@@ -137,13 +145,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 DATABASES = {
     "default": dj_database_url.config(
