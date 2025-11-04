@@ -8,6 +8,50 @@ from wallet.saving_plans.models import SavingsPlan
 # Import LoanOffer, LoanApplication, LoanRepayment from wallet.loan.models (fix: include LoanOffer)
 from wallet.loan.models import LoanOffer, LoanApplication, LoanRepayment
 
+# ADD WALLET TRANSACTION ADMIN AND RESOURCE (wallet5 transaction)
+from wallet.transactions.models import WalletTransaction
+
+class WalletTransactionResource(resources.ModelResource):
+    class Meta:
+        model = WalletTransaction
+        fields = (
+            'id',
+            'user',
+            'wallet',
+            'transaction_type',
+            'amount',
+            'currency',
+            'status',
+            'reference',
+            'payment_gateway',
+            'meta',
+            'created_at',
+            'updated_at',
+            'savings_plan'
+        )
+
+@admin.register(WalletTransaction)
+class WalletTransactionAdmin(ImportExportModelAdmin):
+    resource_class = WalletTransactionResource
+    list_display = (
+        'id',
+        'user',
+        'wallet',
+        'transaction_type',
+        'amount',
+        'currency',
+        'status',
+        'reference',
+        'payment_gateway',
+        'created_at',
+        'updated_at',
+        'savings_plan',
+    )
+    search_fields = (
+        'user__email', 'wallet__id', 'transaction_type', 'status', 'reference', 'payment_gateway__name'
+    )
+    list_filter = ('currency', 'transaction_type', 'status', 'payment_gateway')
+
 class WalletResource(resources.ModelResource):
     class Meta:
         model = Wallet
