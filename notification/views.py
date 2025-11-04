@@ -46,17 +46,6 @@ def websocket_info(request):
     })
 
 
-from drf_yasg.utils import extend_schema
-
-@extend_schema(
-    operation_id="WebSocket Notifications",
-    description=(
-        "This is a WebSocket endpoint for receiving live notifications.\n\n"
-        "**URL:** `wss://yourdomain.com/ws/notifications/`\n\n"
-        "**Protocol:** JSON messages."
-    ),
-    responses=None,
-)
 @api_view(['GET'])
 def websocket_doc(request):
     return Response({"message": "WebSocket endpoint documentation only."})
