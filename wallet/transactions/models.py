@@ -25,24 +25,63 @@ class WalletTransaction(models.Model):
         ('cancelled', 'Cancelled'),
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='wallet_transactions', on_delete=models.CASCADE)
-    wallet = models.ForeignKey(Wallet, related_name='transactions', on_delete=models.CASCADE)
-    transaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=18, decimal_places=2)
-    currency = models.CharField(max_length=10, default="NGN")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    reference = models.CharField(max_length=128, unique=True)
-    # Use a string reference to avoid circular import
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='wallet_transactions',
+        on_delete=models.CASCADE,
+        help_text="The user who initiated this transaction."
+    )
+    wallet = models.ForeignKey(
+        Wallet,
+        related_name='transactions',
+        on_delete=models.CASCADE,
+        help_text="The wallet affected by this transaction."
+    )
+    transaction_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        help_text="The nature of this transaction (deposit, withdrawal, etc)."
+    )
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        help_text="The monetary value of the transaction."
+    )
+    currency = models.CharField(
+        max_length=10,
+        default="NGN",
+        help_text="The currency of the transaction (e.g., NGN, USD)."
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        help_text="Current state of the transaction."
+    )
+    reference = models.CharField(
+        max_length=128,
+        unique=True,
+        help_text="Unique identifier for this transaction (can be used for reconciliation)."
+    )
     payment_gateway = models.ForeignKey(
         'PaymentGateway',
         related_name='transactions',
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        help_text="The payment gateway used for this transaction, if applicable."
     )
-    meta = models.JSONField(blank=True, null=True, help_text="Flexible data for storing raw gateway responses, etc.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    meta = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Flexible data for storing raw gateway responses, etc."
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="Timestamp when this transaction record was created."
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, help_text="Timestamp when this transaction record was last updated."
+    )
     savings_plan = models.ForeignKey(
         SavingsPlan, 
         related_name='transactions', 
@@ -50,6 +89,11 @@ class WalletTransaction(models.Model):
         blank=True, 
         on_delete=models.SET_NULL, 
         help_text='If the transaction is related to a saving plan'
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Optional description or note for the transaction."
     )
 
     def __str__(self):
