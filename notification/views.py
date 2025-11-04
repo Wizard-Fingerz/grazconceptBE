@@ -21,9 +21,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-# views.py
-
-
 @api_view(['GET'])
 def websocket_info(request):
     """
@@ -49,9 +46,7 @@ def websocket_info(request):
     })
 
 
-from drf_yasg.utils import extend_schema_view, extend_schema
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from drf_yasg.utils import extend_schema
 
 @extend_schema(
     operation_id="WebSocket Notifications",
