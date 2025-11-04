@@ -31,7 +31,19 @@ SECRET_KEY = 'django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on")
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['*']   
+# ALLOWED_HOSTS = ['*']   
+
+ALLOWED_HOSTS = [
+    "backend.grazconcept.com.ng",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "grazconcept.com.ng",
+    "www.grazconcept.com.ng",
+    "app.grazconcept.com.ng",
+    "grazconcept-fe.vercel.app",
+]
+
 
 # Allow all (development only)
 CORS_ALLOW_ALL_ORIGINS = True
