@@ -10,3 +10,4 @@ class NotificationConfig(AppConfig):
         import notification.wallet.signals
         import notification.visa.work.signals
         import notification.visa.vacation.signals
+        import notification.visa.study.signals
