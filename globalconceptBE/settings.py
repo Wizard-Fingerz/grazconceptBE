@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'wallet',
     'notification',
+    'channels',
 
 ]
 
@@ -102,6 +103,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'globalconceptBE.wsgi.application'
+ASGI_APPLICATION = 'globalconceptBE.asgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -113,6 +115,16 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("redis://redis:6379")],  # update depending on environment
+        },
+    },
+}
+
 
 AUTHENTICATION_BACKENDS = [
     'account.backends.EmailBackend',  # Custom email authentication backend
