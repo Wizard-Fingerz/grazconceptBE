@@ -17,6 +17,7 @@ def process_wallet_transaction_on_success(sender, instance, created, **kwargs):
       - or transitioned from a non-successful status to 'successful'
     The balance verification and correction for all wallets is NOT performed here;
     it's only for the affected wallet for this instance.
+    Before processing, verify if the balance is correct for the related wallet's transactions.
     """
     if instance.status != 'successful':
         return
@@ -36,6 +37,51 @@ def process_wallet_transaction_on_success(sender, instance, created, **kwargs):
             old.status != 'successful'
         )
     if created or should_process:
+        wallet = instance.wallet
+        # Calculate expected balance for this wallet
+        from decimal import Decimal
+        total_successful_deposit = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='deposit'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        total_successful_withdrawal = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='withdrawal'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        total_successful_transfer = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='transfer'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        total_successful_payment = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='payment'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        total_successful_refund = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='refund'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        total_successful_savings_funding = WalletTransaction.objects.filter(
+            wallet=wallet, status='successful', transaction_type='savings_funding'
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+
+        wallet_expected_balance = (
+            total_successful_deposit
+            + total_successful_refund
+            - total_successful_withdrawal
+            - total_successful_transfer
+            - total_successful_payment
+            - total_successful_savings_funding
+        )
+
+        if wallet.balance != wallet_expected_balance:
+            logger.warning(
+                f"Wallet {wallet.id} balance discrepancy detected before processing transaction. "
+                f"Current: {wallet.balance}, Expected: {wallet_expected_balance}. "
+                f"Updating balance to match successful transactions before processing new transaction."
+            )
+            wallet.balance = wallet_expected_balance
+            wallet.save(update_fields=['balance'])
+
         try:
             instance.process_transaction()
         except Exception as e:
