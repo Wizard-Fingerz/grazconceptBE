@@ -1,1 +1,1 @@
-web: daphne -b 0.0.0.0 -p $PORT globalconceptBE.asgi:application
+web: daphne -b 0.0.0.0 -p $PORT globalconceptBE.asgi:application --timeout 120
