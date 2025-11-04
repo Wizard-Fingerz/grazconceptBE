@@ -37,6 +37,7 @@ api_urlpatterns = [
     # Add other app urls here, e.g.:
     path('app/', include('app.urls')),
     path('wallet/', include('wallet.urls')),
+    path('notification/', include('notification.urls')),
     path('', include('definition.urls')),
 ]
 

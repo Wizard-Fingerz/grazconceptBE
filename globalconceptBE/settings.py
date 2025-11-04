@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'import_export',
     'rest_framework.authtoken',
     'wallet',
+    'notification',
 
 ]
 
