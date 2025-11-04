@@ -16,6 +16,7 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
             'transaction_type',
             'amount',
             'currency',
+            'description',
             'status',
             'reference',
             'payment_gateway',
