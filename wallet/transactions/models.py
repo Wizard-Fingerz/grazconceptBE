@@ -56,11 +56,6 @@ class WalletTransaction(models.Model):
         return f"{self.transaction_type.title()} of {self.amount} {self.currency} by {self.user} ({self.status})"
 
     def process_deposit(self):
-        """
-        Process a deposit transaction: add the transaction amount to the wallet
-        and update the wallet's balance. This should only be called when the
-        deposit is successful, i.e., after payment gateway confirmation.
-        """
         if self.transaction_type != 'deposit':
             raise ValueError("Transaction type must be 'deposit' to process deposit.")
         if self.status != 'successful':
@@ -72,11 +67,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_withdrawal(self):
-        """
-        Process a withdrawal transaction: subtract the transaction amount from the wallet
-        and update the wallet's balance. This should only be called when the
-        withdrawal is successful, i.e., after the money has been sent to user.
-        """
         if self.transaction_type != 'withdrawal':
             raise ValueError("Transaction type must be 'withdrawal' to process withdrawal.")
         if self.status != 'successful':
@@ -90,10 +80,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_transfer(self):
-        """
-        Process a transfer transaction: subtract the transaction amount from the sender's wallet
-        and typically add it to the recipient's wallet. Here, only process the sender side.
-        """
         if self.transaction_type != 'transfer':
             raise ValueError("Transaction type must be 'transfer' to process transfer.")
         if self.status != 'successful':
@@ -107,10 +93,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_payment(self):
-        """
-        Process a payment transaction: subtract the transaction amount from the wallet,
-        typically for paying a bill, service, etc.
-        """
         if self.transaction_type != 'payment':
             raise ValueError("Transaction type must be 'payment' to process payment.")
         if self.status != 'successful':
@@ -124,10 +106,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_refund(self):
-        """
-        Process a refund transaction: add the transaction amount to the wallet,
-        representing money returned to the user.
-        """
         if self.transaction_type != 'refund':
             raise ValueError("Transaction type must be 'refund' to process refund.")
         if self.status != 'successful':
@@ -139,10 +117,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_savings_funding(self):
-        """
-        Process a savings funding transaction: subtract the transaction amount from the wallet
-        (to move into savings). Any logic for crediting the savings plan would be handled elsewhere.
-        """
         if self.transaction_type != 'savings_funding':
             raise ValueError("Transaction type must be 'savings_funding' to process savings funding.")
         if self.status != 'successful':
@@ -156,10 +130,6 @@ class WalletTransaction(models.Model):
             wallet.save()
 
     def process_transaction(self):
-        """
-        Process this transaction and apply its effect to the wallet's balance,
-        depending on its transaction_type.
-        """
         if self.status != 'successful':
             raise ValueError("Only successful transactions can be processed for wallet balance adjustments.")
 
@@ -177,6 +147,39 @@ class WalletTransaction(models.Model):
             self.process_savings_funding()
         else:
             raise ValueError(f"Unknown transaction type: {self.transaction_type}")
+
+    def save(self, *args, **kwargs):
+        # Determine whether this is a new transaction or an update
+        is_new = self._state.adding
+        old_status = None
+        old_type = None
+        if not is_new and self.pk:
+            # Fetch the previous object to see if status/type has changed
+            previous = type(self).objects.get(pk=self.pk)
+            old_status = previous.status
+            old_type = previous.transaction_type
+
+        # Save the transaction first to ensure it has an ID/reference, etc.
+        super().save(*args, **kwargs)
+
+        # Only process wallet balance when status transitions to 'successful'
+        should_process = False
+        if is_new:
+            # If created directly as 'successful', process immediately
+            if self.status == 'successful':
+                should_process = True
+        else:
+            # If an update changed the status to 'successful', process now
+            if self.status == 'successful' and (old_status != 'successful'):
+                should_process = True
+
+        # Only process once
+        if should_process:
+            try:
+                self.process_transaction()
+            except Exception as e:
+                # Optionally, re-raise or log for admin feedback
+                raise e
 
     class Meta:
         ordering = ['-created_at']
