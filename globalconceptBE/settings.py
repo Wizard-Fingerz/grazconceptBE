@@ -44,6 +44,8 @@ ALLOWED_HOSTS = [
     "grazconcept-fe.vercel.app",
 ]
 
+APPEND_SLASH = False
+
 
 # Allow all (development only)
 CORS_ALLOW_ALL_ORIGINS = True
