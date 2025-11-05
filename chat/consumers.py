@@ -2,12 +2,8 @@ import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from django.contrib.auth import get_user_model
-from django.db import models
-from chat.models import ChatSession, Message
 
 logger = logging.getLogger("chat.websocket")
-User = get_user_model()
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -133,15 +129,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_chat_session(self, chat_id):
+        from chat.models import ChatSession  # moved import inside method
         return ChatSession.objects.select_related("customer", "agent").get(id=chat_id)
 
     @database_sync_to_async
     def get_message_history(self, chat_id):
+        from chat.models import Message  # moved import inside method
         qs = Message.objects.filter(chat_session_id=chat_id).select_related("sender", "recipient").order_by("-timestamp")[:50]
         return [self.serialize_message(msg) for msg in reversed(list(qs))]
 
     @database_sync_to_async
     def create_message(self, chat_session, sender_id, recipient_id, sender_type, text):
+        # Dynamically fetch User and Message here
+        from django.contrib.auth import get_user_model
+        from chat.models import Message
+        User = get_user_model()
         sender = User.objects.get(pk=sender_id)
         recipient = User.objects.get(pk=recipient_id)
         return Message.objects.create(
@@ -226,7 +228,14 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_chat_sessions(self, user_id):
-        qs = ChatSession.objects.filter(models.Q(customer_id=user_id) | models.Q(agent_id=user_id)).select_related("agent", "customer")
+        from django.contrib.auth import get_user_model
+        from chat.models import ChatSession
+        from django.db import models
+
+        User = get_user_model()
+        qs = ChatSession.objects.filter(
+            models.Q(customer_id=user_id) | models.Q(agent_id=user_id)
+        ).select_related("agent", "customer")
         result = []
         for sess in qs:
             agent_name = getattr(sess.agent, "full_name", "Unassigned") if sess.agent else "Unassigned"
