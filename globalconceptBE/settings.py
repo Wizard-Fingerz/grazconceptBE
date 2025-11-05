@@ -42,6 +42,8 @@ ALLOWED_HOSTS = [
     "www.grazconcept.com.ng",
     "app.grazconcept.com.ng",
     "grazconcept-fe.vercel.app",
+    "grazconceptbe.onrender.com",  # Added as per instruction
+    "https://grazconceptbe.onrender.com/",  # Added as per instruction (exact URL as given)
 ]
 
 # APPEND_SLASH = False
@@ -57,6 +59,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5174',
     'http://localhost:5173',
     'https://app.grazconcept.com.ng',
+    'https://grazconceptbe.onrender.com',  # Added as per instruction
+    'https://grazconceptbe.onrender.com/',  # (optional, covers possible frontend behaviour)
 ]
 
 # Trusted origin settings for admin/Csrf compliance
@@ -70,6 +74,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:5173",
     "http://localhost:5174",
+    "https://grazconceptbe.onrender.com",   # Added as per instruction
+    "https://grazconceptbe.onrender.com/",  # (as given, exact form)
 ]
 
 # Application definition
