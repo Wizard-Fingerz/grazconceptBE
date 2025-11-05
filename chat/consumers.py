@@ -5,6 +5,19 @@ from channels.db import database_sync_to_async
 
 logger = logging.getLogger("chat.websocket")
 
+# Does this mean I need to have created a session with probably a signal first?
+# --- Yes! ---
+# For this consumer to let you join a chat or send a message,
+# the ChatSession must *already exist* in the database. 
+# Usually, you (or your backend) create the session via an API endpoint 
+# *before* the websocket connects. 
+# This is often done in response to something like a "start chat" button in the UI.
+
+# If you want to auto-create sessions on websocket connect (not recommended!),
+# you could add that logic to ChatConsumer.connect(). 
+# But usually, sessions are created by a separate REST API or maybe you connect a
+# Django signal to auto-create or update sessions elsewhere,
+# THEN use the websocket for messages.
 
 class ChatConsumer(AsyncWebsocketConsumer):
     """
@@ -113,6 +126,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         Send full message history to the client (for get_messages or on connect).
         """
         messages_data = await self.get_message_history(self.chat_id)
+        # --- If there are *no* messages, still respond with empty messages list. ---
         await self.send(text_data=json.dumps({
             "type": "history",
             "messages": messages_data,
@@ -129,18 +143,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_chat_session(self, chat_id):
-        from chat.models import ChatSession  # moved import inside method
-        return ChatSession.objects.select_related("customer", "agent").get(id=chat_id)
+        from chat.models import ChatSession
+        try:
+            return ChatSession.objects.select_related("customer", "agent").get(id=chat_id)
+        except ChatSession.DoesNotExist:
+            # If the session does not exist, raise so connect will close the ws
+            raise
 
     @database_sync_to_async
     def get_message_history(self, chat_id):
-        from chat.models import Message  # moved import inside method
+        from chat.models import Message
+        # Query the most recent 50 messages, if none exist returns empty list
         qs = Message.objects.filter(chat_session_id=chat_id).select_related("sender", "recipient").order_by("-timestamp")[:50]
         return [self.serialize_message(msg) for msg in reversed(list(qs))]
 
     @database_sync_to_async
     def create_message(self, chat_session, sender_id, recipient_id, sender_type, text):
-        # Dynamically fetch User and Message here
         from django.contrib.auth import get_user_model
         from chat.models import Message
         User = get_user_model()
@@ -159,6 +177,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return self.serialize_message(message)
 
     def serialize_message(self, msg):
+        # If msg is None or empty, this function is not called (empty lists ok)
         return {
             "id": msg.id,
             "chat_id": str(msg.chat_session_id),
@@ -211,6 +230,7 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
 
     async def send_sessions_list(self):
         sessions = await self.get_user_chat_sessions(self.user_id)
+        # --- Always respond, even if sessions is an empty list ---
         await self.send(text_data=json.dumps({
             "type": "chats",
             "sessions": sessions,
@@ -254,6 +274,7 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
                 "last_message_at": last_msg_dt.isoformat() if last_msg_dt else "",
                 "unread_count": unread_count,
             })
+        # No sessions? Result is still an empty list, which is serializable.
         result.sort(key=lambda s: (s["status"] != "active", -(s["unread_count"]), s["last_message_at"]), reverse=False)
         return result
 
