@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on")
 
 # ALLOWED_HOSTS = []
-# ALLOWED_HOSTS = ['*']   
+# ALLOWED_HOSTS = ['*']
 
 ALLOWED_HOSTS = [
     "backend.grazconcept.com.ng",
@@ -44,8 +44,7 @@ ALLOWED_HOSTS = [
     "grazconcept-fe.vercel.app",
 ]
 
-APPEND_SLASH = False
-
+# APPEND_SLASH = False
 
 # Allow all (development only)
 CORS_ALLOW_ALL_ORIGINS = True
@@ -58,6 +57,19 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5174',
     'http://localhost:5173',
     'https://app.grazconcept.com.ng',
+]
+
+# Trusted origin settings for admin/Csrf compliance
+CSRF_TRUSTED_ORIGINS = [
+    "https://backend.grazconcept.com.ng",
+    "https://grazconcept.com.ng",
+    "https://www.grazconcept.com.ng",
+    "https://app.grazconcept.com.ng",
+    "https://grazconcept-fe.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://localhost:5174",
 ]
 
 # Application definition

@@ -5,20 +5,6 @@ from channels.db import database_sync_to_async
 
 logger = logging.getLogger("chat.websocket")
 
-# Does this mean I need to have created a session with probably a signal first?
-# --- Yes! ---
-# For this consumer to let you join a chat or send a message,
-# the ChatSession must *already exist* in the database. 
-# Usually, you (or your backend) create the session via an API endpoint 
-# *before* the websocket connects. 
-# This is often done in response to something like a "start chat" button in the UI.
-
-# If you want to auto-create sessions on websocket connect (not recommended!),
-# you could add that logic to ChatConsumer.connect(). 
-# But usually, sessions are created by a separate REST API or maybe you connect a
-# Django signal to auto-create or update sessions elsewhere,
-# THEN use the websocket for messages.
-
 class ChatConsumer(AsyncWebsocketConsumer):
     """
     React-friendly ChatConsumer for customer <-> agent live chat.
@@ -51,6 +37,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
 
+        # Send a successful connection message to the frontend
+        response = {
+            "type": "connection_successful",
+            "message": "WebSocket connection established",
+            "chat_id": str(self.chat_id),
+            "user_id": str(self.user_id),
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
+
         # Optionally send message history on connect
         await self.send_history()
 
@@ -70,7 +66,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
         except Exception:
-            await self.send(text_data=json.dumps({"error": "Invalid JSON"}))
+            response = {"error": "Invalid JSON"}
+            print("BACKEND RESPONSE:", response)
+            await self.send(text_data=json.dumps(response))
             return
 
         command = data.get("command", None)
@@ -84,12 +82,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if "message" in data:
                 await self.handle_send_message(data)
             else:
-                await self.send(text_data=json.dumps({"error": "Unknown command"}))
+                response = {"error": "Unknown command"}
+                print("BACKEND RESPONSE:", response)
+                await self.send(text_data=json.dumps(response))
 
     async def handle_send_message(self, data):
         msg = data.get("message", "").strip()
         if not msg:
-            await self.send(text_data=json.dumps({"error": "Message required"}))
+            response = {"error": "Message required"}
+            print("BACKEND RESPONSE:", response)
+            await self.send(text_data=json.dumps(response))
             return
 
         sender_id = int(self.user_id)
@@ -101,7 +103,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender_type = "agent"
             recipient_id = chat_session.customer_id
         else:
-            await self.send(text_data=json.dumps({"error": "Unauthorized"}))
+            response = {"error": "Unauthorized"}
+            print("BACKEND RESPONSE:", response)
+            await self.send(text_data=json.dumps(response))
             return
 
         message_obj = await self.create_message(
@@ -126,20 +130,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         Send full message history to the client (for get_messages or on connect).
         """
         messages_data = await self.get_message_history(self.chat_id)
-        # --- If there are *no* messages, still respond with empty messages list. ---
-        await self.send(text_data=json.dumps({
+        response = {
             "type": "history",
             "messages": messages_data,
-        }))
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
 
     async def chat_message(self, event):
         """
         Send new incoming message to websocket client.
         """
-        await self.send(text_data=json.dumps({
+        response = {
             "type": "message",
             "message": event["message"]
-        }))
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
 
     @database_sync_to_async
     def get_chat_session(self, chat_id):
@@ -207,6 +214,14 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"user_chats_{self.user_id}"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
+        # Send a successful connection message to the frontend
+        response = {
+            "type": "connection_successful",
+            "message": "WebSocket connection established",
+            "user_id": str(self.user_id),
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
         await self.send_sessions_list()
 
     async def disconnect(self, close_code):
@@ -219,32 +234,39 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
         except Exception:
-            await self.send(text_data=json.dumps({"error": "Invalid JSON"}))
+            response = {"error": "Invalid JSON"}
+            print("BACKEND RESPONSE:", response)
+            await self.send(text_data=json.dumps(response))
             return
 
         cmd = data.get("command")
         if cmd in ("refresh", "sessions_list"):
             await self.send_sessions_list()
         else:
-            await self.send(text_data=json.dumps({"error": "Unknown command"}))
+            response = {"error": "Unknown command"}
+            print("BACKEND RESPONSE:", response)
+            await self.send(text_data=json.dumps(response))
 
     async def send_sessions_list(self):
         sessions = await self.get_user_chat_sessions(self.user_id)
-        # --- Always respond, even if sessions is an empty list ---
-        await self.send(text_data=json.dumps({
+        response = {
             "type": "chats",
             "sessions": sessions,
-        }))
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
 
     async def chat_session_update(self, event):
         """
         Broadcasts a change to a chat session (status/message/unread/etc).
         """
         session = event.get("session")
-        await self.send(text_data=json.dumps({
+        response = {
             "type": "chat_update",
             "session": session,
-        }))
+        }
+        print("BACKEND RESPONSE:", response)
+        await self.send(text_data=json.dumps(response))
 
     @database_sync_to_async
     def get_user_chat_sessions(self, user_id):
