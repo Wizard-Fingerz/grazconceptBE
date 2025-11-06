@@ -48,10 +48,9 @@ ALLOWED_HOSTS = [
 
 # APPEND_SLASH = False
 
-# Allow all (development only)
-CORS_ALLOW_ALL_ORIGINS = True
+# DO NOT use wildcard with credentials. Comment out CORS_ALLOW_ALL_ORIGINS
+# CORS_ALLOW_ALL_ORIGINS = True
 
-# OR allow specific origins
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:8000",
@@ -62,6 +61,9 @@ CORS_ALLOWED_ORIGINS = [
     'https://grazconceptbe.onrender.com',  # Added as per instruction
     # 'https://grazconceptbe.onrender.com/',  # Removed: as per CORS origin spec, no trailing slash allowed
 ]
+
+# If you want to allow credentials (cookies/Authorization), this MUST be True.
+CORS_ALLOW_CREDENTIALS = True
 
 # Trusted origin settings for admin/Csrf compliance
 CSRF_TRUSTED_ORIGINS = [
