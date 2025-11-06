@@ -10,6 +10,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     React-friendly ChatConsumer for customer <-> agent live chat.
     Accepts and responds to modern event-based commands in message payloads:
         command: 'send_message', 'get_messages', etc.
+
+    Supports attachments, expected as base64-encoded content or as a URL/reference.
     """
 
     async def connect(self):
@@ -60,7 +62,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         """
         Accepts commands:
-            - {command: 'send_message', message: "..."}
+            - {command: 'send_message', message: "...", attachment: ...}
             - {command: 'get_messages'}
         """
         try:
@@ -79,7 +81,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             # Default: backwards compatibility for simple text send
             # (for legacy clients not using explicit 'command')
-            if "message" in data:
+            if "message" in data or "attachment" in data:
                 await self.handle_send_message(data)
             else:
                 response = {"error": "Unknown command"}
@@ -87,12 +89,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.send(text_data=json.dumps(response))
 
     async def handle_send_message(self, data):
-        msg = data.get("message", "").strip()
-        if not msg:
-            response = {"error": "Message required"}
-            print("BACKEND RESPONSE:", response)
-            await self.send(text_data=json.dumps(response))
-            return
+        msg = data.get("message", "")
+        attachment = data.get("attachment", None)
+
+        # Allow message creation even if empty (per prompt)
+        # Remove/skip old check for empty message+attachment
 
         sender_id = int(self.user_id)
         chat_session = self.chat_session
@@ -113,7 +114,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender_id,
             recipient_id,
             sender_type,
-            msg
+            msg,
+            attachment
         )
 
         message_data = await self.message_to_dict(message_obj)
@@ -165,19 +167,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return [self.serialize_message(msg) for msg in reversed(list(qs))]
 
     @database_sync_to_async
-    def create_message(self, chat_session, sender_id, recipient_id, sender_type, text):
+    def create_message(self, chat_session, sender_id, recipient_id, sender_type, text, attachment):
         from django.contrib.auth import get_user_model
         from chat.models import Message
         User = get_user_model()
         sender = User.objects.get(pk=sender_id)
         recipient = User.objects.get(pk=recipient_id)
-        return Message.objects.create(
+        msg_kwargs = dict(
             chat_session=chat_session,
             sender=sender,
             recipient=recipient,
             sender_type=sender_type,
             message=text
         )
+        # Storing attachment if provided (as base64, a URL, or a file name reference).
+        # Here, we assume frontend sends attachment as a URL, base64 string, or file name (see note below).
+        # The field is a FileField, so for pure WS, you normally store a reference or handle upload separately.
+        if attachment:
+            # Accept any non-empty string or non-None value as an attachment ref
+            if isinstance(attachment, str):
+                if attachment.strip() != "":
+                    msg_kwargs['attachment'] = attachment
+            else:
+                msg_kwargs['attachment'] = attachment
+        return Message.objects.create(**msg_kwargs)
 
     @database_sync_to_async
     def message_to_dict(self, message):
@@ -185,6 +198,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     def serialize_message(self, msg):
         # If msg is None or empty, this function is not called (empty lists ok)
+        attachment_url = None
+        if getattr(msg, "attachment", None):
+            try:
+                # If using FileField, use .url if available (uploaded files)
+                attachment_url = msg.attachment.url
+            except Exception:
+                # fallback to str
+                attachment_url = str(msg.attachment)
         return {
             "id": msg.id,
             "chat_id": str(msg.chat_session_id),
@@ -194,6 +215,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "message": msg.message,
             "timestamp": msg.timestamp.isoformat(),
             "read": msg.read,
+            "attachment": attachment_url,
         }
 
 
