@@ -3,14 +3,14 @@ from django.urls import re_path
 from . import consumers
 
 websocket_urlpatterns = [
-    # Live chat websocket for a specific chat session (customer<->agent)
+    # WebSocket endpoint for a specific chat session (customer <-> agent)
     re_path(
-        r"^ws/chat/(?P<chat_id>[0-9a-f-]+)/(?P<user_id>[0-9]+)/$",
-        consumers.ChatConsumer.as_asgi()
+        r"ws/chat/(?P<chat_id>[0-9a-f-]+)/(?P<user_id>[0-9]+)/$",
+        consumers.ChatConsumer.as_asgi(),
     ),
-    # Websocket for listing/updating a user's chat sessions
+    # WebSocket endpoint for managing/listing a user's chat sessions
     re_path(
-        r"^ws/chat_sessions/(?P<user_id>[0-9]+)/$",
-        consumers.ChatSessionListConsumer.as_asgi()
+        r"ws/chat_sessions/(?P<user_id>[0-9]+)/$",
+        consumers.ChatSessionListConsumer.as_asgi(),
     ),
 ]

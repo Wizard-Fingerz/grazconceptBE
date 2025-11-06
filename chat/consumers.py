@@ -1,5 +1,6 @@
 import json
 import logging
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -53,11 +54,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send_history()
 
     async def disconnect(self, close_code):
+        logger.info(f"Disconnect started for chat {getattr(self, 'chat_id', None)}")
         if hasattr(self, "room_group_name"):
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
+            try:
+                await asyncio.wait_for(
+                    self.channel_layer.group_discard(
+                        self.room_group_name,
+                        self.channel_name
+                    ),
+                    timeout=3
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"Disconnect group_discard timed out for chat {getattr(self, 'chat_id', None)}")
+            except Exception as exc:
+                logger.error(f"Exception during disconnect group_discard for chat {getattr(self, 'chat_id', None)}: {exc}")
+        logger.info(f"Disconnect finished for chat {getattr(self, 'chat_id', None)}")
 
     async def receive(self, text_data):
         """
@@ -79,8 +90,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         elif command == "get_messages":
             await self.send_history()
         else:
-            # Default: backwards compatibility for simple text send
-            # (for legacy clients not using explicit 'command')
             if "message" in data or "attachment" in data:
                 await self.handle_send_message(data)
             else:
@@ -92,33 +101,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         msg = data.get("message", "")
         attachment = data.get("attachment", None)
 
-        # --- Root cause analysis and fix for "{'message': 'hi'}" issue ---
-        # Sometimes, the frontend may wrongly encode JSON messages as a string representing a dict,
-        # or double-encode the object so that 'msg' is actually a dict or a JSON string that is itself a serialized dict.
-
-        # Defensive check: If message is a dict, extract 'message' field (common React/JS bug).
-        # If message is a JSON string like "{'message':'hi'}", try to parse it.
-        # Root cause: ChatConsumer.handle_send_message() is storing a non-str into Message.message,
-        # either a dict directly or a JSON-stringified dict,
-        # when only the plain text is expected. This results in str(dict) stored, which
-        # becomes "'message': 'hi'", and that's why you receive 'message': "{'message': 'hi'}".
-
         # --- Defensive cleanup for incoming msg ---
         # If 'msg' is a dict, try to extract a text string
         if isinstance(msg, dict):
-            # Likely coming from a buggy frontend sending e.g. {message: {message:'hi'}}
             msg = msg.get('message', str(msg))
         elif isinstance(msg, str):
-            # Sometimes JavaScript can send a JSON-stringified dict as the message
-            # Try to detect and parse it safely
             try:
-                # Try parsing string as JSON if it looks like a JSON object
+                # Try parsing string as JSON if it looks like a JSON object (accept both single/double quotes)
                 if msg.strip().startswith("{") and msg.strip().endswith("}"):
-                    possible_dict = json.loads(msg.replace("'", '"'))
+                    try:
+                        possible_dict = json.loads(msg)
+                    except Exception:
+                        possible_dict = json.loads(msg.replace("'", '"'))
                     if isinstance(possible_dict, dict) and 'message' in possible_dict:
                         msg = possible_dict['message']
             except Exception:
-                # Ignore if parsing fails; just use as is
                 pass
 
         # Now msg should be just a string
@@ -148,7 +145,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             attachment
         )
 
-        # Important: Do not combine message and attachment together in returned message_data!
         message_data = await self.message_to_dict(message_obj)
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -187,13 +183,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             return ChatSession.objects.select_related("customer", "agent").get(id=chat_id)
         except ChatSession.DoesNotExist:
-            # If the session does not exist, raise so connect will close the ws
             raise
 
     @database_sync_to_async
     def get_message_history(self, chat_id):
         from chat.models import Message
-        # Query the most recent 50 messages, if none exist returns empty list
         qs = Message.objects.filter(chat_session_id=chat_id).select_related("sender", "recipient").order_by("-timestamp")[:50]
         return [self.serialize_message(msg) for msg in reversed(list(qs))]
 
@@ -204,7 +198,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         User = get_user_model()
         sender = User.objects.get(pk=sender_id)
         recipient = User.objects.get(pk=recipient_id)
-        # Defensive: guarantee 'message' is only a string (database model expects text)
         if not isinstance(text, str):
             text = str(text)
         msg_kwargs = dict(
@@ -232,17 +225,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         attachment_url = None
         if getattr(msg, "attachment", None):
             try:
-                # If using FileField, use .url if available (uploaded files)
                 if hasattr(msg.attachment, "url"):
                     attachment_url = msg.attachment.url
                 else:
                     attachment_url = str(msg.attachment)
             except Exception:
                 attachment_url = str(msg.attachment)
-        # Ensure the message value is proper string (not a dict as seen in error)
         cleaned_message = msg.message
+        # Defensive: fix for issue where cleaned_message is still a dict/object (should always be str)
         if isinstance(cleaned_message, dict):
-            # Defensive: Should never happen now due to input checks, but clean anyway
             cleaned_message = cleaned_message.get('message', '') if 'message' in cleaned_message else str(cleaned_message)
         elif not isinstance(cleaned_message, str):
             cleaned_message = str(cleaned_message)
@@ -252,10 +243,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "sender_id": msg.sender_id,
             "sender_name": getattr(msg.sender, "full_name", str(msg.sender)),
             "sender_type": msg.sender_type,
-            "message": cleaned_message,  # ensure text only, no dict/JSON
+            "message": cleaned_message,  # always a str
             "timestamp": msg.timestamp.isoformat(),
             "read": msg.read,
-            "attachment": attachment_url,  # File url, string, or None.
+            "attachment": attachment_url,
         }
 
 
@@ -276,7 +267,6 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"user_chats_{self.user_id}"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-        # Send a successful connection message to the frontend
         response = {
             "type": "connection_successful",
             "message": "WebSocket connection established",
@@ -286,7 +276,17 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
         await self.send_sessions_list()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        logger.info(f"Disconnect started for user chat session list {getattr(self, 'user_id', None)}")
+        try:
+            await asyncio.wait_for(
+                self.channel_layer.group_discard(self.room_group_name, self.channel_name),
+                timeout=3
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"Disconnect group_discard timed out for user chat session list {getattr(self, 'user_id', None)}")
+        except Exception as exc:
+            logger.error(f"Exception during disconnect group_discard for user chat session list {getattr(self, 'user_id', None)}: {exc}")
+        logger.info(f"Disconnect finished for user chat session list {getattr(self, 'user_id', None)}")
 
     async def receive(self, text_data):
         """
@@ -357,7 +357,6 @@ class ChatSessionListConsumer(AsyncWebsocketConsumer):
                 "last_message_at": last_msg_dt.isoformat() if last_msg_dt else "",
                 "unread_count": unread_count,
             })
-        # No sessions? Result is still an empty list, which is serializable.
         result.sort(key=lambda s: (s["status"] != "active", -(s["unread_count"]), s["last_message_at"]), reverse=False)
         return result
 
