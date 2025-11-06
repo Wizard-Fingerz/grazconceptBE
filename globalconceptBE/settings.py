@@ -164,6 +164,8 @@ if REDIS_URL:
     }
 else:
     # Dummy backend prevents crashes but disables channels for development
+    # This will result in warnings and timeouts for websocket disconnects as seen in file_context_0.
+    # WebSocket (Channels) support will be non-functional in this mode!
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
