@@ -55,10 +55,12 @@ class MessageViewSet(viewsets.ModelViewSet):
             - file (the attachment)
             - chat_id
             - user_id (recipient)
+            - message (optional text)
         """
         file = request.FILES.get('file')
         chat_id = request.data.get('chat_id')
         recipient_id = request.data.get('user_id')
+        message_text = request.data.get('message', "")
         sender = request.user
 
         if not all([file, chat_id, recipient_id]):
@@ -74,14 +76,16 @@ class MessageViewSet(viewsets.ModelViewSet):
         # Determine sender_type
         sender_type = "customer" if chat_session.customer_id == sender.id else "agent"
 
-        # Create message with attachment only (no message text required)
+        # Create message with attachment, and provided message text (if any)
         message = Message.objects.create(
             chat_session=chat_session,
             sender=sender,
             recipient=recipient,
             sender_type=sender_type,
             attachment=file,
-            message="",  # No text required for attachment upload
+            message=message_text if message_text is not None else "",
         )
         serializer = self.get_serializer(message)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
