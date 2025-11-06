@@ -13,8 +13,8 @@ User = get_user_model()
 
 def should_create_for_user(user):
     """
-    Helper to determine if we should create a ChatSession for a given user.
-    Mimics the logic in the post_save signal.
+    Helper to determine if we should create ChatSessions for a given user.
+    Only creates for customers/clients; not admins/staff.
     """
     # Only create a chat session for users of type 'client' or similar
     if hasattr(user, 'user_type_name'):
@@ -26,36 +26,54 @@ def should_create_for_user(user):
     if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
         return False
 
-    # Don't create if already has a session as a customer
-    if ChatSession.objects.filter(customer=user).exists():
-        return False
-
     return True
 
 
-@receiver(post_save, sender=User)
-def auto_create_chat_session_for_user(sender, instance, created, **kwargs):
+def get_all_admins():
     """
-    Automatically create a ChatSession for a new user, if applicable.
-    This only creates a session if no ChatSession exists for this user as a customer.
-    The agent may be left unassigned.
+    Returns a queryset of all admin users (superusers or staff).
+    """
+    return User.objects.filter(is_superuser=True) | User.objects.filter(is_staff=True)
+
+
+@receiver(post_save, sender=User)
+def auto_create_chat_sessions_for_user(sender, instance, created, **kwargs):
+    """
+    Automatically create ChatSessions for a new eligible customer, 
+    with every admin as an agent.
     """
     if not created or not ChatSession:
         return
 
     if should_create_for_user(instance):
-        ChatSession.objects.create(customer=instance)
+        admins = get_all_admins().distinct()
+        if admins.exists():
+            for admin in admins:
+                if not ChatSession.objects.filter(customer=instance, agent=admin).exists():
+                    ChatSession.objects.create(customer=instance, agent=admin)
+        else:
+            # Fallback: create a session with no agent if no admins are present
+            if not ChatSession.objects.filter(customer=instance, agent=None).exists():
+                ChatSession.objects.create(customer=instance, agent=None)
 
 
 @receiver(post_migrate)
-def auto_create_chat_session_for_existing_users(sender, **kwargs):
+def auto_create_chat_sessions_for_existing_users(sender, **kwargs):
     """
-    After migrations, ensure every appropriate user has a ChatSession.
+    After migrations, ensure every eligible customer has a ChatSession
+    with every admin.
     """
     if not ChatSession:
         return
 
-    # You could optimize with .only() or .iterator() for large user tables
+    admins = get_all_admins().distinct()
     for user in User.objects.all():
         if should_create_for_user(user):
-            ChatSession.objects.create(customer=user)
+            if admins.exists():
+                for admin in admins:
+                    if not ChatSession.objects.filter(customer=user, agent=admin).exists():
+                        ChatSession.objects.create(customer=user, agent=admin)
+            else:
+                # Fallback: create a session with no agent if no admins are present
+                if not ChatSession.objects.filter(customer=user, agent=None).exists():
+                    ChatSession.objects.create(customer=user, agent=None)
