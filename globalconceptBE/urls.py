@@ -38,6 +38,7 @@ api_urlpatterns = [
     path('app/', include('app.urls')),
     path('wallet/', include('wallet.urls')),
     path('notification/', include('notification.urls')),
+    path('chat/', include('chat.urls')),
     path('', include('definition.urls')),
 ]
 
