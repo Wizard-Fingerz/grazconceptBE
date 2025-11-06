@@ -92,6 +92,7 @@ class Message(models.Model):
         help_text="Whether the sender is a customer or agent."
     )
     message = models.TextField(blank=True)
+    file = models.FileField(upload_to='chat_media/', blank=True, null=True)
     # You can extend to support attachments if needed later
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)

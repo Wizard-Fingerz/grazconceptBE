@@ -43,7 +43,7 @@ ALLOWED_HOSTS = [
     "app.grazconcept.com.ng",
     "grazconcept-fe.vercel.app",
     "grazconceptbe.onrender.com",  # Added as per instruction
-    "https://grazconceptbe.onrender.com/",  # Added as per instruction (exact URL as given)
+    # "https://grazconceptbe.onrender.com/",  # Removed as per Django's CORS validation requirements
 ]
 
 # APPEND_SLASH = False
@@ -60,7 +60,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://app.grazconcept.com.ng',
     'https://grazconceptbe.onrender.com',  # Added as per instruction
-    'https://grazconceptbe.onrender.com/',  # (optional, covers possible frontend behaviour)
+    # 'https://grazconceptbe.onrender.com/',  # Removed: as per CORS origin spec, no trailing slash allowed
 ]
 
 # Trusted origin settings for admin/Csrf compliance
@@ -75,7 +75,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
     "https://grazconceptbe.onrender.com",   # Added as per instruction
-    "https://grazconceptbe.onrender.com/",  # (as given, exact form)
+    "https://grazconceptbe.onrender.com/",  # (as given, exact form -- Django tolerates this for CSRF, but not for CORS)
 ]
 
 # Application definition
