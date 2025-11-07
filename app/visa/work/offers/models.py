@@ -6,7 +6,6 @@ from definition.models import TableDropDownDefinition
 from django.conf import settings
 
 
-
 def get_default_work_visa_status():
     try:
         return TableDropDownDefinition.objects.get(
@@ -16,6 +15,7 @@ def get_default_work_visa_status():
         ).id
     except Exception:
         return None
+
 
 class WorkVisaOfferRequirement(models.Model):
     """
@@ -42,6 +42,7 @@ class WorkVisaOfferRequirement(models.Model):
 
     def __str__(self):
         return f"{self.description} ({'Mandatory' if self.is_mandatory else 'Optional'})"
+
 
 class WorkVisaOffer(models.Model):
     """
@@ -115,9 +116,8 @@ class WorkVisaOffer(models.Model):
 
 
 def application_comment_attachment_upload_to(instance, filename):
-    # Each comment's attachments go into their own directory keyed by visa app and comment id (or temp)
-    comment_id = instance.id or "temp"
-    visa_app_id = instance.visa_application.id if instance.visa_application_id else "temp"
+    comment_id = instance.pk or "temp"
+    visa_app_id = instance.visa_application.pk if instance.visa_application_id else "temp"
     return f'work_visa/{visa_app_id}/comments/{comment_id}/{filename}'
 
 
@@ -357,7 +357,6 @@ class WorkVisaApplication(models.Model):
         return f"Application of {self.client} for {self.offer}"
 
     def save(self, *args, **kwargs):
-        # Auto-fill country from the client if possible
         if self.client and hasattr(self.client, "country"):
             if not self.country or self.country != self.client.country:
                 self.country = self.client.country
@@ -366,7 +365,7 @@ class WorkVisaApplication(models.Model):
 
 class WorkVisaApplicationComment(models.Model):
     """
-    A comment/feedback on a WorkVisaApplication, for communication between admin/agent and applicant.
+    Communication comment between admin/agent and applicant for WorkVisaApplication.
     """
     visa_application = models.ForeignKey(
         WorkVisaApplication,
@@ -374,19 +373,17 @@ class WorkVisaApplicationComment(models.Model):
         on_delete=models.CASCADE,
         help_text="The Work visa application this comment belongs to."
     )
-    # Either an agent/admin user or the applicant can post (applicant easiest as a Client FK, admin as User)
+    # Exactly one of applicant or admin should be SET for sender.
     applicant = models.ForeignKey(
         Client,
-        null=True,
-        blank=True,
+        null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='work_application_comments_sent',
         help_text="Set if this comment is from the applicant."
     )
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
+        null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='work_visa_application_comments_admin',
         help_text="Set if this comment is from an admin/agent user."
@@ -406,14 +403,22 @@ class WorkVisaApplicationComment(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        sender = None
         if self.applicant:
-            sender = f"Applicant: {self.applicant.get_full_name() or self.applicant.user.username}"
+            sender = self.applicant.get_full_name() or (self.applicant.user.username if hasattr(self.applicant, "user") and self.applicant.user else str(self.applicant.pk))
+            sender_type = "Applicant"
         elif self.admin:
-            sender = f"Admin: {self.admin.get_full_name() if hasattr(self.admin, 'get_full_name') else self.admin.username}"
+            # Prefer get_full_name if present, fall back to username, otherwise pk
+            if hasattr(self.admin, 'get_full_name'):
+                sender = self.admin.get_full_name()
+            elif hasattr(self.admin, 'username'):
+                sender = self.admin.username
+            else:
+                sender = str(self.admin.pk)
+            sender_type = "Admin"
         else:
             sender = "Unknown"
-        return f"Comment by {sender} on application {self.visa_application.id}"
+            sender_type = "Unknown"
+        return f"Comment by {sender_type}: {sender} on application {self.visa_application.id}"
 
     @property
     def sender_type(self):
@@ -427,21 +432,32 @@ class WorkVisaApplicationComment(models.Model):
 
     @property
     def sender_display(self):
-        # For serializers/UI, show info about who sent the comment.
+        """
+        For serializers/UI, show info about who sent the comment.
+        """
         if self.applicant:
+            name = self.applicant.get_full_name()
+            if not name and hasattr(self.applicant, "user") and self.applicant.user:
+                name = self.applicant.user.username
             return {
                 "type": "applicant",
-                "name": self.applicant.get_full_name() or self.applicant.user.username,
+                "name": name or str(self.applicant.pk),
                 "id": self.applicant.id,
             }
         elif self.admin:
+            name = ""
+            if hasattr(self.admin, 'get_full_name'):
+                name = self.admin.get_full_name()
+            elif hasattr(self.admin, 'username'):
+                name = self.admin.username
+            else:
+                name = str(self.admin.pk)
             return {
                 "type": "admin",
-                "name": self.admin.get_full_name() if hasattr(self.admin, 'get_full_name') else self.admin.username,
+                "name": name,
                 "id": self.admin.id,
             }
         return {"type": "unknown"}
-
 
 
 # class InterviewFAQ(models.Model):

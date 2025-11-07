@@ -1,5 +1,4 @@
 from django.contrib import admin
-# Register your models here.
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from app.ad_banners.models import AdBanner
@@ -14,6 +13,7 @@ from .visa.work.offers.models import (
     WorkVisaApplication,
     # InterviewFAQ,
     WorkVisaInterview,
+    WorkVisaApplicationComment,
 )
 from .visa.work.organization.models import WorkOrganization
 from .visa.vacation.offer.models import (
@@ -95,6 +95,12 @@ class WorkVisaOfferRequirementResource(resources.ModelResource):
 class WorkVisaApplicationResource(resources.ModelResource):
     class Meta:
         model = WorkVisaApplication
+
+
+class WorkVisaApplicationCommentResource(resources.ModelResource):
+    class Meta:
+        model = WorkVisaApplicationComment
+
 
 # class InterviewFAQResource(resources.ModelResource):
 #     class Meta:
@@ -252,6 +258,12 @@ class WorkVisaOfferRequirementAdmin(ImportExportModelAdmin):
 @admin.register(WorkVisaApplication)
 class WorkVisaApplicationAdmin(ImportExportModelAdmin):
     resource_class = WorkVisaApplicationResource
+
+
+@admin.register(WorkVisaApplicationComment)
+class WorkVisaApplicationCommentAdmin(ImportExportModelAdmin):
+    resource_class = WorkVisaApplicationCommentResource
+
 
 # @admin.register(InterviewFAQ)
 # class InterviewFAQAdmin(ImportExportModelAdmin):
