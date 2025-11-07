@@ -18,6 +18,7 @@ from app.visa.work.offers.views import (
     # InterviewFAQViewSet,
     WorkVisaInterviewViewSet,
     CVSubmissionViewSet,
+    WorkVisaApplicationCommentViewSet,  # <-- Added for comment endpoints (from views.py, lines 92-125)
 )
 from app.visa.work.organization.views import WorkOrganizationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
@@ -55,6 +56,7 @@ router.register(r'ad-banner', AdBannerViewSet, basename='adbanner')
 router.register(r'study-visa-offers', StudyVisaOfferViewSet, basename='studyvisaoffers')
 router.register(r'work-visa-offers', WorkVisaOfferViewSet, basename='workvisaoffers')
 router.register(r'work-visa-application', WorkVisaApplicationViewSet, basename='workvisaapplication')
+router.register(r'work-visa-application-comments', WorkVisaApplicationCommentViewSet, basename='workvisaapplicationcomment')  # <-- NEW for Work Visa Application Comments
 router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvisaorg')
 router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offer')
 router.register(r'vacation-application', VacationVisaApplicationViewSet, basename='vacationapplication')

@@ -248,3 +248,5 @@ class PilgrimageVisaApplicationComment(models.Model):
                 "id": self.admin.id,
             }
         return {"type": "unknown"}
+
+

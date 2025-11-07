@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from app.visa.work.offers.models import (
+    WorkVisaApplicationComment,
     WorkVisaOffer,
     WorkVisaOfferRequirement,
     WorkVisaApplication,
@@ -53,6 +54,56 @@ class WorkVisaOfferSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
+
+# Work Visa Application Comment Serializer
+class WorkVisaApplicationCommentSerializer(serializers.ModelSerializer):
+    sender_type = serializers.CharField(source='sender_type', read_only=True)
+    sender_display = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = WorkVisaApplicationComment
+        fields = [
+            "id",
+            "visa_application",
+            "applicant",
+            "admin",
+            "text",
+            "created_at",
+            "is_read_by_applicant",
+            "is_read_by_admin",
+            "attachment",
+            "sender_type",
+            "sender_display",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "sender_type",
+            "sender_display",
+        ]
+
+    def get_sender_display(self, obj):
+        # Replicate logic from sender_display property in the model
+        if obj.applicant:
+            return {
+                "type": "applicant",
+                "name": getattr(obj.applicant, "get_full_name", lambda: None)() or getattr(getattr(obj.applicant, "user", None), "username", None),
+                "id": obj.applicant.id,
+            }
+        elif obj.admin:
+            if hasattr(obj.admin, "get_full_name"):
+                name = obj.admin.get_full_name()
+            else:
+                name = getattr(obj.admin, "username", None)
+            return {
+                "type": "admin",
+                "name": name,
+                "id": obj.admin.id,
+            }
+        return {"type": "unknown"}
+
+
 class WorkVisaApplicationSerializer(serializers.ModelSerializer):
     offer = WorkVisaOfferSerializer(read_only=True)
     offer_id = serializers.PrimaryKeyRelatedField(
@@ -68,6 +119,7 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    comments = WorkVisaApplicationCommentSerializer(many=True, read_only=True)
 
     # Serialize the country as a string (code), not as the Country object itself.
     country = serializers.SerializerMethodField()
@@ -96,6 +148,7 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
             'intended_end_date',
             'visa_type',
             'sponsorship_details',
+            "comments",
             # Step 4: Document Uploads
             'passport_photo',
             'international_passport',
@@ -126,6 +179,7 @@ class WorkVisaApplicationSerializer(serializers.ModelSerializer):
             'id',
             'submitted_at',
             'offer',
+            "comments",
             'status',
         ]
 
@@ -207,3 +261,4 @@ class CVSubmissionSerializer(serializers.ModelSerializer):
             'submitted_at',
             'updated_at',
         ]
+

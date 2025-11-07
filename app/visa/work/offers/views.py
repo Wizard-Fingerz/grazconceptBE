@@ -1,13 +1,19 @@
 from rest_framework import viewsets
 from rest_framework import permissions
 from app.views import CustomPagination
-from app.visa.work.offers.models import CVSubmission, WorkVisaOffer, WorkVisaApplication, WorkVisaInterview
+from app.visa.work.offers.models import (
+    CVSubmission,
+    WorkVisaOffer,
+    WorkVisaApplication,
+    WorkVisaInterview,
+    WorkVisaApplicationComment,
+)
 from app.visa.work.offers.serializers import (
     CVSubmissionSerializer,
     WorkVisaOfferSerializer,
     WorkVisaApplicationSerializer,
-    # InterviewFAQSerializer,
     WorkVisaInterviewSerializer,
+    WorkVisaApplicationCommentSerializer,
 )
 
 from rest_framework.response import Response
@@ -84,11 +90,37 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-# class InterviewFAQViewSet(viewsets.ModelViewSet):
-#     queryset = InterviewFAQ.objects.all()
-#     serializer_class = InterviewFAQSerializer
-#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-#     pagination_class = CustomPagination
+class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling comments on Work Visa Applications.
+    """
+    queryset = WorkVisaApplicationComment.objects.all()
+    serializer_class = WorkVisaApplicationCommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        """
+        Optionally filter comments by visa_application id (?visa_application=<id>).
+        """
+        queryset = super().get_queryset()
+        visa_application_id = self.request.query_params.get('visa_application')
+        if visa_application_id:
+            queryset = queryset.filter(visa_application_id=visa_application_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        """
+        Set the sender fields based on the user.
+        """
+        user = self.request.user
+        # Set sender based on user type
+        applicant = getattr(user, 'applicant', None)
+        admin = None
+        if not applicant:
+            # Assume staff users are admin type, set accordingly
+            admin = user if user.is_staff or hasattr(user, "is_admin") else None
+        serializer.save(applicant=applicant, admin=admin)
 
 
 class WorkVisaInterviewViewSet(viewsets.ModelViewSet):
