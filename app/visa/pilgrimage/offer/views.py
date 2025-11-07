@@ -2,8 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework import permissions
 from app.views import CustomPagination
-from .models import PilgrimageOffer, PilgrimageVisaApplication
-from .serializers import PilgrimageOfferSerializer, PilgrimageVisaApplicationSerializer
+from .models import PilgrimageOffer, PilgrimageVisaApplication, PilgrimageVisaApplicationComment
+from .serializers import (
+    PilgrimageOfferSerializer,
+    PilgrimageVisaApplicationSerializer,
+    PilgrimageVisaApplicationCommentSerializer,
+)
 
 from django.db.models import Q
 from django.core.exceptions import FieldError
@@ -186,3 +190,87 @@ class PilgrimageVisaApplicationViewSet(viewsets.ModelViewSet):
             serializer.save()
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class PilgrimageVisaApplicationCommentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for CRUD operations on PilgrimageVisaApplicationComment.
+    Auto-assigns applicant/admin sender roles based on the current user.
+    """
+    queryset = PilgrimageVisaApplicationComment.objects.all()
+    serializer_class = PilgrimageVisaApplicationCommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        """
+        Optionally filters by visa_application, applicant, admin, search, and read flags.
+        Customers only see their own comments.
+        """
+        queryset = super().get_queryset()
+        params = self.request.query_params
+        user = self.request.user
+
+        # Only let "Customer" users see their own comments
+        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer'
+        if is_customer and hasattr(user, 'client'):
+            queryset = queryset.filter(applicant=user.client)
+
+        visa_application = params.get('visa_application')
+        applicant = params.get('applicant')
+        admin = params.get('admin')
+        is_read_by_applicant = params.get('is_read_by_applicant')
+        is_read_by_admin = params.get('is_read_by_admin')
+        search = params.get('search')
+        limit = params.get('limit')
+
+        if visa_application:
+            queryset = queryset.filter(visa_application=visa_application)
+        if applicant:
+            queryset = queryset.filter(applicant=applicant)
+        if admin:
+            queryset = queryset.filter(admin=admin)
+        if is_read_by_applicant is not None:
+            val = str(is_read_by_applicant).strip().lower()
+            if val in {'true', '1', 'yes', 'on'}:
+                queryset = queryset.filter(is_read_by_applicant=True)
+            elif val in {'false', '0', 'no', 'off'}:
+                queryset = queryset.filter(is_read_by_applicant=False)
+        if is_read_by_admin is not None:
+            val = str(is_read_by_admin).strip().lower()
+            if val in {'true', '1', 'yes', 'on'}:
+                queryset = queryset.filter(is_read_by_admin=True)
+            elif val in {'false', '0', 'no', 'off'}:
+                queryset = queryset.filter(is_read_by_admin=False)
+        if search:
+            q = Q()
+            q |= Q(text__icontains=search)
+            q |= Q(applicant__user__full_name__icontains=search)
+            q |= Q(applicant__user__username__icontains=search)
+            q |= Q(admin__username__icontains=search)
+            try:
+                queryset = queryset.filter(q)
+            except FieldError:
+                pass
+
+        if limit is not None:
+            try:
+                limit_value = int(limit)
+                if limit_value > 0:
+                    queryset = queryset[:limit_value]
+            except (ValueError, TypeError):
+                pass
+
+        return queryset
+
+    def perform_create(self, serializer):
+        """
+        Automatically set applicant or admin fields based on current user.
+        """
+        user = self.request.user
+        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer' and hasattr(user, 'client'):
+            serializer.save(applicant=user.client, admin=None)
+        elif hasattr(user, 'is_staff') and user.is_staff:
+            serializer.save(admin=user, applicant=None)
+        else:
+            # Default: save as is (fallback for unexpected user types)
+            serializer.save()

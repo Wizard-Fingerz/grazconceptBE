@@ -4,7 +4,11 @@ from rest_framework.routers import DefaultRouter
 from app.ad_banners.views import AdBannerViewSet
 from app.citizenship.european.views import EuropeanCitizenshipOfferViewSet, InvestmentOptionViewSet
 from app.help_center.support_ticket.views import SupportTicketViewSet
-from app.visa.pilgrimage.offer.views import PilgrimageOfferViewSet, PilgrimageVisaApplicationViewSet
+from app.visa.pilgrimage.offer.views import (
+    PilgrimageOfferViewSet,
+    PilgrimageVisaApplicationViewSet,
+    PilgrimageVisaApplicationCommentViewSet,  # <-- Added for comment endpoints
+)
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
 from app.visa.vacation.offer.views import VacationOfferViewSet, VacationVisaApplicationViewSet
@@ -56,6 +60,7 @@ router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offe
 router.register(r'vacation-application', VacationVisaApplicationViewSet, basename='vacationapplication')
 router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimageoffer')
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
+router.register(r'pilgrimage-application-comments', PilgrimageVisaApplicationCommentViewSet, basename='pilgrimageapplicationcomment')
 router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
 router.register(r'investment-options', InvestmentOptionViewSet, basename='investmentoptions')
 

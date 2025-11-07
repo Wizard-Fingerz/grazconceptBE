@@ -4,18 +4,70 @@ from .models import (
     PilgrimageOfferIncludedItem,
     PilgrimageOfferImage,
     PilgrimageVisaApplication,
+    PilgrimageVisaApplicationComment,
 )
 
+# Included Item Serializer
 class PilgrimageOfferIncludedItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PilgrimageOfferIncludedItem
         fields = ['id', 'name', 'description']
 
+# Image Serializer
 class PilgrimageOfferImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PilgrimageOfferImage
         fields = ['id', 'image', 'caption']
 
+# Pilgrimage Visa Application Comment Serializer
+class PilgrimageVisaApplicationCommentSerializer(serializers.ModelSerializer):
+    sender_type = serializers.CharField(source='sender_type', read_only=True)
+    sender_display = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = PilgrimageVisaApplicationComment
+        fields = [
+            "id",
+            "visa_application",
+            "applicant",
+            "admin",
+            "text",
+            "created_at",
+            "is_read_by_applicant",
+            "is_read_by_admin",
+            "attachment",
+            "sender_type",
+            "sender_display",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "sender_type",
+            "sender_display",
+        ]
+
+    def get_sender_display(self, obj):
+        # Replicate logic from sender_display property in the model
+        if obj.applicant:
+            return {
+                "type": "applicant",
+                "name": getattr(obj.applicant, "get_full_name", lambda: None)() or getattr(getattr(obj.applicant, "user", None), "username", None),
+                "id": obj.applicant.id,
+            }
+        elif obj.admin:
+            if hasattr(obj.admin, "get_full_name"):
+                name = obj.admin.get_full_name()
+            else:
+                name = getattr(obj.admin, "username", None)
+            return {
+                "type": "admin",
+                "name": name,
+                "id": obj.admin.id,
+            }
+        return {"type": "unknown"}
+
+# Pilgrimage Offer Serializer
 class PilgrimageOfferSerializer(serializers.ModelSerializer):
     included_items = PilgrimageOfferIncludedItemSerializer(many=True, read_only=True)
     images = PilgrimageOfferImageSerializer(many=True, read_only=True)
@@ -64,13 +116,15 @@ class PilgrimageOfferSerializer(serializers.ModelSerializer):
     def get_sponsorship_display(self, obj):
         return obj.sponsorship_display
 
+# Visa Application Serializer
 class PilgrimageVisaApplicationSerializer(serializers.ModelSerializer):
     offer_title = serializers.CharField(source="offer.title", read_only=True)
     destination = serializers.CharField(source="offer.destination", read_only=True)
     applicant_name = serializers.SerializerMethodField()
-    # Remove the fields that cause assertion errors
-    # pilgrimage_type_display = serializers.SerializerMethodField()
-    # accommodation_type_display = serializers.SerializerMethodField()
+    status_display = serializers.SerializerMethodField()
+    # Add comment serialization (read-only)
+    comments = PilgrimageVisaApplicationCommentSerializer(many=True, read_only=True)
+
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
@@ -92,8 +146,11 @@ class PilgrimageVisaApplicationSerializer(serializers.ModelSerializer):
             "emergency_contact_name",
             "emergency_contact_phone",
             "emergency_contact_relationship",
+            "status",
+            "status_display",
             "created_at",
             "updated_at",
+            "comments",
         ]
         read_only_fields = [
             "id",
@@ -102,6 +159,8 @@ class PilgrimageVisaApplicationSerializer(serializers.ModelSerializer):
             "offer_title",
             "destination",
             "applicant_name",
+            "status_display",
+            "comments",
         ]
 
     def get_applicant_name(self, obj):
@@ -113,5 +172,10 @@ class PilgrimageVisaApplicationSerializer(serializers.ModelSerializer):
             return obj.applicant.user.username
         if hasattr(obj.applicant, "username"):
             return obj.applicant.username
+        return None
+
+    def get_status_display(self, obj):
+        if hasattr(obj, "status_display"):
+            return obj.status_display
         return None
 
