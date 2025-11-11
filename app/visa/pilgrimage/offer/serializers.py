@@ -21,7 +21,7 @@ class PilgrimageOfferImageSerializer(serializers.ModelSerializer):
 
 # Pilgrimage Visa Application Comment Serializer
 class PilgrimageVisaApplicationCommentSerializer(serializers.ModelSerializer):
-    sender_type = serializers.CharField(source='sender_type', read_only=True)
+    sender_type = serializers.CharField(read_only=True)
     sender_display = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
 
