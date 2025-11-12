@@ -96,13 +96,13 @@ class LoanApplicationViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Override create to set user as request.user and pass to serializer.
+        Override create to set user as request.user and include user in the request data for the serializer.
         """
         data = request.data.copy()
+        data['user'] = request.user.pk  # Add user to the request data
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        # Pass the user explicitly to serializer.save()
-        self.perform_create(serializer, request.user)
+        self.perform_create(serializer)  # No need to pass user; it is in the data
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

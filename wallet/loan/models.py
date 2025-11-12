@@ -90,7 +90,10 @@ class LoanApplication(models.Model):
         on_delete=models.PROTECT,
         limit_choices_to={'table_name': 'loan_status'},
         related_name='loan_application_statuses',
-        help_text="Dropdown definition record for the current status of the loan application"
+        help_text="Dropdown definition record for the current status of the loan application",
+        default=None,  # Will be set in save()
+        null=True,     # Allow null so we can set in save()
+        blank=True
     )
     # You might collect additional info per application:
     filled_details = models.JSONField(
@@ -101,9 +104,30 @@ class LoanApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    def save(self, *args, **kwargs):
+        # Assign default status as 'Pending' if not set
+        if self.status is None:
+            try:
+                self.status = TableDropDownDefinition.objects.get(
+                    table_name='loan_status',
+                    term__iexact='Pending'
+                )
+            except TableDropDownDefinition.DoesNotExist:
+                # Fallback: try first available 'loan_status' or raise
+                first_status = TableDropDownDefinition.objects.filter(table_name='loan_status').first()
+                if first_status:
+                    self.status = first_status
+                else:
+                    raise Exception(
+                        "Cannot find any TableDropDownDefinition with table_name='loan_status' to set as default status."
+                    )
+        super().save(*args, **kwargs)
+
     def __str__(self):
         status_label = getattr(self.status, 'label', None) or str(self.status)
         return f"LoanApplication #{self.id} for {self.loan_offer.name} by {self.user} - {status_label}"
+
+
 
 class LoanRepayment(models.Model):
     """
