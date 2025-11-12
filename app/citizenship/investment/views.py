@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, mixins
+
+from app.views import CustomPagination
 from .models import InvestmentPlan, InvestmentPlanBenefit, Investment
 from .serializers import (
     InvestmentPlanSerializer,
@@ -19,6 +21,7 @@ class InvestmentPlanViewSet(mixins.ListModelMixin,
     queryset = InvestmentPlan.objects.all()
     serializer_class = InvestmentPlanSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = CustomPagination
 
     @action(detail=True, methods=["get"], url_path="benefits", permission_classes=[permissions.AllowAny])
     def benefits(self, request, pk=None):
@@ -38,6 +41,7 @@ class InvestmentViewSet(mixins.ListModelMixin,
     """
     serializer_class = InvestmentSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         return Investment.objects.filter(investor=self.request.user).order_by('-created_at')

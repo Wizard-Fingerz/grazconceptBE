@@ -9,7 +9,7 @@ class InvestmentPlan(models.Model):
     """
     name = models.CharField(max_length=80, unique=True)
     description = models.TextField()
-    price = models.DecimalField(max_digits=12, decimal_places=2, help_text="Minimum investment amount in USD")
+    price = models.DecimalField(max_digits=12, decimal_places=2, help_text="Minimum investment amount in NGN")
     roi_percentage = models.DecimalField(
         max_digits=5, decimal_places=2, help_text="Annual ROI as a % (e.g., 12.00 for 12%)"
     )
