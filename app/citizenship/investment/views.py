@@ -38,8 +38,7 @@ class InvestmentViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     """
     ViewSet to list, create, and retrieve investments scoped to the current user.
-    Ensures that investor is always set to the request user for all actions,
-    and removes investor from incoming validated data on create.
+    Ensures that investor is always set to the request user for all actions.
     """
     serializer_class = InvestmentSerializer
     permission_classes = [IsAuthenticated]
@@ -48,9 +47,14 @@ class InvestmentViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         return Investment.objects.filter(investor=self.request.user).order_by('-created_at')
 
-    def perform_create(self, serializer):
-        # Always set investor to request.user, remove investor from incoming data if present
-        validated_data = dict(serializer.validated_data)
-        validated_data.pop('investor', None)
-        serializer.save(investor=self.request.user, **validated_data)
-
+    def create(self, request, *args, **kwargs):
+        """
+        Ensure investor is always set to the request user when creating an investment.
+        """
+        data = request.data.copy()
+        data['investor'] = request.user.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
