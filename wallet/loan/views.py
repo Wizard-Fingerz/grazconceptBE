@@ -94,9 +94,21 @@ class LoanApplicationViewSet(viewsets.ModelViewSet):
         # Only return loan applications related to the authenticated user
         return self.queryset.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        """
+        Override create to set user as request.user and pass to serializer.
+        """
+        data = request.data.copy()
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        # Pass the user explicitly to serializer.save()
+        self.perform_create(serializer, request.user)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer, user=None):
         # Set the user to the authenticated user on creation
-        serializer.save(user=self.request.user)
+        serializer.save(user=user or self.request.user)
 
 
 class LoanRepaymentViewSet(viewsets.ModelViewSet):
