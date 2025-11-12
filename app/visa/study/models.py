@@ -100,7 +100,7 @@ class StudyVisaApplication(models.Model):
     emergency_contact_name = models.CharField(max_length=255, blank=True, null=True)
     emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
     emergency_contact_phone = models.CharField(max_length=30, blank=True, null=True)
-    statement_of_purpose = models.TextField(blank=True, null=True)
+    statement_of_purpose = models.FileField(upload_to='study_visa/statement_of_purpose/',blank=True, null=True)
 
     # 6️⃣ Review & Submit
     is_submitted = models.BooleanField(default=False)
