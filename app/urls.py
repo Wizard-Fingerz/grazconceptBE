@@ -7,7 +7,7 @@ from app.help_center.support_ticket.views import SupportTicketViewSet
 from app.visa.pilgrimage.offer.views import (
     PilgrimageOfferViewSet,
     PilgrimageVisaApplicationViewSet,
-    PilgrimageVisaApplicationCommentViewSet,  # <-- Added for comment endpoints
+    PilgrimageVisaApplicationCommentViewSet,
 )
 from app.visa.study.offers.views import StudyVisaOfferViewSet
 from app.visa.study.views import StudyVisaApplicationViewSet
@@ -18,7 +18,7 @@ from app.visa.work.offers.views import (
     # InterviewFAQViewSet,
     WorkVisaInterviewViewSet,
     CVSubmissionViewSet,
-    WorkVisaApplicationCommentViewSet,  # <-- Added for comment endpoints (from views.py, lines 92-125)
+    WorkVisaApplicationCommentViewSet,
 )
 from app.visa.work.organization.views import WorkOrganizationViewSet
 from .flight.views import get_booked_flights, search_flights, suggest_flights_for_user, suggest_locations
@@ -30,18 +30,20 @@ from .visa.study.institutions.views import (
     InstitutionViewSet,
     CourseOfStudyViewSet,
 )
-
 # --- Import Education/Exam Fee ViewSets ---
 from app.services.edu_and_exam_fee.views import (
     EducationFeeProviderViewSet,
     EducationFeeTypeViewSet,
     EducationFeePaymentViewSet,
 )
-# ----------------------------------------
-
 # --- Import Knowledge Base FAQ ViewSet ---
 from app.help_center.knowledge_base.views import FaqArticleViewSet
-# ----------------------------------------
+
+# ---- Investment endpoints from app.citizenship.investment.views ----
+from app.citizenship.investment.views import (
+    InvestmentPlanViewSet,
+    InvestmentViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
@@ -56,7 +58,7 @@ router.register(r'ad-banner', AdBannerViewSet, basename='adbanner')
 router.register(r'study-visa-offers', StudyVisaOfferViewSet, basename='studyvisaoffers')
 router.register(r'work-visa-offers', WorkVisaOfferViewSet, basename='workvisaoffers')
 router.register(r'work-visa-application', WorkVisaApplicationViewSet, basename='workvisaapplication')
-router.register(r'work-visa-application-comments', WorkVisaApplicationCommentViewSet, basename='workvisaapplicationcomment')  # <-- NEW for Work Visa Application Comments
+router.register(r'work-visa-application-comments', WorkVisaApplicationCommentViewSet, basename='workvisaapplicationcomment')
 router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvisaorg')
 router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offer')
 router.register(r'vacation-application', VacationVisaApplicationViewSet, basename='vacationapplication')
@@ -64,6 +66,8 @@ router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimag
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
 router.register(r'pilgrimage-application-comments', PilgrimageVisaApplicationCommentViewSet, basename='pilgrimageapplicationcomment')
 router.register(r'european-citizenship-offer', EuropeanCitizenshipOfferViewSet, basename='europiancitizenshipoffer')
+router.register(r'investment-plans', InvestmentPlanViewSet, basename='investmentplan')
+router.register(r'investments', InvestmentViewSet, basename='investment')
 router.register(r'investment-options', InvestmentOptionViewSet, basename='investmentoptions')
 
 # --- Register Work Visa Interview & FAQ endpoints ---

@@ -46,6 +46,13 @@ from .help_center.support_ticket.models import SupportTicket, SupportTicketMessa
 # --- FAQ Admin Imports ---
 from .help_center.knowledge_base.models import FaqArticle
 
+# --- Investment Models Admin Imports ---
+from .citizenship.investment.models import (
+    InvestmentPlan,
+    InvestmentPlanBenefit,
+    Investment,
+)
+
 
 class HotelResource(resources.ModelResource):
     class Meta:
@@ -160,6 +167,21 @@ class PilgrimageVisaApplicationResource(resources.ModelResource):
 class PilgrimageVisaApplicationCommentResource(resources.ModelResource):
     class Meta:
         model = PilgrimageVisaApplicationComment
+
+# --- Investment Admin Resources ---
+
+
+class InvestmentPlanResource(resources.ModelResource):
+    class Meta:
+        model = InvestmentPlan
+
+class InvestmentPlanBenefitResource(resources.ModelResource):
+    class Meta:
+        model = InvestmentPlanBenefit
+
+class InvestmentResource(resources.ModelResource):
+    class Meta:
+        model = Investment
 
 # --- European Citizenship Resource ---
 
@@ -318,6 +340,31 @@ class PilgrimageOfferImageAdmin(ImportExportModelAdmin):
 @admin.register(PilgrimageVisaApplication)
 class PilgrimageVisaApplicationAdmin(ImportExportModelAdmin):
     resource_class = PilgrimageVisaApplicationResource
+
+# --- Investment Admin Registration ---
+
+
+@admin.register(InvestmentPlan)
+class InvestmentPlanAdmin(ImportExportModelAdmin):
+    resource_class = InvestmentPlanResource
+    list_display = ("id", "name", "price", "roi_percentage", "period_months", "color", "progress", "withdraw_available")
+    search_fields = ("id", "name", "description")
+    list_filter = ("withdraw_available", "period_months")
+
+@admin.register(InvestmentPlanBenefit)
+class InvestmentPlanBenefitAdmin(ImportExportModelAdmin):
+    resource_class = InvestmentPlanBenefitResource
+    list_display = ("id", "plan", "order", "text")
+    list_filter = ("plan",)
+    search_fields = ("plan__name", "text")
+
+@admin.register(Investment)
+class InvestmentAdmin(ImportExportModelAdmin):
+    resource_class = InvestmentResource
+    list_display = ("id", "investor", "plan", "amount", "roi_amount", "start_date",
+                    "maturity_date", "withdrawable", "next_withdraw_date", "status", "created_at")
+    search_fields = ("id", "investor__username", "plan__name")
+    list_filter = ("status", "plan", "withdrawable")
 
 # --- European Citizenship Admin Registration ---
 
