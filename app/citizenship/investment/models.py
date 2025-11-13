@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from definition.models import TableDropDownDefinition
 
@@ -92,7 +93,73 @@ class Investment(models.Model):
         return self.status.term if self.status else None
 
     def save(self, *args, **kwargs):
-        # Auto-calculate ROI amount when saving, if not set
-        if not self.roi_amount and self.plan:
+        from django.db import transaction
+        from wallet.models import Wallet
+        from wallet.transactions.models import WalletTransaction
+
+        investor = self.investor
+
+        # Calculate ROI if not set and plan is set
+        if (not self.roi_amount or float(self.roi_amount) == 0) and self.plan:
             self.roi_amount = float(self.amount) * float(self.plan.roi_percentage) * (self.plan.period_months/12) / 100
-        super().save(*args, **kwargs)
+
+        try:
+            # Preferred: Deduct via wallet transaction if user has wallet
+            wallet = investor.wallet
+        except AttributeError:
+            wallet = None
+
+        if wallet:
+            # Check available balance
+            wallet.refresh_from_db()
+            if float(wallet.balance) < float(self.amount):
+                raise ValidationError("Insufficient wallet balance for this investment. Please fund your wallet.")
+
+            # Make sure we only create the withdrawal transaction the first time the investment is created
+            is_new = self._state.adding
+
+            with transaction.atomic():
+                # On create, perform and record the withdrawal
+                if is_new:
+                    # Create a withdrawal wallet transaction with remark for investment
+                    tx = WalletTransaction.objects.create(
+                        user=investor,
+                        wallet=wallet,
+                        transaction_type='withdrawal',
+                        amount=self.amount,
+                        currency=getattr(wallet, 'currency', 'NGN'),
+                        status='successful',
+                        reference=WalletTransaction.objects.make_reference() if hasattr(WalletTransaction.objects, 'make_reference') else None,
+                        description=f"Investment in: {self.plan.name}. Investment ID will be assigned after creation.",
+                        meta={
+                            'investment_plan_id': self.plan_id,
+                            'investment_plan': self.plan.name,
+                            'investment_id': None,  # Will update after save
+                        }
+                    )
+                    # Save investment so we get the ID
+                    super().save(*args, **kwargs)
+                    # Now update the wallet transaction meta with investment_id
+                    tx.meta['investment_id'] = self.pk
+                    tx.description = f"Investment in: {self.plan.name} (Investment #{self.pk})"
+                    tx.save(update_fields=['meta', 'description'])
+                else:
+                    super().save(*args, **kwargs)
+        else:
+            # Fallback legacy: Deduct from wallet_balance directly on investor if no wallet object exists
+            investor.refresh_from_db()
+            if float(getattr(investor, "wallet_balance", 0)) < float(self.amount):
+                raise ValidationError("Insufficient wallet balance for this investment. Please fund your wallet.")
+
+            with transaction.atomic():
+                is_new = self._state.adding
+                if is_new:
+                    investor_locked = type(investor).objects.select_for_update().get(pk=investor.pk)
+                    if float(getattr(investor_locked, "wallet_balance", 0)) < float(self.amount):
+                        raise ValidationError("Insufficient wallet balance for this investment. Please fund your wallet.")
+                    # Deduct and save
+                    investor_locked.wallet_balance = float(investor_locked.wallet_balance) - float(self.amount)
+                    investor_locked.save(update_fields=['wallet_balance'])
+                    super().save(*args, **kwargs)
+                else:
+                    super().save(*args, **kwargs)
