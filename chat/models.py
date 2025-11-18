@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from cloudinary.models import CloudinaryField  # Added for Cloudinary file/image fields
 
 User = get_user_model()
 
@@ -92,7 +93,7 @@ class Message(models.Model):
         help_text="Whether the sender is a customer or agent."
     )
     message = models.TextField(blank=True)
-    attachment = models.FileField(upload_to='chat_media/', blank=True, null=True)
+    attachment = CloudinaryField('file', blank=True, null=True, help_text="Attachment (image, document, etc.) uploaded to Cloudinary")
     # You can extend to support attachments if needed later
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)

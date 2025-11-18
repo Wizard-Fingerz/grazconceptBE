@@ -3,6 +3,7 @@ from django_countries.fields import CountryField
 from definition.models import TableDropDownDefinition
 from account.client.models import Client  # For applicant ForeignKey
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 class PilgrimageOffer(models.Model):
     title = models.CharField(max_length=255)
@@ -125,8 +126,8 @@ class PilgrimageVisaApplication(models.Model):
     date_of_birth = models.DateField()
     preferred_travel_date = models.DateField()
     group_travel = models.BooleanField(default=False)
-    passport_photo = models.FileField(upload_to=pilgrimage_passport_photo_upload_to)
-    medical_certificate = models.FileField(upload_to=pilgrimage_medical_certificate_upload_to, blank=True, null=True)
+    passport_photo = CloudinaryField("passport_photo")
+    medical_certificate = CloudinaryField("medical_certificate", blank=True, null=True)
     emergency_contact_name = models.CharField(max_length=255)
     emergency_contact_phone = models.CharField(max_length=30)
     emergency_contact_relationship = models.CharField(max_length=100)
@@ -235,11 +236,7 @@ class PilgrimageVisaApplicationComment(models.Model):
     is_read_by_applicant = models.BooleanField(default=False)
     is_read_by_admin = models.BooleanField(default=False)
     # (optional) Document upload to clarify/request something
-    attachment = models.FileField(
-        upload_to=application_comment_attachment_upload_to,
-        null=True, blank=True,
-        help_text="Optional file/document related to this comment."
-    )
+    attachment = CloudinaryField("attachment", null=True, blank=True, help_text="Optional file/document related to this comment.")
 
     class Meta:
         ordering = ['created_at']

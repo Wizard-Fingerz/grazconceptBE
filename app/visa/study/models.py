@@ -5,6 +5,8 @@ from django_countries.fields import CountryField
 from definition.models import TableDropDownDefinition
 from app.visa.study.offers.models import StudyVisaOffer
 
+from cloudinary.models import CloudinaryField
+
 # Helper for file upload paths
 def upload_to(instance, filename, prefix):
     return f'study_visa/{instance.id or "temp"}/{prefix}/{filename}'
@@ -86,12 +88,12 @@ class StudyVisaApplication(models.Model):
     )
 
     # 4️⃣ Document Uploads
-    passport_photo = models.ImageField(upload_to='study_visa/passport_photos/', blank=True, null=True)
-    passport_document = models.FileField(upload_to='study_visa/international_passports/', blank=True, null=True)
-    academic_transcript = models.FileField(upload_to='study_visa/academic_transcripts/', blank=True, null=True)
-    admission_letter = models.FileField(upload_to='study_visa/admission_letters/', blank=True, null=True)
-    financial_statement = models.FileField(upload_to='study_visa/financial_statements/', blank=True, null=True)
-    english_test_result = models.FileField(upload_to='study_visa/english_proficiency/', blank=True, null=True)
+    passport_photo = CloudinaryField('image', blank=True, null=True)
+    passport_document = CloudinaryField('file', blank=True, null=True)
+    academic_transcript = CloudinaryField('file', blank=True, null=True)
+    admission_letter = CloudinaryField('file', blank=True, null=True)
+    financial_statement = CloudinaryField('file', blank=True, null=True)
+    english_test_result = CloudinaryField('file', blank=True, null=True)
 
     # 5️⃣ Additional Information
     previous_visa_applications = models.BooleanField(default=False)
@@ -100,7 +102,7 @@ class StudyVisaApplication(models.Model):
     emergency_contact_name = models.CharField(max_length=255, blank=True, null=True)
     emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
     emergency_contact_phone = models.CharField(max_length=30, blank=True, null=True)
-    statement_of_purpose = models.FileField(upload_to='study_visa/statement_of_purpose/',blank=True, null=True)
+    statement_of_purpose = CloudinaryField('file', blank=True, null=True)
 
     # 6️⃣ Review & Submit
     is_submitted = models.BooleanField(default=False)

@@ -3,6 +3,8 @@ from django_countries.fields import CountryField
 from definition.models import TableDropDownDefinition
 from account.client.models import Client  # For applicant ForeignKey
 
+from cloudinary.models import CloudinaryField  # Added for Cloudinary file/image fields
+
 class VacationOffer(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -13,7 +15,7 @@ class VacationOffer(models.Model):
     currency = models.CharField(max_length=10, default="USD")
     per_seat = models.BooleanField(default=True, help_text="Is the price per seat?")
     hotel_stars = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Hotel star rating if included")
-    image = models.URLField(max_length=500, null=True, blank=True, help_text="Main image URL for the offer")
+    image = CloudinaryField('image', blank=True, null=True, help_text="Main image for the offer")  # Changed from URLField to CloudinaryField
     # For multiple images, use a related model below
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -35,7 +37,7 @@ class VacationOfferIncludedItem(models.Model):
 
 class VacationOfferImage(models.Model):
     offer = models.ForeignKey(VacationOffer, related_name='images', on_delete=models.CASCADE)
-    image = models.URLField(max_length=500)
+    image = CloudinaryField('image', blank=True, null=True)  # Changed from URLField to CloudinaryField
     caption = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
@@ -85,10 +87,7 @@ class VacationVisaApplication(models.Model):
     )
 
     # Document Uploads
-    identification_document = models.FileField(
-        upload_to=vacation_identification_document_upload_to,
-        help_text="Passport, National ID, or other identification document"
-    )
+    identification_document = CloudinaryField('file', blank=True, null=True, help_text="Passport, National ID, or other identification document")
 
     # Emergency Contact
     emergency_contact_name = models.CharField(max_length=255)

@@ -5,6 +5,8 @@ from account.client.models import Client
 from definition.models import TableDropDownDefinition
 from django.conf import settings
 
+from cloudinary.models import CloudinaryField
+
 
 def get_default_work_visa_status():
     try:
@@ -212,44 +214,44 @@ class WorkVisaApplication(models.Model):
     )
 
     # Step 4: Document Uploads
-    passport_photo = models.FileField(
-        upload_to="work_visa_applications/passport_photo/",
+    passport_photo = CloudinaryField(
+        'image',
         blank=True,
         null=True,
         help_text="Passport sized recent photo"
     )
-    international_passport = models.FileField(
-        upload_to="work_visa_applications/international_passport/",
+    international_passport = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Scanned international passport document"
     )
-    updated_resume = models.FileField(
-        upload_to="work_visa_applications/resume/",
+    updated_resume = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Updated Resume/CV"
     )
-    reference_letter = models.FileField(
-        upload_to="work_visa_applications/reference_letter/",
+    reference_letter = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Reference letter upload"
     )
-    employment_letter = models.FileField(
-        upload_to="work_visa_applications/employment_letter/",
+    employment_letter = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Employment letter upload"
     )
-    financial_statement = models.FileField(
-        upload_to="work_visa_applications/financial_statement/",
+    financial_statement = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Financial/bank statement"
     )
-    english_proficiency_test = models.FileField(
-        upload_to="work_visa_applications/english_proficiency/",
+    english_proficiency_test = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="Proof of English language proficiency"
@@ -296,8 +298,8 @@ class WorkVisaApplication(models.Model):
     )
 
     # Deprecated/legacy fields or moved fields
-    resume = models.FileField(
-        upload_to='work_visa_applications/legacy_resume/',
+    resume = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="(Legacy) Resume or CV document"
@@ -307,8 +309,8 @@ class WorkVisaApplication(models.Model):
         null=True,
         help_text="(Legacy) Cover letter for the job application"
     )
-    passport_document = models.FileField(
-        upload_to='work_visa_applications/legacy_passport/',
+    passport_document = CloudinaryField(
+        'auto',
         blank=True,
         null=True,
         help_text="(Legacy) Scanned passport document"
@@ -393,9 +395,10 @@ class WorkVisaApplicationComment(models.Model):
     is_read_by_applicant = models.BooleanField(default=False)
     is_read_by_admin = models.BooleanField(default=False)
     # (optional) Document upload to clarify/request something
-    attachment = models.FileField(
-        upload_to=application_comment_attachment_upload_to,
-        null=True, blank=True,
+    attachment = CloudinaryField(
+        'auto',
+        blank=True,
+        null=True,
         help_text="Optional file/document related to this comment."
     )
 
@@ -558,7 +561,10 @@ class CVSubmission(models.Model):
         max_length=400, blank=True,
         help_text="Comma separated list if applicant filled in 'other' or unlisted skills"
     )
-    cv_file = models.FileField(upload_to='cv_uploads/%Y/%m/', help_text="CV file uploaded by the user")
+    cv_file = CloudinaryField(
+        'auto',
+        help_text="CV file uploaded by the user"
+    )
     cover_letter = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
