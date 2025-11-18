@@ -8,6 +8,7 @@ class NotificationConfig(AppConfig):
 
     def ready(self):
         import notification.wallet.signals
+        import notification.saving_plans.signals
         import notification.visa.work.signals
         import notification.visa.vacation.signals
         import notification.visa.study.signals
