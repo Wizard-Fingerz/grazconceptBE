@@ -11,7 +11,13 @@ class SavingsPlanViewSet(viewsets.ModelViewSet):
         # Return only savings plans belonging to the authenticated user
         return SavingsPlan.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        # Automatically assign the savings plan to the logged-in user
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        # Copy data and set the user to the request user before passing to the serializer
+        data = request.data.copy()
+        data['user'] = request.user.pk
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
 
