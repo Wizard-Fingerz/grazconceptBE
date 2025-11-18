@@ -8,7 +8,6 @@ from .serializers import (
     InvestmentSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -50,11 +49,27 @@ class InvestmentViewSet(mixins.ListModelMixin,
     def create(self, request, *args, **kwargs):
         """
         Ensure investor is always set to the request user when creating an investment.
+        Catch any wallet balance ValidationError and return as a normal error message.
         """
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
         data = request.data.copy()
         data['investor'] = request.user.id
         serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=201, headers=headers)
+        except DjangoValidationError as e:
+            detail = e.messages if hasattr(e, "messages") else [str(e)]
+            # Remove 'success': False and respond with standard error keys as dictated by DRF (but as 400)
+            return Response(
+                # {
+                #     "error": detail[0] if detail else "Validation failed.",
+                #     "errors": detail,
+                # },
+
+                detail,
+                status=400
+            )
