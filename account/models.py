@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from account.managers import UserManager
-from account.utils import generate_filename
 from definition.models import TableDropDownDefinition
 from definition.permissions.models import UserPermissions
 from definition.roles.models import Roles
 from django_countries.fields import CountryField
+from cloudinary.models import CloudinaryField
 import string
 import random
 
@@ -49,7 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
     custom_id = models.CharField(max_length=7, unique=True, null=True, blank=True)
-    profile_picture = models.ImageField(upload_to=generate_filename, blank=True, null=True)
+    profile_picture = CloudinaryField('image', blank=True, null=True)
     email = models.EmailField(unique=True)
     extra_permissions = models.ManyToManyField(UserPermissions, related_name='extra_user_permissions', blank=True)
     is_deleted = models.BooleanField(default=False)
@@ -101,7 +101,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.profile_picture:
             try:
                 return self.profile_picture.url
-            except ValueError:
+            except Exception:
                 return None
         return None
 
