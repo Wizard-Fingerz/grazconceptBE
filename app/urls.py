@@ -45,6 +45,9 @@ from app.citizenship.investment.views import (
     InvestmentViewSet,
 )
 
+# --- Import CVProfileViewSet for CV builder API ---
+from app.cv_builder.views import CVProfileViewSet
+
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
 router.register(r'hotels', HotelViewSet, basename='hotels')
@@ -86,6 +89,9 @@ router.register(r'education-fee-payments', EducationFeePaymentViewSet, basename=
 router.register(r'faq-articles', FaqArticleViewSet, basename='faqarticles')
 router.register(r'support-ticket', SupportTicketViewSet, basename='supportticket')
 # --------------------------------------------
+
+# --- Register CV Builder endpoints ---
+router.register(r'cv-profiles', CVProfileViewSet, basename='cvprofile')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),
