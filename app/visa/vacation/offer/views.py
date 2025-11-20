@@ -145,12 +145,19 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status=status)
         return queryset
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        # Always ensure applicant is set to user.client if user is a Customer
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        # Determine applicant based on user type
+        data = request.data.copy()
         if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer' \
             and hasattr(user, "client") and user.client:
-            serializer.save(applicant=user.client)
-        else:
-            serializer.save()
+            data['applicant'] = user.client.id
+        elif hasattr(user, "client") and user.client:
+            data['applicant'] = user.client.id  # Default: set to user.client if available
+        # else, allow posted applicant
 
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

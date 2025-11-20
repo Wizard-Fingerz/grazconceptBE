@@ -81,7 +81,7 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
             'applicant',
             'passport_number',
             'date_of_birth',
-            'destination',
+            # 'destination',
             'travel_date',
             'number_of_people',
             'accommodation_type',

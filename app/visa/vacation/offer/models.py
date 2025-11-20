@@ -76,7 +76,7 @@ class VacationVisaApplication(models.Model):
     date_of_birth = models.DateField()
 
     # Vacation Details
-    destination = CountryField()
+    # destination = CountryField()
     travel_date = models.DateField()
     number_of_people = models.PositiveIntegerField(default=1, help_text="Number of people in the application")
     accommodation_type = models.CharField(
