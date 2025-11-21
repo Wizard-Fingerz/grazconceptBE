@@ -176,6 +176,25 @@ else:
         }
     }
 
+# ---- Celery configuration ----
+# If REDIS_URL is set, use it for Celery as both the broker and backend.
+# Otherwise, fallback to a local Redis server (for development).
+CELERY_BROKER_URL = REDIS_URL or "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = REDIS_URL or "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+
+# Periodic tasks example (see also tasks.py guide)
+CELERY_BEAT_SCHEDULE = {
+    "process-recurring-savings-plans": {
+        "task": "wallet.saving_plans.tasks.process_recurring_savings_plans",
+        "schedule": 86400.0,  # Every day (in seconds), adjust as needed.
+    },
+}
+
+
 AUTHENTICATION_BACKENDS = [
     'account.backends.EmailBackend',  # Custom email authentication backend
     'django.contrib.auth.backends.ModelBackend',  # Default Django backend
