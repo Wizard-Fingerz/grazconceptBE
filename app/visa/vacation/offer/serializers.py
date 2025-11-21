@@ -70,7 +70,6 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
         allow_null=True,
         default=None
     )
-    # Fix: remove redundant source kwarg per DRF error (source='status_display' is unnecessary)
     status_display = serializers.CharField(read_only=True)
 
     class Meta:
@@ -97,8 +96,6 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
         read_only_fields = ['id', 'created_at', 'updated_at', 'status_display']
 
     def create(self, validated_data):
-        # The model handles default 'Draft' status if status not provided,
-        # but you can enforce it here as well
         if 'status' not in validated_data or validated_data['status'] is None:
             try:
                 draft_status = TableDropDownDefinition.objects.filter(
@@ -113,14 +110,29 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
 
     def to_representation(self, instance):
         """
-        Optionally, override to add more details (e.g., applicant/basic offer data).
+        Customize representation to avoid AttributeError if Client has no user.
+        Populate applicant_detail with id and either get_full_name(), username (if applicant has .user), or email (if available).
         """
         rep = super().to_representation(instance)
-        # Add applicant info (limited to username & id for privacy)
-        rep['applicant_detail'] = {
-            'id': instance.applicant.id,
-            'name': getattr(instance.applicant, 'get_full_name', lambda: None)() or getattr(instance.applicant.user, 'username', None)
-        } if instance.applicant else None
-        # Add offer title for quick reference
+        applicant_detail = None
+        if instance.applicant:
+            # Try get_full_name if exists and returns a value
+            name = None
+            get_full_name = getattr(instance.applicant, 'get_full_name', None)
+            if callable(get_full_name):
+                name = get_full_name()
+            if not name:
+                # Try .user.username if applicant has a user and user has username field
+                user = getattr(instance.applicant, 'user', None)
+                if user and hasattr(user, 'username'):
+                    name = user.username
+            if not name:
+                # Fallback: try email field
+                name = getattr(instance.applicant, 'email', None)
+            applicant_detail = {
+                'id': instance.applicant.id,
+                'name': name
+            }
+        rep['applicant_detail'] = applicant_detail
         rep['offer_title'] = instance.offer.title if instance.offer else None
         return rep

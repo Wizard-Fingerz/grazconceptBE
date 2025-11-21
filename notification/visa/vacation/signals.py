@@ -3,6 +3,23 @@ from django.dispatch import receiver
 from notification.models import Notification
 from app.visa.vacation.offer.models import VacationOffer, VacationVisaApplication
 
+def get_notification_user_from_applicant(applicant):
+    """
+    Returns the user object related to the applicant for notification purposes.
+    Handles direct user or related user (for 'Client' applicant) fallback.
+    """
+    if hasattr(applicant, 'user') and applicant.user is not None:
+        # applicant has a direct user field
+        return applicant.user
+    elif hasattr(applicant, 'account') and applicant.account is not None:
+        # Fallback: some implementations have 'account' pointing to User
+        return applicant.account
+    elif hasattr(applicant, 'email'):
+        # As an absolute fallback (not recommended), just return None
+        # or raise, depending on requirements
+        return None
+    return None
+
 def create_vacation_notification(user, title, message, notification_type="system", data=None):
     if not user:
         return
@@ -46,12 +63,13 @@ def vacation_application_pre_save(sender, instance, **kwargs):
 @receiver(post_save, sender=VacationVisaApplication)
 def vacation_application_post_save(sender, instance, created, **kwargs):
     # Application Created Event
+    user = get_notification_user_from_applicant(instance.applicant)
     if created:
         title = "Vacation Visa Application Submitted"
         offer_title = instance.offer.title if instance.offer else "the offer"
         message = f"Your application for '{offer_title}' has been submitted successfully."
         create_vacation_notification(
-            user=instance.applicant.user,
+            user=user,
             title=title,
             message=message,
             notification_type="system",
@@ -86,7 +104,7 @@ def vacation_application_post_save(sender, instance, created, **kwargs):
                 f"has changed to '{new_status_display}'."
             )
             create_vacation_notification(
-                user=instance.applicant.user,
+                user=user,
                 title=title,
                 message=message,
                 notification_type="system",
@@ -108,11 +126,8 @@ def vacation_application_post_delete(sender, instance, **kwargs):
         f"Your vacation visa application for '{offer_title}' has been deleted. "
         "If you believe this was a mistake, please contact support."
     )
-    # Edge case: instance.applicant could theoretically be gone, so check
-    user = None
-    try:
-        user = instance.applicant.user
-    except Exception:
+    user = get_notification_user_from_applicant(instance.applicant)
+    if not user:
         return
     create_vacation_notification(
         user=user,

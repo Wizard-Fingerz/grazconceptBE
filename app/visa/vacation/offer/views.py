@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
 from .models import (
     VacationOffer,
     VacationOfferIncludedItem,
@@ -11,24 +12,24 @@ from .serializers import (
     VacationOfferImageSerializer,
     VacationVisaApplicationSerializer,
 )
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from app.views import CustomPagination
 
 from django.db.models import Q
 from django.core.exceptions import FieldError
 
+
 class VacationOfferViewSet(viewsets.ModelViewSet):
-    queryset = VacationOffer.objects.all()
+    queryset = VacationOffer.objects.all().order_by('-created_at')
     serializer_class = VacationOfferSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
 
     def get_queryset(self):
         """
-        Optionally restricts the returned VacationOffers by filtering against
-        query parameters in the URL. Supports filtering by destination, hotel_stars,
-        is_active, price (min_price, max_price), date range (start_date, end_date), and search.
-        Also supports 'limit' param for limiting results like pilgrimage's viewset.
+        Optionally filter VacationOffers by query params:
+        destination, hotel_stars, is_active, min_price, max_price,
+        date range, search, and supports limit.
         """
         queryset = super().get_queryset()
         params = self.request.query_params
@@ -72,14 +73,14 @@ class VacationOfferViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(start_date__gte=start_date)
         if end_date:
             queryset = queryset.filter(end_date__lte=end_date)
-        # Full-text or partial search across multiple fields
+
         if search_term:
-            search_q = Q()
-            search_q |= Q(title__icontains=search_term)
-            search_q |= Q(description__icontains=search_term)
-            search_q |= Q(destination__icontains=search_term)
-            search_q |= Q(hotel_stars__icontains=search_term)
-            # Add other relevant fields if needed
+            search_q = (
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term) |
+                Q(destination__icontains=search_term)
+            )
+            # Do not try searching for hotel_stars if it's not a char field
             try:
                 queryset = queryset.filter(search_q)
             except FieldError:
@@ -89,75 +90,69 @@ class VacationOfferViewSet(viewsets.ModelViewSet):
             try:
                 limit_value = int(limit)
                 if limit_value > 0:
-                    return queryset[:limit_value]
+                    queryset = queryset[:limit_value]
             except (ValueError, TypeError):
-                pass  # Ignore invalid limit values
+                pass
         return queryset
 
 
 class VacationOfferIncludedItemViewSet(viewsets.ModelViewSet):
     queryset = VacationOfferIncludedItem.objects.all()
     serializer_class = VacationOfferIncludedItemSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
+
 
 class VacationOfferImageViewSet(viewsets.ModelViewSet):
     queryset = VacationOfferImage.objects.all()
     serializer_class = VacationOfferImageSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
 
+
 class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
-    queryset = VacationVisaApplication.objects.all()
+    queryset = VacationVisaApplication.objects.all().order_by('-created_at')
     serializer_class = VacationVisaApplicationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
     def get_queryset(self):
         """
-        Filters vacation visa applications.
-        If the user's user_type.term is "Customer", restrict to their own applications only.
-        Allows filtering by offer, applicant, and status for others.
+        If user is a customer, show only their vacation visa applications.
+        Allows filtering by offer, applicant (if not customer), and status.
         """
         queryset = super().get_queryset()
-        offer = self.request.query_params.get('offer')
-        applicant = self.request.query_params.get('applicant')
-        status = self.request.query_params.get('status')
-
         user = self.request.user
 
-        # Enforce: If the user.user_type.term is "Customer", return only their own applications
-        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer':
-            client = getattr(user, 'client', None)
+        offer = self.request.query_params.get('offer')
+        applicant = self.request.query_params.get('applicant')
+        status_val = self.request.query_params.get('status')
+
+        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer'
+        client = getattr(user, 'client', None)
+
+        if is_customer:
             if client:
                 queryset = queryset.filter(applicant=client)
             else:
-                # No client object for this user; return none.
                 return queryset.none()
-        else:
-            # Only allow filtering by applicant if user is NOT a "Customer"
-            if applicant:
-                queryset = queryset.filter(applicant_id=applicant)
+        elif applicant:
+            queryset = queryset.filter(applicant_id=applicant)
 
         if offer:
             queryset = queryset.filter(offer_id=offer)
-        if status:
-            queryset = queryset.filter(status=status)
+        if status_val:
+            queryset = queryset.filter(status=status_val)
         return queryset
+    
 
     def create(self, request, *args, **kwargs):
+        """
+        Assign applicant id to the request data if user is a customer before saving.
+        """
         user = request.user
-        # Determine applicant based on user type
-        data = request.data.copy()
-        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer' \
-            and hasattr(user, "client") and user.client:
-            data['applicant'] = user.client.id
-        elif hasattr(user, "client") and user.client:
-            data['applicant'] = user.client.id  # Default: set to user.client if available
-        # else, allow posted applicant
+        if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer' and hasattr(user, 'client') and user.client:
+            if isinstance(request.data, dict):
+                request.data['applicant'] = user.client.id
+        return super().create(request, *args, **kwargs)
 
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
