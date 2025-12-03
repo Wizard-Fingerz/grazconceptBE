@@ -53,6 +53,9 @@ from .citizenship.investment.models import (
     Investment,
 )
 
+# --- Airtime Admin Imports ---
+from .services.airtime.models import NetworkProvider, AirtimePurchase
+
 
 class HotelResource(resources.ModelResource):
     class Meta:
@@ -231,6 +234,16 @@ class FaqArticleResource(resources.ModelResource):
     class Meta:
         model = FaqArticle
 
+# --- Airtime Admin Resources ---
+
+class NetworkProviderResource(resources.ModelResource):
+    class Meta:
+        model = NetworkProvider
+
+class AirtimePurchaseResource(resources.ModelResource):
+    class Meta:
+        model = AirtimePurchase
+
 
 @admin.register(Hotel)
 class HotelAdmin(ImportExportModelAdmin):
@@ -340,6 +353,26 @@ class PilgrimageOfferImageAdmin(ImportExportModelAdmin):
 @admin.register(PilgrimageVisaApplication)
 class PilgrimageVisaApplicationAdmin(ImportExportModelAdmin):
     resource_class = PilgrimageVisaApplicationResource
+
+# --- Airtime Admin Registration ---
+
+@admin.register(NetworkProvider)
+class NetworkProviderAdmin(ImportExportModelAdmin):
+    resource_class = NetworkProviderResource
+    list_display = ("id", "label", "value", "active", "accent", "logo")
+    list_filter = ("active",)
+    search_fields = ("label", "value")
+
+@admin.register(AirtimePurchase)
+class AirtimePurchaseAdmin(ImportExportModelAdmin):
+    resource_class = AirtimePurchaseResource
+    list_display = (
+        "id", "user", "provider", "phone", "amount",
+        "completed", "created_at", "external_ref",
+        "status_message"
+    )
+    list_filter = ("completed", "provider", "created_at")
+    search_fields = ("id", "user__username", "phone", "external_ref", "status_message")
 
 # --- Investment Admin Registration ---
 

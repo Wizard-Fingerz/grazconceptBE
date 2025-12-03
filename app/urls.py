@@ -48,6 +48,12 @@ from app.citizenship.investment.views import (
 # --- Import CVProfileViewSet for CV builder API ---
 from app.cv_builder.views import CVProfileViewSet
 
+# --- Import Airtime API viewsets ---
+from app.services.airtime.views import (
+    NetworkProviderViewSet,
+    AirtimePurchaseViewSet,
+)
+
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
 router.register(r'hotels', HotelViewSet, basename='hotels')
@@ -92,6 +98,10 @@ router.register(r'support-ticket', SupportTicketViewSet, basename='supportticket
 
 # --- Register CV Builder endpoints ---
 router.register(r'cv-profiles', CVProfileViewSet, basename='cvprofile')
+
+# --- Register Airtime API endpoints ---
+router.register(r'airtime-network-providers', NetworkProviderViewSet, basename='airtime-network-providers')
+router.register(r'airtime-purchases', AirtimePurchaseViewSet, basename='airtime-purchases')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),
