@@ -1,9 +1,10 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
-
+from app.views import CustomPagination
 from .models import CVProfile
 from .serializers import CVProfileSerializer
+
 
 class CVProfileViewSet(viewsets.ModelViewSet):
     """
@@ -14,6 +15,7 @@ class CVProfileViewSet(viewsets.ModelViewSet):
     queryset = CVProfile.objects.all()
     serializer_class = CVProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         # Users only see their own CV profiles unless staff/superuser.
@@ -46,4 +48,3 @@ class CVProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
-
