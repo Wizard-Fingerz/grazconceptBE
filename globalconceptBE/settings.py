@@ -278,6 +278,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+MASKAWA_API_KEY = os.environ.get('MASKAWA_API_KEY')
+
+
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
 AMADEUS_CLIENT_ID = os.environ.get('AMADEUS_CLIENT_ID')
 AMADEUS_CLIENT_SECRET = os.environ.get('AMADEUS_CLIENT_SECRET')
