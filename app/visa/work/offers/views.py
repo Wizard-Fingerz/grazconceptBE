@@ -90,9 +90,13 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling comments on Work Visa Applications.
+    Allows list/create for /api/app/work-visa-application-comments/ or via application-specific route
     """
     queryset = WorkVisaApplicationComment.objects.all()
     serializer_class = WorkVisaApplicationCommentSerializer
@@ -101,26 +105,68 @@ class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally filter comments by visa_application id (?visa_application=<id>).
+        Optionally filter comments by ?visa_application=<id> or by nested URL /work-visa-application/<id>/comments/
         """
         queryset = super().get_queryset()
-        visa_application_id = self.request.query_params.get('visa_application')
+        # Support both nested route and query param for filtering, or router path
+        visa_application_id = (
+            self.kwargs.get('visa_application_id')
+            or self.request.query_params.get('visa_application')
+        )
         if visa_application_id:
             queryset = queryset.filter(visa_application_id=visa_application_id)
         return queryset
 
     def perform_create(self, serializer):
         """
-        Set the sender fields based on the user.
+        Sets the sender fields based on the user
         """
         user = self.request.user
-        # Set sender based on user type
         applicant = getattr(user, 'applicant', None)
         admin = None
         if not applicant:
-            # Assume staff users are admin type, set accordingly
             admin = user if user.is_staff or hasattr(user, "is_admin") else None
         serializer.save(applicant=applicant, admin=admin)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='(?P<visa_application_id>[^/.]+)/comments',
+        url_name='work-visa-application-comments'  # for clarity, matches new DRF naming
+    )
+    def list_by_application(self, request, visa_application_id=None):
+        """
+        Custom route for: /api/app/work-visa-application/<visa_application_id>/comments/
+        (See @file_context_0 for router context: the main comment viewset is at /api/app/work-visa-application-comments/)
+        """
+        # Set on view kwargs for get_queryset()
+        self.kwargs['visa_application_id'] = visa_application_id
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='(?P<visa_application_id>[^/.]+)/comments',
+        url_name='work-visa-application-comments-create'  # for clarity
+    )
+    def create_by_application(self, request, visa_application_id=None):
+        """
+        Custom route for posting a comment to: /api/app/work-visa-application/<visa_application_id>/comments/
+        The default viewset action will use: /api/app/work-visa-application-comments/
+        """
+        data = request.data.copy()
+        data['visa_application'] = visa_application_id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class WorkVisaInterviewViewSet(viewsets.ModelViewSet):
