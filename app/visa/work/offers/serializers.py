@@ -83,25 +83,22 @@ class WorkVisaApplicationCommentSerializer(serializers.ModelSerializer):
             "sender_display",
         ]
 
+    def to_internal_value(self, data):
+        """
+        Custom to_internal_value to fix CloudinaryField:
+        If 'attachment' is a dict (from frontend, not string), discard it (let it default to None/blank).
+        This prevents 'got dict' error by not passing dict to CloudinaryField.
+        Otherwise, defer to default implementation.
+        """
+        data = data.copy()
+        if "attachment" in data and isinstance(data["attachment"], dict):
+            # Discard erroneous dict, let model field handle blank/null/default
+            data["attachment"] = None
+        return super().to_internal_value(data)
+
     def get_sender_display(self, obj):
-        # Replicate logic from sender_display property in the model
-        if obj.applicant:
-            return {
-                "type": "applicant",
-                "name": getattr(obj.applicant, "get_full_name", lambda: None)() or getattr(getattr(obj.applicant, "user", None), "username", None),
-                "id": obj.applicant.id,
-            }
-        elif obj.admin:
-            if hasattr(obj.admin, "get_full_name"):
-                name = obj.admin.get_full_name()
-            else:
-                name = getattr(obj.admin, "username", None)
-            return {
-                "type": "admin",
-                "name": name,
-                "id": obj.admin.id,
-            }
-        return {"type": "unknown"}
+        # Use the sender_display property from the model for correct logic.
+        return getattr(obj, "sender_display", {"type": "unknown"})
 
 
 class WorkVisaApplicationSerializer(serializers.ModelSerializer):

@@ -4,7 +4,6 @@ from app.visa.work.organization.models import WorkOrganization
 from account.client.models import Client
 from definition.models import TableDropDownDefinition
 from django.conf import settings
-
 from cloudinary.models import CloudinaryField
 
 
@@ -407,11 +406,13 @@ class WorkVisaApplicationComment(models.Model):
 
     def __str__(self):
         if self.applicant:
-            sender = self.applicant.get_full_name() or (self.applicant.user.username if hasattr(self.applicant, "user") and self.applicant.user else str(self.applicant.pk))
+            sender = self.applicant.get_full_name() or (
+                self.applicant.user.username if hasattr(self.applicant, "user") and self.applicant.user else str(self.applicant.pk)
+            )
             sender_type = "Applicant"
         elif self.admin:
             # Prefer get_full_name if present, fall back to username, otherwise pk
-            if hasattr(self.admin, 'get_full_name'):
+            if hasattr(self.admin, 'get_full_name') and callable(getattr(self.admin, 'get_full_name', None)):
                 sender = self.admin.get_full_name()
             elif hasattr(self.admin, 'username'):
                 sender = self.admin.username
@@ -439,7 +440,7 @@ class WorkVisaApplicationComment(models.Model):
         For serializers/UI, show info about who sent the comment.
         """
         if self.applicant:
-            name = self.applicant.get_full_name()
+            name = self.applicant.get_full_name() if callable(getattr(self.applicant, "get_full_name", None)) else ""
             if not name and hasattr(self.applicant, "user") and self.applicant.user:
                 name = self.applicant.user.username
             return {
@@ -449,7 +450,7 @@ class WorkVisaApplicationComment(models.Model):
             }
         elif self.admin:
             name = ""
-            if hasattr(self.admin, 'get_full_name'):
+            if hasattr(self.admin, 'get_full_name') and callable(getattr(self.admin, 'get_full_name', None)):
                 name = self.admin.get_full_name()
             elif hasattr(self.admin, 'username'):
                 name = self.admin.username
@@ -526,7 +527,9 @@ class WorkVisaInterview(models.Model):
         ordering = ['-interview_date', '-interview_time']
 
     def __str__(self):
-        return f"{self.application.client} | {self.country} | {self.job} | {self.interview_date} {self.interview_time} ({self.status})"
+        # Correct attribute name: 'job' is not a field, should reference job_role or offer
+        job_info = self.job_role.term if self.job_role else "N/A"
+        return f"{self.application.client} | {self.country} | {job_info} | {self.interview_date} {self.interview_time} ({self.status})"
 
 
 class CVSubmission(models.Model):
@@ -576,5 +579,6 @@ class CVSubmission(models.Model):
         ordering = ['-submitted_at']
 
     def __str__(self):
-        return f"{self.full_name} - {self.email} ({self.country}) [{self.job or self.job_title_freeform}]"
+        job_display = self.job.job_title if self.job else self.job_title_freeform
+        return f"{self.full_name} - {self.email} ({self.country}) [{job_display}]"
 
