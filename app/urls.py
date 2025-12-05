@@ -10,8 +10,12 @@ from app.visa.pilgrimage.offer.views import (
     PilgrimageVisaApplicationCommentViewSet,
 )
 from app.visa.study.offers.views import StudyVisaOfferViewSet
-from app.visa.study.views import StudyVisaApplicationViewSet, StudyVisaApplicationCommentViewSet  # <--- include the comment viewset
-from app.visa.vacation.offer.views import VacationOfferViewSet, VacationVisaApplicationViewSet
+from app.visa.study.views import StudyVisaApplicationViewSet, StudyVisaApplicationCommentViewSet
+from app.visa.vacation.offer.views import (
+    VacationOfferViewSet,
+    VacationVisaApplicationViewSet,
+)
+from app.visa.vacation.offer.views import VacationVisaApplicationCommentViewSet  # <-- register vacation visa comment viewset separately for custom routes
 from app.visa.work.offers.views import (
     WorkVisaOfferViewSet,
     WorkVisaApplicationViewSet,
@@ -63,7 +67,7 @@ router.register(r'program-types', ProgramTypeViewSet, basename='programtypes')
 router.register(r'institutions', InstitutionViewSet, basename='institutions')
 router.register(r'courses-of-study', CourseOfStudyViewSet, basename='coursesofstudy')
 router.register(r'study-visa-application', StudyVisaApplicationViewSet, basename='studyvisaapplication')
-router.register(r'study-visa-application-comments', StudyVisaApplicationCommentViewSet, basename='studyvisaapplicationcomment')  # <--- register study visa comments
+router.register(r'study-visa-application-comments', StudyVisaApplicationCommentViewSet, basename='studyvisaapplicationcomment')
 router.register(r'ad-banner', AdBannerViewSet, basename='adbanner')
 router.register(r'study-visa-offers', StudyVisaOfferViewSet, basename='studyvisaoffers')
 router.register(r'work-visa-offers', WorkVisaOfferViewSet, basename='workvisaoffers')
@@ -72,6 +76,7 @@ router.register(r'work-visa-application-comments', WorkVisaApplicationCommentVie
 router.register(r'work-organisations', WorkOrganizationViewSet, basename='workvisaorg')
 router.register(r'vacation-offer', VacationOfferViewSet, basename='vacation-offer')
 router.register(r'vacation-application', VacationVisaApplicationViewSet, basename='vacationapplication')
+router.register(r'vacation-visa-application-comments', VacationVisaApplicationCommentViewSet, basename='vacationvisaapplicationcomment')  # <-- register vacation visa application comments viewset/route
 router.register(r'pilgrimage-offer', PilgrimageOfferViewSet, basename='pilgrimageoffer')
 router.register(r'pilgrimage-application', PilgrimageVisaApplicationViewSet, basename='pilgrimageapplication')
 router.register(r'pilgrimage-application-comments', PilgrimageVisaApplicationCommentViewSet, basename='pilgrimageapplicationcomment')

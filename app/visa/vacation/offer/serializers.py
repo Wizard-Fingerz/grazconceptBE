@@ -4,6 +4,7 @@ from .models import (
     VacationOfferIncludedItem,
     VacationOfferImage,
     VacationVisaApplication,
+    VacationVisaApplicationComment,
 )
 from django_countries.serializers import CountryFieldMixin
 from definition.models import TableDropDownDefinition
@@ -136,3 +137,53 @@ class VacationVisaApplicationSerializer(CountryFieldMixin, serializers.ModelSeri
         rep['applicant_detail'] = applicant_detail
         rep['offer_title'] = instance.offer.title if instance.offer else None
         return rep
+
+
+# Work Visa Application Comment Serializer
+class VacationVisaApplicationCommentSerializer(serializers.ModelSerializer):
+    sender_type = serializers.CharField(read_only=True)
+    sender_display = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = VacationVisaApplicationComment
+        fields = [
+            "id",
+            "visa_application",
+            "applicant",
+            "admin",
+            "text",
+            "created_at",
+            "is_read_by_applicant",
+            "is_read_by_admin",
+            "attachment",
+            "sender_type",
+            "sender_display",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "sender_type",
+            "sender_display",
+        ]
+
+    def get_sender_display(self, obj):
+        # Replicate logic from sender_display property in the model
+        if obj.applicant:
+            return {
+                "type": "applicant",
+                "name": getattr(obj.applicant, "get_full_name", lambda: None)() or getattr(getattr(obj.applicant, "user", None), "username", None),
+                "id": obj.applicant.id,
+            }
+        elif obj.admin:
+            if hasattr(obj.admin, "get_full_name"):
+                name = obj.admin.get_full_name()
+            else:
+                name = getattr(obj.admin, "username", None)
+            return {
+                "type": "admin",
+                "name": name,
+                "id": obj.admin.id,
+            }
+        return {"type": "unknown"}
+

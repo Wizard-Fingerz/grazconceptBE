@@ -8,7 +8,7 @@ from .serializers import (
     PilgrimageVisaApplicationSerializer,
     PilgrimageVisaApplicationCommentSerializer,
 )
-
+from rest_framework.decorators import action
 from django.db.models import Q
 from django.core.exceptions import FieldError
 
@@ -198,7 +198,7 @@ class PilgrimageVisaApplicationCommentViewSet(viewsets.ModelViewSet):
     """
     queryset = PilgrimageVisaApplicationComment.objects.all()
     serializer_class = PilgrimageVisaApplicationCommentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
 
     def get_queryset(self):
@@ -274,3 +274,45 @@ class PilgrimageVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         else:
             # Default: save as is (fallback for unexpected user types)
             serializer.save()
+
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='(?P<visa_application_id>[^/.]+)/comments',
+        url_name='pilgrimage-visa-application-comments-by-visa-id'  # for clarity, matches new DRF naming
+    )
+    def list_by_application(self, request, visa_application_id=None):
+        """
+        Custom route for: /api/app/pilgrimage-visa-application/<visa_application_id>/comments/
+        (See @file_context_0 for router context: the main comment viewset is at /api/app/pilgrimage-visa-application-comments/)
+        """
+        # Set on view kwargs for get_queryset()
+        self.kwargs['visa_application_id'] = visa_application_id
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='(?P<visa_application_id>[^/.]+)/create',
+        url_name='pilgrimage-visa-application-comments-create'  # for clarity
+    )
+    def create_by_application(self, request, visa_application_id=None):
+        """
+        Custom route for posting a comment to: /api/app/pilgrimage-visa-application/<visa_application_id>/comments/
+        The default viewset action will use: /api/app/pilgrimage-visa-application-comments/
+        """
+        data = request.data.copy()
+        data['visa_application'] = visa_application_id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
