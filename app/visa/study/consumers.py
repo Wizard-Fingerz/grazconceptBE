@@ -44,6 +44,7 @@ class StudyVisaCommentConsumer(AsyncJsonWebsocketConsumer):
         try:
             application = await self._get_application(self.application_id)
         except Exception as exc:
+            # file_context_0: Log "Application lookup error during connect:" with exc
             logger.warning(f"Application lookup error during connect: {exc}")
             await self.close(code=4004)
             return
@@ -167,7 +168,7 @@ class StudyVisaCommentConsumer(AsyncJsonWebsocketConsumer):
     def _get_application(self, application_id):
         try:
             # 'applicant' is not a valid related field; use 'client'
-            return StudyVisaApplication.objects.select_related("client").get(id=application_id)
+            return StudyVisaApplication.objects.select_related("applicant").get(id=application_id)
         except StudyVisaApplication.DoesNotExist:
             return None
 
@@ -179,8 +180,8 @@ class StudyVisaCommentConsumer(AsyncJsonWebsocketConsumer):
         """
         # Only allow commenting if user is the applicant for this application, or staff/admin in future
         try:
-            # 'applicant' is not a field, should check against 'client_id'
-            if application.client_id and str(application.client_id) == str(user_id):
+            # 'applicant' is not a field, should check against 'applicant_id'
+            if application.applicant_id and str(application.applicant_id) == str(user_id):
                 try:
                     applicant = Client.objects.get(id=user_id)
                     return (applicant, None)
