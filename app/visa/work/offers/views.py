@@ -132,7 +132,7 @@ class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['get'],
         url_path='(?P<visa_application_id>[^/.]+)/comments',
-        url_name='work-visa-application-comments'  # for clarity, matches new DRF naming
+        url_name='work-visa-application-comments-by-visa-id'  # for clarity, matches new DRF naming
     )
     def list_by_application(self, request, visa_application_id=None):
         """
