@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudyVisaApplication
+from .models import StudyVisaApplication, StudyVisaApplicationComment
 
 
 class StudyVisaApplicationSerializer(serializers.ModelSerializer):
@@ -88,4 +88,55 @@ class StudyVisaApplicationSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
+
+
+
+# Work Visa Application Comment Serializer
+class StudyVisaApplicationCommentSerializer(serializers.ModelSerializer):
+    sender_type = serializers.CharField(read_only=True)
+    sender_display = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = StudyVisaApplicationComment
+        fields = [
+            "id",
+            "visa_application",
+            "applicant",
+            "admin",
+            "text",
+            "created_at",
+            "is_read_by_applicant",
+            "is_read_by_admin",
+            "attachment",
+            "sender_type",
+            "sender_display",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "sender_type",
+            "sender_display",
+        ]
+
+    def get_sender_display(self, obj):
+        # Replicate logic from sender_display property in the model
+        if obj.applicant:
+            return {
+                "type": "applicant",
+                "name": getattr(obj.applicant, "get_full_name", lambda: None)() or getattr(getattr(obj.applicant, "user", None), "username", None),
+                "id": obj.applicant.id,
+            }
+        elif obj.admin:
+            if hasattr(obj.admin, "get_full_name"):
+                name = obj.admin.get_full_name()
+            else:
+                name = getattr(obj.admin, "username", None)
+            return {
+                "type": "admin",
+                "name": name,
+                "id": obj.admin.id,
+            }
+        return {"type": "unknown"}
 

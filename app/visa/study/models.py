@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from account.client.models import Client
 from app.visa.study.institutions.models import Institution, CourseOfStudy, ProgramType
@@ -284,3 +285,104 @@ class StudyVisaApplicationStatusLog(models.Model):
 
     def __str__(self):
         return f"Application {self.application.id}: {self.old_status.term if self.old_status else 'None'} → {self.new_status.term if self.new_status else 'None'} at {self.changed_at}"
+
+
+
+
+class StudyVisaApplicationComment(models.Model):
+    """
+    Communication comment between admin/agent and applicant for StudyVisaApplication.
+    """
+    visa_application = models.ForeignKey(
+        StudyVisaApplication,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        help_text="The Work visa application this comment belongs to."
+    )
+    # Exactly one of applicant or admin should be SET for sender.
+    applicant = models.ForeignKey(
+        Client,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='study_application_comments_sent',
+        help_text="Set if this comment is from the applicant."
+    )
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='study_visa_application_comments_admin',
+        help_text="Set if this comment is from an admin/agent user."
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read_by_applicant = models.BooleanField(default=False)
+    is_read_by_admin = models.BooleanField(default=False)
+    # (optional) Document upload to clarify/request something
+    attachment = CloudinaryField(
+        'auto',
+        blank=True,
+        null=True,
+        help_text="Optional file/document related to this comment."
+    )
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        if self.applicant:
+            sender = self.applicant.get_full_name() or (self.applicant.user.username if hasattr(self.applicant, "user") and self.applicant.user else str(self.applicant.pk))
+            sender_type = "Applicant"
+        elif self.admin:
+            # Prefer get_full_name if present, fall back to username, otherwise pk
+            if hasattr(self.admin, 'get_full_name'):
+                sender = self.admin.get_full_name()
+            elif hasattr(self.admin, 'username'):
+                sender = self.admin.username
+            else:
+                sender = str(self.admin.pk)
+            sender_type = "Admin"
+        else:
+            sender = "Unknown"
+            sender_type = "Unknown"
+        return f"Comment by {sender_type}: {sender} on application {self.visa_application.id}"
+
+    @property
+    def sender_type(self):
+        if self.applicant and self.admin:
+            return "applicant+admin"
+        elif self.applicant:
+            return "applicant"
+        elif self.admin:
+            return "admin"
+        return "unknown"
+
+    @property
+    def sender_display(self):
+        """
+        For serializers/UI, show info about who sent the comment.
+        """
+        if self.applicant:
+            name = self.applicant.get_full_name()
+            if not name and hasattr(self.applicant, "user") and self.applicant.user:
+                name = self.applicant.user.username
+            return {
+                "type": "applicant",
+                "name": name or str(self.applicant.pk),
+                "id": self.applicant.id,
+            }
+        elif self.admin:
+            name = ""
+            if hasattr(self.admin, 'get_full_name'):
+                name = self.admin.get_full_name()
+            elif hasattr(self.admin, 'username'):
+                name = self.admin.username
+            else:
+                name = str(self.admin.pk)
+            return {
+                "type": "admin",
+                "name": name,
+                "id": self.admin.id,
+            }
+        return {"type": "unknown"}
+

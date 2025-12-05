@@ -1,15 +1,15 @@
 import logging
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import WorkVisaApplicationComment, WorkVisaApplication
-from .serializers import WorkVisaApplicationCommentSerializer
+from .models import StudyVisaApplicationComment, StudyVisaApplication
+from .serializers import StudyVisaApplicationCommentSerializer
 from account.client.models import Client
 
-logger = logging.getLogger("visa.work.websocket")
+logger = logging.getLogger("visa.study.websocket")
 
-class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
+class StudyVisaCommentConsumer(AsyncJsonWebsocketConsumer):
     """
-    WebSocket consumer for real-time comments (chat-like) on WorkVisaApplication.
+    WebSocket consumer for real-time comments (chat-like) on StudyVisaApplication.
     Each application has its own "room", named by application id.
     Expects frontend to provide user_id with each action.
     """
@@ -20,7 +20,7 @@ class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
         Checks validity of the application_id, joins channel group, and accepts the connection.
         On error: closes the socket.
         """
-        # Expect application_id provided in the URL, e.g. /ws/work/visa-application/<application_id>/
+        # Expect application_id provided in the URL, e.g. /ws/study/visa-application/<application_id>/
         try:
             self.application_id = self.scope['url_route']['kwargs'].get('application_id')
         except Exception as exc:
@@ -39,7 +39,7 @@ class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4003)
             return
 
-        self.room_group_name = f'Work_visa_application_{self.application_id}'
+        self.room_group_name = f'Study_visa_application_{self.application_id}'
 
         try:
             application = await self._get_application(self.application_id)
@@ -167,8 +167,8 @@ class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
     def _get_application(self, application_id):
         try:
             # 'applicant' is not a valid related field; use 'client'
-            return WorkVisaApplication.objects.select_related("client").get(id=application_id)
-        except WorkVisaApplication.DoesNotExist:
+            return StudyVisaApplication.objects.select_related("client").get(id=application_id)
+        except StudyVisaApplication.DoesNotExist:
             return None
 
     @database_sync_to_async
@@ -195,7 +195,7 @@ class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _create_comment(self, application, applicant, admin, text):
         try:
-            return WorkVisaApplicationComment.objects.create(
+            return StudyVisaApplicationComment.objects.create(
                 visa_application=application,
                 applicant=applicant,
                 admin=admin,
@@ -207,5 +207,5 @@ class WorkVisaCommentConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _serialize_comment(self, comment):
-        serializer = WorkVisaApplicationCommentSerializer(comment)
+        serializer = StudyVisaApplicationCommentSerializer(comment)
         return serializer.data

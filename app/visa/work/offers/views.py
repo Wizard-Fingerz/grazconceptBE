@@ -1,3 +1,4 @@
+from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import permissions
 from app.views import CustomPagination
@@ -44,7 +45,8 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Enforce: If the user's user_type.term is "Customer", return only their own applications
-        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer'
+        is_customer = hasattr(user, 'user_type') and getattr(
+            user.user_type, 'term', None) == 'Customer'
         if is_customer:
             client = getattr(user, 'client', None)
             if client:
@@ -90,9 +92,6 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling comments on Work Visa Applications.
@@ -125,14 +124,16 @@ class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         applicant = getattr(user, 'applicant', None)
         admin = None
         if not applicant:
-            admin = user if user.is_staff or hasattr(user, "is_admin") else None
+            admin = user if user.is_staff or hasattr(
+                user, "is_admin") else None
         serializer.save(applicant=applicant, admin=admin)
 
     @action(
         detail=False,
         methods=['get'],
         url_path='(?P<visa_application_id>[^/.]+)/comments',
-        url_name='work-visa-application-comments-by-visa-id'  # for clarity, matches new DRF naming
+        # for clarity, matches new DRF naming
+        url_name='work-visa-application-comments-by-visa-id'
     )
     def list_by_application(self, request, visa_application_id=None):
         """
@@ -152,7 +153,7 @@ class WorkVisaApplicationCommentViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['post'],
-        url_path='(?P<visa_application_id>[^/.]+)/comments',
+        url_path='(?P<visa_application_id>[^/.]+)/create',
         url_name='work-visa-application-comments-create'  # for clarity
     )
     def create_by_application(self, request, visa_application_id=None):
@@ -198,4 +199,3 @@ class CVSubmissionViewSet(viewsets.ModelViewSet):
         if job_id:
             queryset = queryset.filter(job_id=job_id)
         return queryset
-
