@@ -151,7 +151,7 @@ def process_airtime_and_validate_wallet(sender, instance, **kwargs):
             # print("[Airtime SIGNALS][pre_save] No valid provider_ref in API response. Full API response:", maskawa_resp)
             raise ValidationError("Provider did not return a valid reference for this airtime purchase.")
 
-        # print("[Airtime SIGNALS][pre_save] Airtime purchase succeeded. Setting instance fields.")
+        print("[Airtime SIGNALS][pre_save] Airtime purchase succeeded. Setting instance fields.")
         instance.external_ref = provider_ref
         instance.status_message = str(maskawa_resp)
         instance.completed = True  # Mark as completed after successful external call
