@@ -89,3 +89,5 @@ class AirtimePurchase(models.Model):
             f"Airtime ({self.amount} NGN) for {self.phone} on {self.provider.label} "
             f"by {self.user} [{'Done' if self.completed else 'Pending'}]"
         )
+
+
