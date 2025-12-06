@@ -56,6 +56,8 @@ from app.cv_builder.views import CVProfileViewSet
 from app.services.airtime.views import (
     NetworkProviderViewSet,
     AirtimePurchaseViewSet,
+    DataPlanViewSet,
+    DataPurchaseViewSet,
 )
 
 router = DefaultRouter()
@@ -108,6 +110,8 @@ router.register(r'cv-profiles', CVProfileViewSet, basename='cvprofile')
 # --- Register Airtime API endpoints ---
 router.register(r'airtime-network-providers', NetworkProviderViewSet, basename='airtime-network-providers')
 router.register(r'airtime-purchases', AirtimePurchaseViewSet, basename='airtime-purchases')
+router.register(r'airtime-data-plans', DataPlanViewSet, basename='airtime-data-plans')
+router.register(r'airtime-data-purchases', DataPurchaseViewSet, basename='airtime-data-purchases')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),

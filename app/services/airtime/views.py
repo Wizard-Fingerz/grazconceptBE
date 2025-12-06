@@ -2,11 +2,15 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 
 from app.views import CustomPagination
-from .models import NetworkProvider, AirtimePurchase
-from .serializers import NetworkProviderSerializer, AirtimePurchaseSerializer
+from .models import NetworkProvider, AirtimePurchase, DataPlan, DataPurchase
+from .serializers import (
+    NetworkProviderSerializer,
+    AirtimePurchaseSerializer,
+    DataPlanSerializer,
+    DataPurchaseSerializer,
+)
 import requests
 from django.conf import settings
-
 
 
 class NetworkProviderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -29,14 +33,12 @@ class AirtimePurchaseViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        # Only return purchases for the logged-in user
         user = self.request.user
         if user.is_staff or user.is_superuser:
             return AirtimePurchase.objects.all()
         return AirtimePurchase.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        # Ensure that logged-in user is associated with the purchase
         serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -53,3 +55,52 @@ class AirtimePurchaseViewSet(viewsets.ModelViewSet):
         headers_out = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers_out)
 
+
+class DataPlanViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint to list data plans available for purchase.
+    """
+    queryset = DataPlan.objects.all().select_related("provider")
+    serializer_class = DataPlanSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        provider_id = self.request.query_params.get("provider_id")
+        if provider_id:
+            qs = qs.filter(provider_id=provider_id)
+        return qs
+
+
+class DataPurchaseViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for creating and viewing Data plan purchases.
+    """
+    queryset = DataPurchase.objects.all()
+    serializer_class = DataPurchaseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return DataPurchase.objects.all()
+        return DataPurchase.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """
+        The provider API call is now handled in signals.py pre_save and wallet debit in post_save.
+        This view just creates the data purchase.
+        """
+        data = request.data.copy()
+        data["user"] = request.user.pk
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers_out = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers_out)
