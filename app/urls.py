@@ -60,6 +60,12 @@ from app.services.airtime.views import (
     DataPurchaseViewSet,
 )
 
+# --- Import Utility API viewsets ---
+from app.services.utility.views import (
+    UtilityProviderViewSet,
+    UtilityBillPaymentViewSet,
+)
+
 router = DefaultRouter()
 router.register(r'hotel-bookings', HotelBookingViewSet, basename='hotelbooking')
 router.register(r'hotels', HotelViewSet, basename='hotels')
@@ -112,6 +118,10 @@ router.register(r'airtime-network-providers', NetworkProviderViewSet, basename='
 router.register(r'airtime-purchases', AirtimePurchaseViewSet, basename='airtime-purchases')
 router.register(r'airtime-data-plans', DataPlanViewSet, basename='airtime-data-plans')
 router.register(r'airtime-data-purchases', DataPurchaseViewSet, basename='airtime-data-purchases')
+
+# --- Register Utility API endpoints ---
+router.register(r'utility-providers', UtilityProviderViewSet, basename='utility-providers')
+router.register(r'utility-bill-payments', UtilityBillPaymentViewSet, basename='utility-bill-payments')
 
 urlpatterns = [
     path("search-flights/", search_flights, name="search_flights"),

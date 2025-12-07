@@ -1,6 +1,7 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+
 from app.ad_banners.models import AdBanner
 from .hotels.models import Hotel, HotelBooking, Amenity
 from .flight.models import FlightBooking
@@ -26,35 +27,26 @@ from .visa.pilgrimage.offer.models import (
     PilgrimageOfferIncludedItem,
     PilgrimageOfferImage,
     PilgrimageVisaApplication,
-    PilgrimageVisaApplicationComment
+    PilgrimageVisaApplicationComment,
 )
 
-# --- European Citizenship Admin Imports ---
 from .citizenship.european.models import EuropeanCitizenshipOffer, InvestmentOption
-
-# --- Education/Exam Fee Admin Imports ---
 from .services.edu_and_exam_fee.models import (
     EducationFeeProvider,
     EducationFeeType,
     EducationFeePayment,
 )
-
-# --- Support Ticket Admin Imports ---
 from .help_center.support_ticket.models import SupportTicket, SupportTicketMessage
-
-# --- FAQ Admin Imports ---
 from .help_center.knowledge_base.models import FaqArticle
-
-# --- Investment Models Admin Imports ---
 from .citizenship.investment.models import (
     InvestmentPlan,
     InvestmentPlanBenefit,
     Investment,
 )
-
-# --- Airtime Admin Imports ---
 from .services.airtime.models import NetworkProvider, AirtimePurchase, DataPlan, DataPurchase
 
+# --- Utility Services Admin Imports ---
+from app.services.utility.models import UtilityProvider, UtilityBillPayment
 
 # Resources
 class HotelResource(resources.ModelResource):
@@ -220,6 +212,15 @@ class InstitutionResource(resources.ModelResource):
 class CourseOfStudyResource(resources.ModelResource):
     class Meta:
         model = CourseOfStudy
+
+# Utility Services resources
+class UtilityProviderResource(resources.ModelResource):
+    class Meta:
+        model = UtilityProvider
+
+class UtilityBillPaymentResource(resources.ModelResource):
+    class Meta:
+        model = UtilityBillPayment
 
 # Admin registrations
 
@@ -413,6 +414,24 @@ class EducationFeePaymentAdmin(ImportExportModelAdmin):
 @admin.register(PilgrimageVisaApplicationComment)
 class PilgrimageVisaApplicationCommentAdmin(ImportExportModelAdmin):
     resource_class = PilgrimageVisaApplicationCommentResource
+
+# --- Utility Services Admin Registration ---
+
+@admin.register(UtilityProvider)
+class UtilityProviderAdmin(ImportExportModelAdmin):
+    resource_class = UtilityProviderResource
+    list_display = ('id', 'label', 'value', 'logo', 'accent')
+    search_fields = ('label', 'value')
+
+@admin.register(UtilityBillPayment)
+class UtilityBillPaymentAdmin(ImportExportModelAdmin):
+    resource_class = UtilityBillPaymentResource
+    list_display = (
+        'id', 'user', 'provider', 'meter_number', 'meter_type', 'amount', 'status',
+        'transaction_reference', 'token', 'created_at', 'completed_at'
+    )
+    list_filter = ('status', 'provider', 'meter_type', 'created_at')
+    search_fields = ('id', 'user__username', 'meter_number', 'transaction_reference', 'token', 'error_message')
 
 # --- Support Ticket Admin Registration ---
 
