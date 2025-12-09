@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
 from .models import UtilityProvider, UtilityBillPayment
 from .serializers import UtilityProviderSerializer, UtilityBillPaymentSerializer
 
@@ -18,15 +19,23 @@ class UtilityBillPaymentViewSet(viewsets.ModelViewSet):
     serializer_class = UtilityBillPaymentSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [permissions.IsAuthenticated()]
-        if self.action == 'create':
-            return [permissions.IsAuthenticated()]
-        return [permissions.IsAdminUser()]
+        try:
+            if self.action in ['list', 'retrieve']:
+                return [permissions.IsAuthenticated()]
+            if self.action == 'create':
+                return [permissions.IsAuthenticated()]
+            return [permissions.IsAdminUser()]
+        except Exception as e:
+            # Fallback to admin user for all unexpected errors
+            return [permissions.IsAdminUser()]
 
     def perform_create(self, serializer):
-        # Automatically associate payment with the current user, if authenticated
-        if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
-        else:
-            serializer.save()
+        try:
+            # Automatically associate payment with the current user, if authenticated
+            if self.request.user.is_authenticated:
+                serializer.save(user=self.request.user)
+            else:
+                serializer.save()
+        except Exception as e:
+            # Re-raise so DRF can handle as APIException
+            raise e

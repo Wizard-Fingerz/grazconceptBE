@@ -150,6 +150,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+ 
+    "EXCEPTION_HANDLER": "globalconceptBE.exceptions.custom_exception_handler",
 }
 
 # CHANNEL_LAYERS needs a working REDIS_URL set as an environment variable for the project to start.
