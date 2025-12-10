@@ -8,3 +8,4 @@ class WalletConfig(AppConfig):
     def ready(self):
         import wallet.signals
         import wallet.transactions.signals
+        import wallet.saving_plans.signals
