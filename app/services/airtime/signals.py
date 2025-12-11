@@ -290,7 +290,9 @@ def call_maskawa_api_for_airtime(instance, api_key):
         "glo": 2,
         "9mobile": 3,
         "airtel": 4,
+        "smile": 5,
     }
+    
     network_id = provider_code_to_id.get(str(network_code).strip().lower())
     if not network_id:
         raise ValidationError(f"Unknown provider code '{network_code}' for Maskawa API")
