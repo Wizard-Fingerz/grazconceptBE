@@ -4,11 +4,16 @@ from wallet.serializers import WalletSerializer
 from .models import Client
 from django.contrib.auth.hashers import make_password
 
+
 class ClientSerializer(serializers.ModelSerializer):
     client_type_name = serializers.ReadOnlyField()
     service_of_interest_name = serializers.ReadOnlyField()
     assigned_to_teams_name = serializers.ReadOnlyField()
+
     country = serializers.SerializerMethodField()
+    country_of_residence = serializers.SerializerMethodField()
+    nationality = serializers.SerializerMethodField()
+
     wallet = WalletSerializer()
 
     class Meta:
@@ -45,7 +50,6 @@ class ClientSerializer(serializers.ModelSerializer):
             "is_prospect",
             "wallet",
             "referred_by",
-
         ]
         read_only_fields = [
             'id',
@@ -64,20 +68,22 @@ class ClientSerializer(serializers.ModelSerializer):
         }
 
     def get_country(self, obj):
-        # Return the full country name if available, else None
-        country = getattr(obj, 'country', None)
-        if country:
-            # If it's a django_countries Country object, use .name
-            name = getattr(country, 'name', None)
-            if name:
-                return name
-            # If it's a string code, try to get the name from django_countries
-            try:
-                from django_countries import countries
-                return dict(countries).get(str(country), str(country))
-            except ImportError:
-                return str(country)
-        return None
+        value = obj.country
+        if not value:
+            return None
+        return {"code": value.code, "name": value.name}
+
+    def get_country_of_residence(self, obj):
+        value = getattr(obj, "country_of_residence", None)
+        if not value:
+            return {"code": None, "name": None}
+        return {"code": value.code, "name": value.name}
+
+    def get_nationality(self, obj):
+        value = getattr(obj, "nationality", None)
+        if not value:
+            return {"code": None, "name": None}
+        return {"code": value.code, "name": value.name}
 
     def create(self, validated_data):
         password = validated_data.get('password')

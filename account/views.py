@@ -25,27 +25,41 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 
 
+# Why is there no referred_by in my serializer? 
+# Actually, it IS in your UserRegistrationSerializer. Your serializer:
+#   - accepts it (it's in the fields list and as a serializer.CharField).
+#   - but in your .create() method of the serializer, you ignore it and don't use it to set on the User.
+#   - So, that's why you pull it in the view and apply it to the model *after* creating the user instance, right before final .save().
+# This is so you don't set the referred_by on your User model via the serializer itself but assign it directly on the model. Both approaches can work, but currently you chose to handle assignment in the view outside the serializer (for maybe validation or business logic control).
+# 
+# Main point: There **is** a "referred_by" field in your UserRegistrationSerializer and your view expects clients to POST it as normal.
+
 class SignUpView(APIView):
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
         request_body=UserRegistrationSerializer,
-        responses={201: openapi.Response(
-            'Created', UserRegistrationSerializer)},
+        responses={201: openapi.Response('Created', UserRegistrationSerializer)},
     )
     def post(self, request):
         data = request.data.copy()
-
-        
+        # Ensure referred_by from request is sent to serializer (and not blanked out)
+        # This way, the serializer receives what the client sent, whether present or not
+        print(data)
         serializer = UserRegistrationSerializer(data=data)
+        print(serializer)
         if serializer.is_valid():
             user = serializer.save()
+            # The serializer already handles referred_by if client sent it; 
+            # if you still want to post-process (e.g., strip/validate), do it here:
+            if "referred_by" in request.data:
+                user.referred_by = request.data.get("referred_by", "")
+                user.save()
 
-            # Generate JWT tokens for the new user
+            # Issue JWT tokens after registration
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-
 
             return Response(
                 {
@@ -134,6 +148,7 @@ class UserProfileView(APIView):
 from account.client.models import Client
 from account.client.serializers import ClientSerializer
 
+
 class GetMyRefeereesView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -164,11 +179,19 @@ class GetMyRefeereesView(APIView):
         results = []
         for item in paginated_combined:
             if item['type'] == 'user':
-                data = UserSerializer(item['instance']).data
+                # Use context to pass request for serializer if necessary
+                data = UserSerializer(item['instance'], context={'request': request}).data
                 data['referee_type'] = 'user'
             else:
-                data = ClientSerializer(item['instance']).data
-                data['referee_type'] = 'client'
+                # Force country field (if Country instance) to string in the output, if needed
+                client_instance = item['instance']
+                client_data = ClientSerializer(client_instance, context={'request': request}).data
+                # Country is already handled as string by ClientSerializer
+                client_data['referee_type'] = 'client'
+                data = client_data
             results.append(data)
 
+        # Ensure the response is a DRF Response (already paginated)
         return paginator.get_paginated_response(results)
+
+

@@ -1,14 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-
 from wallet.serializers import WalletSerializer
 from .models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
-    # Use source to directly get the string representation from the model property
-    country_of_residence = serializers.CharField(
-        source="country_of_residence_str", read_only=True)
+    country_of_residence = serializers.SerializerMethodField()
     nationality = serializers.SerializerMethodField()
     wallet = WalletSerializer()
 
@@ -39,7 +35,6 @@ class UserSerializer(serializers.ModelSerializer):
             "modified_by",
             "modified_date",
             "last_login",
-            # computed / helper fields
             "user_type_name",
             "full_name",
             "profile_picture_url",
@@ -49,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "custom_id",          # if auto-generated
+            "custom_id",
             "created_by",
             "created_date",
             "modified_by",
@@ -62,39 +57,57 @@ class UserSerializer(serializers.ModelSerializer):
             "gender_name",
         ]
 
+
+    def get_country_of_residence(self, obj):
+        value = obj.country_of_residence
+        if not value:
+            return None
+        return {
+            "code": value.code,
+            "name": value.name,
+        }
+
+
     def get_nationality(self, obj):
-        nationality = getattr(obj, "nationality", None)
-        if nationality:
-            return str(nationality)
-        return None
+        value = obj.nationality
+        if not value:
+            return None
+        return {
+            "code": value.code,
+            "name": value.name,
+        }
+
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    referred_by = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        help_text="The custom_id of the user who referred this client",
+        label="Referred By",
+        max_length=20,
+        required=False,
+        default=""
+    )
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'user_type', 'password', 'referred_by']
+        fields = [
+            'email',
+            'first_name',
+            'last_name',
+            'user_type',
+            'password',
+            'referred_by'
+        ]
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        # Accept referred_by as a string (custom_id), can be empty
-        referred_by = validated_data.pop('referred_by', None)
-        # If referred_by is None, set it to empty string (matches model CharField default)
-        if referred_by is None:
-            referred_by = ""
-
-        # Ensure referred_by is a string (even if user sends null/None)
-        referred_by = str(referred_by) if referred_by is not None else ""
-
         user = User(**validated_data)
         user.set_password(password)
-        user.referred_by = referred_by
         user.save()
         return user
-
-
-
 
 
 class UserLoginSerializer(serializers.Serializer):

@@ -3,6 +3,7 @@ from django.db import models
 
 from account.models import User
 from definition.models import TableDropDownDefinition
+from django_countries.fields import CountryField
 
 
 class Client(User):
@@ -23,10 +24,9 @@ class Client(User):
         related_name="client_service_of_interest_team"
     )
     internal_note_and_reminder = models.TextField(blank=True, null=True)
-    country = models.CharField(max_length=100, blank=True, null=True)
+    country = CountryField(blank=True, null=True)
     is_prospect = models.BooleanField(default=False)
 
-    # Partner type field: only relevant for clients who are partners
     partner_type = models.ForeignKey(
         TableDropDownDefinition,
         on_delete=models.SET_NULL,
@@ -37,18 +37,19 @@ class Client(User):
         help_text="Only set for clients who are partners"
     )
 
-
     @property
     def client_type_name(self):
-        return self.client_type.term
+        return self.client_type.term if self.client_type else None
 
     @property
-    def service_of_interest_names(self):
-        return [s.term for s in self.service_of_interest.all()]
+    def service_of_interest_name(self):
+        # For serializer compatibility: return comma-separated string or list if required
+        return ', '.join([s.term for s in self.service_of_interest.all()])
 
     @property
-    def assigned_to_teams_names(self):
-        return [t.term for t in self.assign_to_teams.all()]
+    def assigned_to_teams_name(self):
+        # For serializer compatibility: return comma-separated string or list if required
+        return ', '.join([t.term for t in self.assign_to_teams.all()])
 
     @property
     def partner_type_name(self):
@@ -56,5 +57,6 @@ class Client(User):
 
     @property
     def referred_by_email(self):
-        return self.referred_by.email if self.referred_by else None
+        ref = getattr(self, 'referred_by', None)
+        return ref.email if ref else None
 
