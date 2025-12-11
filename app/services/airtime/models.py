@@ -208,3 +208,6 @@ class DataPurchase(models.Model):
             f"Data ({self.plan.label}, {self.amount} NGN) for {self.phone} on {self.provider.label} "
             f"by {self.user} [{'Done' if self.completed else 'Pending'}]"
         )
+
+
+
