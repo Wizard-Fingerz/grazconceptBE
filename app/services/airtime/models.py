@@ -108,6 +108,7 @@ class DataPlan(models.Model):
         related_name="data_plans",
         help_text="Mobile network provider for this data plan"
     )
+    api_platform_id = models.PositiveBigIntegerField(default=0)
     label = models.CharField(
         max_length=100,
         help_text="Human friendly label for the plan (e.g. '1GB (1 Day)')"
