@@ -11,7 +11,7 @@ from .serializers import (
 )
 import requests
 from django.conf import settings
-
+from rest_framework.decorators import action
 
 class NetworkProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -59,6 +59,7 @@ class AirtimePurchaseViewSet(viewsets.ModelViewSet):
 class DataPlanViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint to list data plans available for purchase.
+    Includes custom action to get all providers with any data plans.
     """
     queryset = DataPlan.objects.all().select_related("provider")
     serializer_class = DataPlanSerializer
@@ -72,6 +73,15 @@ class DataPlanViewSet(viewsets.ReadOnlyModelViewSet):
             qs = qs.filter(provider_id=provider_id)
         return qs
 
+    @action(detail=False, methods=["get"], url_path="providers-with-plans", permission_classes=[permissions.AllowAny])
+    def providers_with_plans(self, request):
+        """
+        Returns a list of providers that have at least one data plan.
+        """
+        provider_ids = DataPlan.objects.values_list("provider_id", flat=True).distinct()
+        providers = NetworkProvider.objects.filter(id__in=provider_ids, active=True)
+        serializer = NetworkProviderSerializer(providers, many=True)
+        return Response(serializer.data)
 
 class DataPurchaseViewSet(viewsets.ModelViewSet):
     """
