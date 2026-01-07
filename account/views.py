@@ -580,5 +580,158 @@ class AdminDashboardAnalyticsView(APIView):
         }
         return Response(result)
 
+# Admin analytics and report endpoint: provides dashboard analytics for the AdminAnalytics React view.
+# Route suggestion: /api/admin/analytics/ (GET)
 
+from rest_framework.permissions import IsAdminUser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.utils import timezone
+from django.db.models.functions import TruncDate
+import datetime
+
+class AdminAnalyticsReportView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        """
+        Returns the analytics report for frontend AdminAnalytics component.
+        Accepts optional ?period= param: '7days', '30days', '90days', '1year' (default: 30days)
+        """
+        period = request.query_params.get("period", "30days").lower()
+        now = timezone.now()
+        if period == "7days":
+            start_date = now - datetime.timedelta(days=7)
+        elif period == "90days":
+            start_date = now - datetime.timedelta(days=90)
+        elif period == "1year":
+            start_date = now - datetime.timedelta(days=365)
+        else:
+            start_date = now - datetime.timedelta(days=30)
+
+        # Key metrics
+        revenue_total = (
+            WalletTransaction.objects.filter(
+                status='successful',
+                amount__gt=0,
+                created_at__gte=start_date
+            )
+            .aggregate(s=Sum('amount'))['s'] or 0
+        )
+        new_users = (
+            User.objects.filter(created_date__gte=start_date)
+            .count()
+        )
+        applications_count = (
+            StudyVisaApplication.objects.filter(submitted_at__gte=start_date).count()
+            + WorkVisaApplication.objects.filter(submitted_at__gte=start_date).count()
+        )
+        # Growth rate: e.g., percent new users versus previous period
+        prev_new_users = (
+            User.objects.filter(
+                created_date__gte=start_date - (start_date - now + datetime.timedelta(days=1)),
+                created_date__lt=start_date,
+            ).count()
+        )
+        growth_rate = 0.0
+        if prev_new_users > 0:
+            growth_rate = round(100 * (new_users - prev_new_users) / prev_new_users, 2)
+        elif new_users > 0:
+            growth_rate = 100.0
+
+        # Revenue Trend for line chart (sum per date, last N days)
+        revenue_trend_qs = (
+            WalletTransaction.objects.filter(
+                status='successful',
+                amount__gt=0,
+                created_at__gte=start_date,
+            )
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(value=Sum('amount'))
+            .order_by('day')
+        )
+        revenue_trend = [
+            {"date": d['day'].strftime('%Y-%m-%d'), "value": float(d['value'] or 0)}
+            for d in revenue_trend_qs
+        ]
+
+        # User growth trend (new users per week, up to 6 past intervals)
+        user_growth_qs = (
+            User.objects.filter(created_date__gte=start_date)
+            .annotate(day=TruncDate('created_date'))
+            .values('day')
+            .annotate(users=Count('id'))
+            .order_by('day')
+        )
+        user_growth = [
+            {"date": d['day'].strftime('%Y-%m-%d'), "users": d['users']}
+            for d in user_growth_qs
+        ]
+
+        # Application Distribution - Pie: by channel/source if available, or Study/Work visa for demo
+        application_pie_data = [
+            {
+                "name": "Study Visa",
+                "value": StudyVisaApplication.objects.filter(submitted_at__gte=start_date).count(),
+            },
+            {
+                "name": "Work Visa",
+                "value": WorkVisaApplication.objects.filter(submitted_at__gte=start_date).count(),
+            }
+        ]
+        # Optionally: add more channels if you track them
+
+        # Service Analytics (dummy categories, for demo pie)
+        service_analytics = [
+            {"name": "Payment", "value": WalletTransaction.objects.filter(
+                created_at__gte=start_date, status='successful').count()},
+            {"name": "KYC", "value": User.objects.filter(kyc_status='approved', created_date__gte=start_date).count() if hasattr(User, 'kyc_status') else 0},
+            {"name": "Loan", "value": LoanApplication.objects.filter(created_at__gte=start_date).count()},
+            {"name": "Reporting", "value": SupportTicket.objects.filter(created_at__gte=start_date).count()},
+        ]
+
+        # Top Performing Services (used for left pie in lower box): can sort above by value desc
+        top_services = sorted(service_analytics, key=lambda x: x["value"], reverse=True)
+
+        # User Demographics: age distribution (demo, only if User model has 'dob')
+        age_groups = {
+            "18-24": 0,
+            "25-34": 0,
+            "35-44": 0,
+            "45+": 0,
+        }
+        if hasattr(User, 'dob'):
+            # Only count if User model has date-of-birth field
+            qs = User.objects.filter(dob__isnull=False, created_date__gte=start_date)
+            for user in qs:
+                try:
+                    age = (now.date() - user.dob).days // 365
+                    if 18 <= age <= 24:
+                        age_groups["18-24"] += 1
+                    elif 25 <= age <= 34:
+                        age_groups["25-34"] += 1
+                    elif 35 <= age <= 44:
+                        age_groups["35-44"] += 1
+                    elif age >= 45:
+                        age_groups["45+"] += 1
+                except Exception:
+                    pass
+        user_demographics = [{"name": k, "value": v} for k, v in age_groups.items()]
+
+        return Response({
+            "metrics": {
+                "revenue_total": float(revenue_total),
+                "new_users": new_users,
+                "applications": applications_count,
+                "growth_rate": f"{growth_rate:.2f}%",
+            },
+            "revenue_trend": revenue_trend,
+            "user_growth": user_growth,
+            "application_distribution": application_pie_data,
+            "service_analytics": service_analytics,
+            "top_services": top_services,
+            "user_demographics": user_demographics,
+            # For chart demo, keep field structure like in React `demoLineData` etc.
+        })
 
