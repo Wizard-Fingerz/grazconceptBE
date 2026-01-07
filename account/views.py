@@ -703,7 +703,7 @@ class AdminAnalyticsReportView(APIView):
         }
         if hasattr(User, 'dob'):
             # Only count if User model has date-of-birth field
-            qs = User.objects.filter(dob__isnull=False, created_date__gte=start_date)
+            qs = User.objects.filter(date_of_birth__isnull=False, created_date__gte=start_date)
             for user in qs:
                 try:
                     age = (now.date() - user.dob).days // 365
@@ -734,4 +734,128 @@ class AdminAnalyticsReportView(APIView):
             "user_demographics": user_demographics,
             # For chart demo, keep field structure like in React `demoLineData` etc.
         })
+
+        # User Analytics View
+
+class AdminUserAnalyticsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        """
+        Returns extended user analytics based on the User model definition.
+        """
+        # Only users not marked as deleted
+        active_users_qs = User.objects.filter(is_deleted=False)
+
+        total_users = active_users_qs.count()
+        customers = active_users_qs.filter(is_staff=False, is_superuser=False).count()
+        staff = active_users_qs.filter(is_staff=True, is_superuser=False).count()
+        admins = active_users_qs.filter(is_superuser=True).count()
+
+        # Role distribution (using related name)
+        from django.db.models import Count
+        role_counts = (
+            active_users_qs.values('role__name')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        roles_breakdown = [
+            {"role": entry["role__name"] or "Unassigned", "count": entry["count"]}
+            for entry in role_counts
+        ]
+
+        # User type distribution (TableDropDownDefinition: term)
+        user_type_counts = (
+            active_users_qs.values('user_type__term')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        user_type_breakdown = [
+            {"user_type": entry["user_type__term"] or "Unspecified", "count": entry["count"]}
+            for entry in user_type_counts
+        ]
+
+        # Gender distribution
+        gender_counts = (
+            active_users_qs.values('gender__term')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        gender_breakdown = [
+            {"gender": entry["gender__term"] or "Unspecified", "count": entry["count"]}
+            for entry in gender_counts
+        ]
+
+        # Country of residence distribution (string property for serialization)
+        country_counts = (
+            active_users_qs.values('country_of_residence')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        country_breakdown = [
+            {"country": entry["country_of_residence"] or "Unspecified", "count": entry["count"]}
+            for entry in country_counts
+        ]
+
+        # KYC status if it exists
+        kyc_status_breakdown = []
+        if hasattr(User, "kyc_status"):
+            kyc_counts = (
+                active_users_qs.values('kyc_status')
+                .annotate(count=Count('id'))
+                .order_by('-count')
+            )
+            kyc_status_breakdown = [
+                {"kyc_status": entry["kyc_status"] or "Unspecified", "count": entry["count"]}
+                for entry in kyc_counts
+            ]
+
+        # Age distribution (date_of_birth)
+        from datetime import date
+        import math
+        age_bins = {
+            "18-24": 0,
+            "25-34": 0,
+            "35-44": 0,
+            "45+": 0,
+            "Unknown": 0,
+        }
+        dob_qs = active_users_qs.exclude(date_of_birth__isnull=True)
+        for u in dob_qs.only('date_of_birth'):
+            try:
+                age = (date.today() - u.date_of_birth).days // 365
+                if 18 <= age <= 24:
+                    age_bins["18-24"] += 1
+                elif 25 <= age <= 34:
+                    age_bins["25-34"] += 1
+                elif 35 <= age <= 44:
+                    age_bins["35-44"] += 1
+                elif age >= 45:
+                    age_bins["45+"] += 1
+                else:
+                    age_bins["Unknown"] += 1
+            except Exception:
+                age_bins["Unknown"] += 1
+        # Account for users with null DOB
+        unknown_dob_count = active_users_qs.filter(date_of_birth__isnull=True).count()
+        age_bins["Unknown"] += unknown_dob_count
+        age_distribution = [{"range": k, "count": v} for k, v in age_bins.items()]
+
+        # Compose analytics
+        data = {
+            "all_users": total_users,
+            "customers": customers,
+            "staff": staff,
+            "admins": admins,
+            "role_breakdown": roles_breakdown,
+            "user_type_breakdown": user_type_breakdown,
+            "gender_breakdown": gender_breakdown,
+            "country_breakdown": country_breakdown,
+            "age_distribution": age_distribution,
+        }
+        if kyc_status_breakdown:
+            data["kyc_status_breakdown"] = kyc_status_breakdown
+
+        return Response(data)
+
 

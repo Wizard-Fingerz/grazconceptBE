@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from account.client.documents.views import ClientDocumentsViewSet
 from .views import (
+    AdminUserAnalyticsView,
     SignUpView,
     UserProfileView,
     MyTokenObtainPairView,
@@ -28,5 +29,6 @@ urlpatterns = [
     path('users/my-referees/', GetMyRefeereesView.as_view(), name='my_referees'),
     path('admin/dashboard-analytics/', AdminDashboardAnalyticsView.as_view(), name='admin_dashboard_analytics'),
     path('admin/analytics-report/', AdminAnalyticsReportView.as_view(), name='admin_dashboard_analytics'),
+    path('admin/user-analytics/', AdminUserAnalyticsView.as_view(), name='admin_dashboard_analytics'),
     path('', include(router.urls)),
 ]
