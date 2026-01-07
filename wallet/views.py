@@ -1,5 +1,7 @@
 from django.db import models
 from rest_framework import viewsets, permissions, decorators, response, status
+
+from app.views import CustomPagination
 from .models import Wallet
 from .serializers import WalletSerializer
 
@@ -7,6 +9,7 @@ class WalletViewSet(viewsets.ModelViewSet):
     queryset = Wallet.objects.all()
     serializer_class = WalletSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     @decorators.action(detail=False, methods=['get'], url_path='my-balance')
     def my_balance(self, request):
