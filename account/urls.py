@@ -2,7 +2,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from account.client.documents.views import ClientDocumentsViewSet
-from .views import SignUpView, UserProfileView, MyTokenObtainPairView, UserViewSet, GetMyRefeereesView
+from .views import (
+    SignUpView,
+    UserProfileView,
+    MyTokenObtainPairView,
+    UserViewSet,
+    GetMyRefeereesView,
+    AdminDashboardAnalyticsView,
+)
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from account.client.views import ClientViewSet
@@ -18,5 +25,6 @@ urlpatterns = [
     path('users/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('users/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('users/my-referees/', GetMyRefeereesView.as_view(), name='my_referees'),
+    path('admin/dashboard-analytics/', AdminDashboardAnalyticsView.as_view(), name='admin_dashboard_analytics'),
     path('', include(router.urls)),
 ]
