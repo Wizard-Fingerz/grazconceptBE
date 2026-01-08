@@ -136,4 +136,116 @@ class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        # Admin Analytics APIView for Study Visa Applications
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import models
+
+class StudyVisaApplicationAnalyticsView(APIView):
+    """
+    Admin analytics for Study Visa Applications.
+
+    - Counts by status (all statuses in study_visa_status TableDropDownDefinition)
+    - By institution
+    - By destination_country
+
+    Optional filters (as query params):
+        - institution (institution id)
+        - country (destination country code/string)
+        - start_date, end_date (application_date)
+    """
+    def get(self, request):
+        from app.visa.study.models import StudyVisaApplication
+        from definition.models import TableDropDownDefinition
+        from django.db.models import Count
+
+        # Only staff or admin users allowed
+        if not (request.user.is_staff or getattr(request.user, 'is_admin', False)):
+            return Response({"detail": "Unauthorized."}, status=status.HTTP_403_FORBIDDEN)
+
+        institution_id = request.query_params.get('institution')
+        country = request.query_params.get('country')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        qs = StudyVisaApplication.objects.all()
+
+        if institution_id:
+            qs = qs.filter(institution_id=institution_id)
+        if country:
+            # Check both institution.country and study_visa_offer institution country
+            qs = qs.filter(
+                models.Q(institution__country=country) |
+                models.Q(study_visa_offer__institution__country=country)
+            )
+        if start_date:
+            qs = qs.filter(application_date__gte=start_date)
+        if end_date:
+            qs = qs.filter(application_date__lte=end_date)
+
+        # Get all statuses in system defined order
+        all_status_terms = [
+            "Draft",
+            "Completed",
+            "Approved",
+            "Rejected",
+            "Received Application",
+            "Pending From Student",
+            "Application Submitted to the Institution",
+            "Application on hold, Intake not yet open",
+            "Case Closed",
+            "Rejected By the institution",
+            "Conditional offer Received",
+            "Unconditional Offer received",
+            "Payment Received",
+            "Visa  granted ",
+            "Visa Denied"
+        ]
+
+        # Look up all status TableDropDownDefinitions (for possible mapping, not strictly needed)
+        status_qs = TableDropDownDefinition.objects.filter(
+            table_name="study_visa_status",
+            term__in=[s.strip() for s in all_status_terms]
+        )
+        status_term_map = {s.term.strip(): s.id for s in status_qs}
+
+        # Do a count-group-by-status FK (NULL ⇒ "Unknown")
+        status_counts = (
+            qs.values("status__term")
+              .annotate(count=Count("id"))
+        )
+        by_status = {s: 0 for s in all_status_terms}
+        for row in status_counts:
+            key = row["status__term"] or "Unknown"
+            # Sometimes admins enter ad-hoc status not in list
+            if key in by_status:
+                by_status[key] = row["count"]
+            else:
+                by_status.setdefault(key, 0)
+                by_status[key] += row["count"]
+
+        total = qs.count()
+
+        # By institution
+        inst_counts = (
+            qs.values("institution__name")
+              .annotate(count=Count("id"))
+              .order_by("-count")
+        )
+        by_institution = {row["institution__name"] or "No institution": row["count"] for row in inst_counts}
+
+        # By destination country -- using model property for reliability
+        country_counts = {}
+        for app in qs:
+            dest_country = app.destination_country
+            key = str(dest_country) if dest_country else "Unknown"
+            country_counts[key] = country_counts.get(key, 0) + 1
+
+        return Response({
+            "total": total,
+            "by_status": by_status,
+            "by_institution": by_institution,
+            "by_country": country_counts,
+        })
