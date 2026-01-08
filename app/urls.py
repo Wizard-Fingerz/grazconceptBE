@@ -10,7 +10,7 @@ from app.visa.pilgrimage.offer.views import (
     PilgrimageVisaApplicationCommentViewSet,
 )
 from app.visa.study.offers.views import StudyVisaOfferViewSet
-from app.visa.study.views import StudyVisaApplicationViewSet, StudyVisaApplicationCommentViewSet
+from app.visa.study.views import StudyVisaApplicationAnalyticsView, StudyVisaApplicationViewSet, StudyVisaApplicationCommentViewSet
 from app.visa.vacation.offer.views import (
     VacationOfferViewSet,
     VacationVisaApplicationViewSet,
@@ -129,4 +129,13 @@ urlpatterns = [
     path("suggest-flights/", suggest_flights_for_user, name="suggest_flights_for_user"),
     path("suggest-locations/", suggest_locations, name="suggest_locations"),
     path("", include(router.urls)),
+
+   
+    path(
+        "study-visa-application-analytics/",
+        StudyVisaApplicationAnalyticsView.as_view(),
+        name="study_visa_application_analytics"
+    ),
+
+
 ]
