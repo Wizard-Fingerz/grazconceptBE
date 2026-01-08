@@ -1,3 +1,5 @@
+from rest_framework.views import APIView
+from django.db import models
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -25,7 +27,8 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Check if the user is a Customer based on user_type.term
-        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer'
+        is_customer = hasattr(user, 'user_type') and getattr(
+            user.user_type, 'term', None) == 'Customer'
         if is_customer:
             client = getattr(user, 'client', None)
             if client:
@@ -54,12 +57,12 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Always enforce applicant = current user's Client instance
         user = self.request.user
-        is_customer = hasattr(user, 'user_type') and getattr(user.user_type, 'term', None) == 'Customer'
+        is_customer = hasattr(user, 'user_type') and getattr(
+            user.user_type, 'term', None) == 'Customer'
         if is_customer and hasattr(user, "client") and user.client:
             serializer.save(applicant=user.client)
         else:
             serializer.save()
-
 
 
 class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):
@@ -94,14 +97,16 @@ class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         applicant = getattr(user, 'applicant', None)
         admin = None
         if not applicant:
-            admin = user if user.is_staff or hasattr(user, "is_admin") else None
+            admin = user if user.is_staff or hasattr(
+                user, "is_admin") else None
         serializer.save(applicant=applicant, admin=admin)
 
     @action(
         detail=False,
         methods=['get'],
         url_path='(?P<visa_application_id>[^/.]+)/comments',
-        url_name='study-visa-application-comments-by-visa-id'  # for clarity, matches new DRF naming
+        # for clarity, matches new DRF naming
+        url_name='study-visa-application-comments-by-visa-id'
     )
     def list_by_application(self, request, visa_application_id=None):
         """
@@ -138,10 +143,6 @@ class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         # Admin Analytics APIView for Study Visa Applications
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db import models
 
 class StudyVisaApplicationAnalyticsView(APIView):
     """
@@ -156,6 +157,7 @@ class StudyVisaApplicationAnalyticsView(APIView):
         - country (destination country code/string)
         - start_date, end_date (application_date)
     """
+
     def get(self, request):
         from app.visa.study.models import StudyVisaApplication
         from definition.models import TableDropDownDefinition
@@ -234,7 +236,8 @@ class StudyVisaApplicationAnalyticsView(APIView):
               .annotate(count=Count("id"))
               .order_by("-count")
         )
-        by_institution = {row["institution__name"] or "No institution": row["count"] for row in inst_counts}
+        by_institution = {row["institution__name"]
+                          or "No institution": row["count"] for row in inst_counts}
 
         # By destination country -- using model property for reliability
         country_counts = {}
