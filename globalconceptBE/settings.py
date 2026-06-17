@@ -58,6 +58,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5174',
     'http://localhost:5173',
     'https://app.grazconcept.com.ng',
+    'https://backend.grazconcept.com.ng',
     'https://grazconceptbe.onrender.com',  # Added as per instruction
     # 'https://grazconceptbe.onrender.com/',  # Removed: as per CORS origin spec, no trailing slash allowed
 ]
