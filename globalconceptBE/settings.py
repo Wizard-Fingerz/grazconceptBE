@@ -30,7 +30,7 @@ if not SECRET_KEY:
     # Fail fast in any environment that forgot to set SECRET_KEY, except local
     # dev where DEBUG is on and an ephemeral key is acceptable.
     if os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on"):
-        SECRET_KEY = "django-insecure-dev-only-key-do-not-use-in-production"
+        SECRET_KEY = "django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz"
     else:
         raise RuntimeError(
             "SECRET_KEY environment variable is not set. "
