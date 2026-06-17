@@ -4,6 +4,7 @@ from definition.models import TableDropDownDefinition
 from account.client.models import Client  # For applicant ForeignKey
 from django.conf import settings
 from cloudinary.models import CloudinaryField
+from globalconceptBE.validators import validate_image_file, validate_document_file, validate_attachment_file
 
 class PilgrimageOffer(models.Model):
     title = models.CharField(max_length=255)
@@ -126,8 +127,8 @@ class PilgrimageVisaApplication(models.Model):
     date_of_birth = models.DateField()
     preferred_travel_date = models.DateField()
     group_travel = models.BooleanField(default=False)
-    passport_photo = CloudinaryField("passport_photo")
-    medical_certificate = CloudinaryField("medical_certificate", blank=True, null=True)
+    passport_photo = CloudinaryField("passport_photo", validators=[validate_image_file])
+    medical_certificate = CloudinaryField("medical_certificate", blank=True, null=True, validators=[validate_document_file])
     emergency_contact_name = models.CharField(max_length=255)
     emergency_contact_phone = models.CharField(max_length=30)
     emergency_contact_relationship = models.CharField(max_length=100)
@@ -236,7 +237,7 @@ class PilgrimageVisaApplicationComment(models.Model):
     is_read_by_applicant = models.BooleanField(default=False)
     is_read_by_admin = models.BooleanField(default=False)
     # (optional) Document upload to clarify/request something
-    attachment = CloudinaryField("attachment", null=True, blank=True, help_text="Optional file/document related to this comment.")
+    attachment = CloudinaryField("attachment", null=True, blank=True, validators=[validate_attachment_file], help_text="Optional file/document related to this comment.")
 
     class Meta:
         ordering = ['created_at']

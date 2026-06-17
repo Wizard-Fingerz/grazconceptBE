@@ -5,6 +5,7 @@ from account.client.models import Client
 from definition.models import TableDropDownDefinition
 from django.conf import settings
 from cloudinary.models import CloudinaryField
+from globalconceptBE.validators import validate_image_file, validate_document_file, validate_attachment_file
 
 
 def get_default_work_visa_status():
@@ -217,43 +218,50 @@ class WorkVisaApplication(models.Model):
         'image',
         blank=True,
         null=True,
-        help_text="Passport sized recent photo"
+        help_text="Passport sized recent photo",
+        validators=[validate_image_file],
     )
     international_passport = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Scanned international passport document"
+        help_text="Scanned international passport document",
+        validators=[validate_document_file],
     )
     updated_resume = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Updated Resume/CV"
+        help_text="Updated Resume/CV",
+        validators=[validate_document_file],
     )
     reference_letter = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Reference letter upload"
+        help_text="Reference letter upload",
+        validators=[validate_document_file],
     )
     employment_letter = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Employment letter upload"
+        help_text="Employment letter upload",
+        validators=[validate_document_file],
     )
     financial_statement = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Financial/bank statement"
+        help_text="Financial/bank statement",
+        validators=[validate_document_file],
     )
     english_proficiency_test = CloudinaryField(
         'auto',
         blank=True,
         null=True,
-        help_text="Proof of English language proficiency"
+        help_text="Proof of English language proficiency",
+        validators=[validate_document_file],
     )
 
     # Step 5: Additional Information
@@ -301,7 +309,8 @@ class WorkVisaApplication(models.Model):
         'auto',
         blank=True,
         null=True,
-        help_text="(Legacy) Resume or CV document"
+        help_text="(Legacy) Resume or CV document",
+        validators=[validate_document_file],
     )
     cover_letter = models.TextField(
         blank=True,
@@ -312,7 +321,8 @@ class WorkVisaApplication(models.Model):
         'auto',
         blank=True,
         null=True,
-        help_text="(Legacy) Scanned passport document"
+        help_text="(Legacy) Scanned passport document",
+        validators=[validate_document_file],
     )
     date_of_birth = models.DateField(
         blank=True,
@@ -398,7 +408,8 @@ class WorkVisaApplicationComment(models.Model):
         'auto',
         blank=True,
         null=True,
-        help_text="Optional file/document related to this comment."
+        help_text="Optional file/document related to this comment.",
+        validators=[validate_attachment_file],
     )
 
     class Meta:
@@ -566,7 +577,8 @@ class CVSubmission(models.Model):
     )
     cv_file = CloudinaryField(
         'auto',
-        help_text="CV file uploaded by the user"
+        help_text="CV file uploaded by the user",
+        validators=[validate_document_file],
     )
     cover_letter = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)

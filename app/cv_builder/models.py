@@ -1,6 +1,7 @@
 from django.db import models
 from django_countries.fields import CountryField
 from cloudinary.models import CloudinaryField
+from globalconceptBE.validators import validate_image_file
 
 from account.models import User
 
@@ -14,7 +15,7 @@ class CVProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # The 'owner' field is removed; use 'user' as owner.
     summary = models.TextField(blank=True)
-    photo = CloudinaryField('image', blank=True, null=True)
+    photo = CloudinaryField('image', blank=True, null=True, validators=[validate_image_file])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -28,8 +28,10 @@ schema_view = get_schema_view(
       default_version='v1',
       description="API documentation for GrazConcept",
    ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+   public=False,
+   # Only staff/admin accounts can browse the API schema in any environment.
+   # This avoids handing attackers a full endpoint map for free.
+   permission_classes=(permissions.IsAdminUser,),
 )
 
 api_urlpatterns = [

@@ -19,11 +19,12 @@ class WalletTransactionViewSet(viewsets.ModelViewSet):
         date_from (created_at >=), date_to (created_at <=), and reference (exact).
         """
         user = self.request.user
+        base_queryset = WalletTransaction.objects.select_related('wallet', 'wallet__user')
         if user.is_staff or user.is_superuser:
             # Admin: see all transactions, but filters still apply
-            queryset = WalletTransaction.objects.all().order_by('-created_at')
+            queryset = base_queryset.order_by('-created_at')
         else:
-            queryset = WalletTransaction.objects.filter(wallet__user=user).order_by('-created_at')
+            queryset = base_queryset.filter(wallet__user=user).order_by('-created_at')
 
         tx_type = self.request.query_params.get("transaction_type")
         status = self.request.query_params.get("status")

@@ -41,17 +41,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 
 
-# Why is there no referred_by in my serializer?
-# Actually, it IS in your UserRegistrationSerializer. Your serializer:
-#   - accepts it (it's in the fields list and as a serializer.CharField).
-#   - but in your .create() method of the serializer, you ignore it and don't use it to set on the User.
-#   - So, that's why you pull it in the view and apply it to the model *after* creating the user instance, right before final .save().
-# This is so you don't set the referred_by on your User model via the serializer itself but assign it directly on the model. Both approaches can work, but currently you chose to handle assignment in the view outside the serializer (for maybe validation or business logic control).
-#
-# Main point: There **is** a "referred_by" field in your UserRegistrationSerializer and your view expects clients to POST it as normal.
-
 class SignUpView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'signup'
 
     @swagger_auto_schema(
         request_body=UserRegistrationSerializer,
@@ -62,16 +54,20 @@ class SignUpView(APIView):
         data = request.data.copy()
         # Ensure referred_by from request is sent to serializer (and not blanked out)
         # This way, the serializer receives what the client sent, whether present or not
-        print(data)
         serializer = UserRegistrationSerializer(data=data)
-        print(serializer)
         if serializer.is_valid():
             user = serializer.save()
             # The serializer already handles referred_by if client sent it;
             # if you still want to post-process (e.g., strip/validate), do it here:
             if "referred_by" in request.data:
-                user.referred_by = request.data.get("referred_by", "")
-                user.save()
+                referred_by = (request.data.get("referred_by") or "").strip()
+                # Only persist it if it actually refers to an existing user,
+                # and never let someone refer themselves.
+                if referred_by and referred_by != user.email and User.objects.filter(
+                    Q(email=referred_by) | Q(id=referred_by) if referred_by.isdigit() else Q(email=referred_by)
+                ).exists():
+                    user.referred_by = referred_by
+                    user.save()
 
             # Issue JWT tokens after registration
             refresh = RefreshToken.for_user(user)
@@ -112,9 +108,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    throttle_scope = 'login'
 
 
 class PasswordResetRequestView(APIView):
+    throttle_scope = 'password_reset'
+
     @swagger_auto_schema(
         request_body=PasswordResetRequestSerializer, responses={
             200: openapi.Response("OK")}

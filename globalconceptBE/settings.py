@@ -25,7 +25,18 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz'
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    # Fail fast in any environment that forgot to set SECRET_KEY, except local
+    # dev where DEBUG is on and an ephemeral key is acceptable.
+    if os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on"):
+        SECRET_KEY = "django-insecure-dev-only-key-do-not-use-in-production"
+    else:
+        raise RuntimeError(
+            "SECRET_KEY environment variable is not set. "
+            "Generate one with django.core.management.utils.get_random_secret_key() "
+            "and set it in the environment/.env file."
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on")
@@ -150,7 +161,17 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
- 
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    # Tight limits on auth endpoints (brute-force / spam protection); views opt
+    # in via `throttle_scope`. Anything without a scope is unthrottled here.
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '10/min',
+        'signup': '5/min',
+        'password_reset': '5/min',
+    },
+
     "EXCEPTION_HANDLER": "globalconceptBE.exceptions.custom_exception_handler",
 }
 
@@ -286,3 +307,55 @@ MASKAWA_API_KEY = os.environ.get('MASKAWA_API_KEY')
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
 AMADEUS_CLIENT_ID = os.environ.get('AMADEUS_CLIENT_ID')
 AMADEUS_CLIENT_SECRET = os.environ.get('AMADEUS_CLIENT_SECRET')
+
+# Frontend URL used to build links in emails (password reset, etc.)
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://app.grazconcept.com.ng')
+
+# Email configuration. Defaults to console backend (prints emails to stdout)
+# so password-reset etc. don't crash if SMTP isn't configured; set EMAIL_*
+# environment variables to send real emails.
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@grazconcept.com.ng')
+
+# Production-only security hardening. Skipped under DEBUG so local HTTP dev
+# still works without a TLS cert.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True').lower() in ('1', 'true', 'yes', 'on')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+
+# Logging: surface warnings/errors to stdout (captured by Render/Vercel logs)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}

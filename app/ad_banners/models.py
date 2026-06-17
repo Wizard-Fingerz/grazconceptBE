@@ -1,5 +1,6 @@
 from django.db import models
 from cloudinary.models import CloudinaryField  # <-- As instructed per file_context_0
+from globalconceptBE.validators import validate_image_file
 import os
 
 def ad_banner_image_upload_path(instance, filename):
@@ -15,7 +16,7 @@ class AdBanner(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    image = CloudinaryField('image', blank=True, null=True)  # Use CloudinaryField instead of ImageField
+    image = CloudinaryField('image', blank=True, null=True, validators=[validate_image_file])  # Use CloudinaryField instead of ImageField
     link_url = models.URLField(max_length=500, blank=True, null=True)
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, default='top')
     is_active = models.BooleanField(default=True)

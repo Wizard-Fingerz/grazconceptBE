@@ -7,6 +7,7 @@ from definition.models import TableDropDownDefinition
 from app.visa.study.offers.models import StudyVisaOffer
 
 from cloudinary.models import CloudinaryField
+from globalconceptBE.validators import validate_image_file, validate_document_file, validate_attachment_file
 
 # Helper for file upload paths
 def upload_to(instance, filename, prefix):
@@ -89,12 +90,12 @@ class StudyVisaApplication(models.Model):
     )
 
     # 4️⃣ Document Uploads
-    passport_photo = CloudinaryField('image', blank=True, null=True)
-    passport_document = CloudinaryField('file', blank=True, null=True)
-    academic_transcript = CloudinaryField('file', blank=True, null=True)
-    admission_letter = CloudinaryField('file', blank=True, null=True)
-    financial_statement = CloudinaryField('file', blank=True, null=True)
-    english_test_result = CloudinaryField('file', blank=True, null=True)
+    passport_photo = CloudinaryField('image', blank=True, null=True, validators=[validate_image_file])
+    passport_document = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
+    academic_transcript = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
+    admission_letter = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
+    financial_statement = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
+    english_test_result = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
 
     # 5️⃣ Additional Information
     previous_visa_applications = models.BooleanField(default=False)
@@ -103,7 +104,7 @@ class StudyVisaApplication(models.Model):
     emergency_contact_name = models.CharField(max_length=255, blank=True, null=True)
     emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
     emergency_contact_phone = models.CharField(max_length=30, blank=True, null=True)
-    statement_of_purpose = CloudinaryField('file', blank=True, null=True)
+    statement_of_purpose = CloudinaryField('file', blank=True, null=True, validators=[validate_document_file])
 
     # 6️⃣ Review & Submit
     is_submitted = models.BooleanField(default=False)
@@ -323,6 +324,7 @@ class StudyVisaApplicationComment(models.Model):
         'auto',
         blank=True,
         null=True,
+        validators=[validate_attachment_file],
         help_text="Optional file/document related to this comment."
     )
 

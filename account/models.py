@@ -6,6 +6,7 @@ from definition.permissions.models import UserPermissions
 from definition.roles.models import Roles
 from django_countries.fields import CountryField
 from cloudinary.models import CloudinaryField
+from globalconceptBE.validators import validate_image_file
 import string
 import random
 
@@ -49,7 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
     custom_id = models.CharField(max_length=7, unique=True, null=True, blank=True)
-    profile_picture = CloudinaryField('image', blank=True, null=True)
+    profile_picture = CloudinaryField('image', blank=True, null=True, validators=[validate_image_file])
     email = models.EmailField(unique=True)
     extra_permissions = models.ManyToManyField(UserPermissions, related_name='extra_user_permissions', blank=True)
     is_deleted = models.BooleanField(default=False)
