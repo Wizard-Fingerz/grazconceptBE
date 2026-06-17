@@ -25,18 +25,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
-if not SECRET_KEY:
-    # Fail fast in any environment that forgot to set SECRET_KEY, except local
-    # dev where DEBUG is on and an ephemeral key is acceptable.
-    if os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on"):
-        SECRET_KEY = "django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz"
-    else:
-        raise RuntimeError(
-            "SECRET_KEY environment variable is not set. "
-            "Generate one with django.core.management.utils.get_random_secret_key() "
-            "and set it in the environment/.env file."
-        )
+SECRET_KEY = 'django-insecure-%%jjte3p!n@u8u9m9*@6-aibu9n71e3r-+d_1q(db8lj=@#6kz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes", "on")
@@ -161,16 +150,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_THROTTLE_CLASSES': (
-        'rest_framework.throttling.ScopedRateThrottle',
-    ),
-    # Tight limits on auth endpoints (brute-force / spam protection); views opt
-    # in via `throttle_scope`. Anything without a scope is unthrottled here.
-    'DEFAULT_THROTTLE_RATES': {
-        'login': '10/min',
-        'signup': '5/min',
-        'password_reset': '5/min',
-    },
+    # 'DEFAULT_THROTTLE_CLASSES': (
+    #     'rest_framework.throttling.ScopedRateThrottle',
+    # ),
+    # # Tight limits on auth endpoints (brute-force / spam protection); views opt
+    # # in via `throttle_scope`. Anything without a scope is unthrottled here.
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'login': '10/min',
+    #     'signup': '5/min',
+    #     'password_reset': '5/min',
+    # },
 
     "EXCEPTION_HANDLER": "globalconceptBE.exceptions.custom_exception_handler",
 }
