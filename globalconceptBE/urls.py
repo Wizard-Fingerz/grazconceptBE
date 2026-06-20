@@ -42,6 +42,7 @@ api_urlpatterns = [
     path('notification/', include('notification.urls')),
     path('chat/', include('chat.urls')),
     path('', include('definition.urls')),
+    path('value-services/', include('value_services.urls')),
 ]
 
 urlpatterns = [
