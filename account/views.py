@@ -1,4 +1,4 @@
-from account.models import User
+from account.models import User, UserProfile
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
@@ -16,7 +16,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Sum
 from app.flight.models import FlightBooking
 from app.citizenship.investment.models import Investment, InvestmentPlan
 from app.help_center.support_ticket.models import SupportTicket
@@ -31,49 +30,38 @@ from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
     UserSerializer,
+    UserProfileDetailSerializer,
+    UserProfileUpdateSerializer,
 )
-from .models import User
+from .models import User, UserProfile
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
 
 
 class SignUpView(APIView):
     permission_classes = [AllowAny]
-    throttle_scope = 'signup'
+    throttle_scope = "signup"
 
     @swagger_auto_schema(
         request_body=UserRegistrationSerializer,
-        responses={201: openapi.Response(
-            'Created', UserRegistrationSerializer)},
+        responses={201: openapi.Response("Created", UserRegistrationSerializer)},
     )
     def post(self, request):
         data = request.data.copy()
-        # Ensure referred_by from request is sent to serializer (and not blanked out)
-        # This way, the serializer receives what the client sent, whether present or not
         serializer = UserRegistrationSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
-            # The serializer already handles referred_by if client sent it;
-            # if you still want to post-process (e.g., strip/validate), do it here:
             if "referred_by" in request.data:
                 referred_by = (request.data.get("referred_by") or "").strip()
-                # Only persist it if it actually refers to an existing user,
-                # and never let someone refer themselves.
                 if referred_by and referred_by != user.email and User.objects.filter(
                     Q(email=referred_by) | Q(id=referred_by) if referred_by.isdigit() else Q(email=referred_by)
                 ).exists():
                     user.referred_by = referred_by
                     user.save()
-
-            # Issue JWT tokens after registration
             refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-
             return Response(
                 {
                     "user_id": user.id,
@@ -82,8 +70,8 @@ class SignUpView(APIView):
                     "last_name": user.last_name,
                     "referred_by": user.referred_by,
                     "user_type": user.user_type.term if user.user_type else None,
-                    "access": access_token,
-                    "refresh": refresh_token,
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -94,29 +82,27 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add custom claims
         token["email"] = user.email
         token["first_name"] = user.first_name
         token["user_type"] = user.user_type.term if user.user_type else None
         return token
 
     def validate(self, attrs):
-        # Replace username with email for authentication
         attrs["username"] = attrs.get("email")
         return super().validate(attrs)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
-    throttle_scope = 'login'
+    throttle_scope = "login"
 
 
 class PasswordResetRequestView(APIView):
-    throttle_scope = 'password_reset'
+    throttle_scope = "password_reset"
 
     @swagger_auto_schema(
-        request_body=PasswordResetRequestSerializer, responses={
-            200: openapi.Response("OK")}
+        request_body=PasswordResetRequestSerializer,
+        responses={200: openapi.Response("OK")},
     )
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -135,7 +121,7 @@ class PasswordResetRequestView(APIView):
                 fail_silently=False,
             )
         except UserModel.DoesNotExist:
-            pass  # Don't reveal if email exists
+            pass
         return Response(
             {"message": "If the email exists, a reset link has been sent."},
             status=status.HTTP_200_OK,
@@ -143,23 +129,189 @@ class PasswordResetRequestView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
 
+# ─── Profile views ────────────────────────────────────────────────────────────
+
 class UserProfileView(APIView):
+    """
+    GET   /api/users/profile/  -> full profile including extended fields
+    PATCH /api/users/profile/  -> update profile_picture (multipart/form-data)
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+        return Response(UserProfileDetailSerializer(request.user).data)
 
-        # GetMyRefeerees endpoint: returns all users referred by the authenticated user
+    def patch(self, request):
+        user = request.user
+        picture = request.FILES.get("profile_picture")
+        if picture:
+            user.profile_picture = picture
+            user.save(update_fields=["profile_picture"])
+        return Response(UserProfileDetailSerializer(user).data)
+
+
+class UserProfileUpdateView(APIView):
+    """
+    PATCH /api/users/profile/update/
+    Flat JSON update for all profile + extended profile fields.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        serializer = UserProfileUpdateSerializer(
+            instance=request.user,
+            data=request.data,
+            partial=True,
+        )
+        if serializer.is_valid():
+            serializer.update(request.user, serializer.validated_data)
+            return Response(UserProfileDetailSerializer(request.user).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomerDashboardView(APIView):
+    """
+    GET /api/users/dashboard/
+    Returns stats and recent activity for the logged-in customer.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Applications
+        try:
+            client = Client.objects.get(pk=user.pk)
+            study_total = StudyVisaApplication.objects.filter(applicant=client).count()
+            study_pending = StudyVisaApplication.objects.filter(
+                applicant=client, status__term__iexact="pending"
+            ).count()
+            work_total = WorkVisaApplication.objects.filter(applicant=client).count()
+            work_pending = WorkVisaApplication.objects.filter(
+                applicant=client, status__term__iexact="pending"
+            ).count()
+        except Client.DoesNotExist:
+            client = None
+            study_total = study_pending = work_total = work_pending = 0
+
+        total_applications = study_total + work_total
+        pending_applications = study_pending + work_pending
+
+        # Wallet
+        wallet_balance = None
+        wallet_currency = "NGN"
+        try:
+            from wallet.models import Wallet
+            w = Wallet.objects.get(user=user)
+            wallet_balance = float(w.balance)
+            wallet_currency = w.currency
+        except Exception:
+            pass
+
+        # Loans
+        try:
+            loans = LoanApplication.objects.filter(user=user)
+            active_loans = loans.filter(
+                status__term__in=["Pending", "Approved", "Active"]
+            ).count()
+            total_loan_amount = float(loans.aggregate(s=Sum("amount"))["s"] or 0)
+        except Exception:
+            active_loans = 0
+            total_loan_amount = 0.0
+
+        # Documents
+        try:
+            from account.client.documents.models import ClientDocuments
+            docs_uploaded = ClientDocuments.objects.filter(client__pk=user.pk).count()
+        except Exception:
+            docs_uploaded = 0
+
+        # Profile completeness
+        core_fields = [
+            user.first_name, user.last_name, user.phone_number,
+            user.date_of_birth, user.gender_id, user.nationality,
+            user.country_of_residence, user.current_address, user.profile_picture,
+        ]
+        try:
+            ep = user.extended_profile
+            ext_fields = [
+                ep.passport_number, ep.highest_qualification,
+                ep.previous_job_title, ep.emergency_contact_name,
+            ]
+        except UserProfile.DoesNotExist:
+            ext_fields = []
+        all_fields = core_fields + ext_fields
+        filled = sum(1 for f in all_fields if f)
+        profile_completion = round(filled / len(all_fields) * 100) if all_fields else 0
+
+        # Recent transactions
+        recent_transactions = []
+        try:
+            for tx in WalletTransaction.objects.filter(user=user).order_by("-created_at")[:5]:
+                recent_transactions.append({
+                    "id": tx.pk,
+                    "type": getattr(tx, "transaction_type", "transaction"),
+                    "amount": float(tx.amount),
+                    "currency": getattr(tx, "currency", wallet_currency),
+                    "status": tx.status,
+                    "description": getattr(tx, "description", ""),
+                    "date": tx.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                })
+        except Exception:
+            pass
+
+        # Recent applications
+        recent_applications = []
+        if client:
+            try:
+                for app in StudyVisaApplication.objects.filter(
+                    applicant=client
+                ).order_by("-submitted_at")[:3]:
+                    recent_applications.append({
+                        "id": app.pk,
+                        "type": "study_visa",
+                        "label": "Study Visa Application",
+                        "status": str(app.status) if app.status else "pending",
+                        "date": app.submitted_at.strftime("%Y-%m-%dT%H:%M:%SZ") if app.submitted_at else None,
+                    })
+            except Exception:
+                pass
+            try:
+                for app in WorkVisaApplication.objects.filter(
+                    applicant=client
+                ).order_by("-submitted_at")[:3]:
+                    recent_applications.append({
+                        "id": app.pk,
+                        "type": "work_visa",
+                        "label": "Work Visa Application",
+                        "status": str(app.status) if app.status else "pending",
+                        "date": app.submitted_at.strftime("%Y-%m-%dT%H:%M:%SZ") if app.submitted_at else None,
+                    })
+            except Exception:
+                pass
+            recent_applications.sort(key=lambda x: x["date"] or "", reverse=True)
+            recent_applications = recent_applications[:5]
+
+        return Response({
+            "profile_completion": profile_completion,
+            "applications": {
+                "total": total_applications,
+                "pending": pending_applications,
+                "study_visa": study_total,
+                "work_visa": work_total,
+            },
+            "wallet": {"balance": wallet_balance, "currency": wallet_currency},
+            "loans": {"active": active_loans, "total_amount": total_loan_amount},
+            "documents_uploaded": docs_uploaded,
+            "recent_transactions": recent_transactions,
+            "recent_applications": recent_applications,
+        })
 
 
 class GetMyRefeereesView(APIView):
