@@ -1,8 +1,12 @@
 Passport
+Passport Photo
 General
 Transcript
 Bank Statement
 ID Card
 Visa
 Offer Letter
+CV
+English Test
+Medical Certificate
 Other

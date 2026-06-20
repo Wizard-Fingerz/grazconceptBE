@@ -7,7 +7,7 @@ from django.db import IntegrityError
 
 @receiver(post_migrate)
 def create_system_defined_entries(sender, **kwargs):
-    if sender.name == 'app':
+    if sender.name == 'definition':
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'system_defined_definitions.txt')
         with open(file_path, 'r') as file:
             for line in file:
