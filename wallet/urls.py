@@ -2,7 +2,11 @@ from rest_framework import routers
 from django.urls import path, include
 from .views import WalletViewSet, AdminWalletAnalyticsView
 from .transactions.views import WalletTransactionViewSet
-from .payment_gateway.views import PaymentGatewayViewSet, PaymentGatewayCallbackLogViewSet
+from .payment_gateway.views import (
+    PaymentGatewayViewSet, PaymentGatewayCallbackLogViewSet,
+    FlutterwaveInitiateView, FlutterwaveVerifyView, FlutterwaveWebhookView,
+    FlutterwaveWithdrawView, FlutterwaveBanksView,
+)
 from .saving_plans.views import SavingsPlanViewSet
 from .loan.views import LoanOfferViewSet, LoanApplicationViewSet, LoanRepaymentViewSet, LoanAnalyticsViewSet
 
@@ -12,7 +16,6 @@ router.register(r'wallet-transactions', WalletTransactionViewSet, basename='wall
 router.register(r'payment-gateways', PaymentGatewayViewSet, basename='payment-gateway')
 router.register(r'payment-gateway-callback-logs', PaymentGatewayCallbackLogViewSet, basename='payment-gateway-callback-log')
 router.register(r'saving-plans', SavingsPlanViewSet, basename='saving-plan')
-
 router.register(r'loan-offers', LoanOfferViewSet, basename='loan-offer')
 router.register(r'loan-applications', LoanApplicationViewSet, basename='loan-application')
 router.register(r'loan-repayments', LoanRepaymentViewSet, basename='loan-repayment')
@@ -21,4 +24,11 @@ router.register(r'loan-analytics', LoanAnalyticsViewSet, basename='loan-analytic
 urlpatterns = [
     path('', include(router.urls)),
     path('admin-analytics/', AdminWalletAnalyticsView.as_view(), name='wallet-admin-analytics'),
+
+    # ── Flutterwave ──────────────────────────────────────────────────────
+    path('flutterwave/initiate/',  FlutterwaveInitiateView.as_view(),  name='flw-initiate'),
+    path('flutterwave/verify/',    FlutterwaveVerifyView.as_view(),    name='flw-verify'),
+    path('flutterwave/webhook/',   FlutterwaveWebhookView.as_view(),   name='flw-webhook'),
+    path('flutterwave/withdraw/',  FlutterwaveWithdrawView.as_view(),  name='flw-withdraw'),
+    path('flutterwave/banks/',     FlutterwaveBanksView.as_view(),     name='flw-banks'),
 ]

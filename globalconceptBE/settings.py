@@ -349,3 +349,9 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no
 #         },
 #     },
 # }
+# ── Flutterwave ───────────────────────────────────────────────────────────────
+import os
+FLUTTERWAVE_SECRET_KEY     = os.environ.get("FLUTTERWAVE_SECRET_KEY", "")
+FLUTTERWAVE_PUBLIC_KEY     = os.environ.get("FLUTTERWAVE_PUBLIC_KEY", "")
+FLUTTERWAVE_ENCRYPTION_KEY = os.environ.get("FLUTTERWAVE_ENCRYPTION_KEY", "")
+FLUTTERWAVE_WEBHOOK_HASH   = os.environ.get("FLUTTERWAVE_WEBHOOK_HASH", "")
