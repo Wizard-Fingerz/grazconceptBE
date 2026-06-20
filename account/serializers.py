@@ -178,9 +178,9 @@ class UserProfileUpdateSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=200, required=False)
     phone_number = serializers.CharField(max_length=17, required=False)
     date_of_birth = serializers.DateField(required=False, allow_null=True)
-    gender = serializers.IntegerField(required=False, allow_null=True)
-    nationality = serializers.CharField(max_length=10, required=False, allow_blank=True, allow_null=True)
-    country_of_residence = serializers.CharField(max_length=10, required=False, allow_blank=True, allow_null=True)
+    gender = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+    nationality = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+    country_of_residence = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
     current_address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     passport_number = serializers.CharField(max_length=50, required=False, allow_blank=True, allow_null=True)
@@ -214,8 +214,15 @@ class UserProfileUpdateSerializer(serializers.Serializer):
             if field not in validated_data:
                 continue
             if field == "gender":
-                gender_id = validated_data[field]
-                user_updates["gender_id"] = int(gender_id) if gender_id else None
+                gender_val = validated_data[field]
+                if gender_val:
+                    from definition.models import TableDropDownDefinition
+                    gender_obj = TableDropDownDefinition.objects.filter(
+                        table_name='gender', term__iexact=gender_val
+                    ).first()
+                    user_updates["gender_id"] = gender_obj.pk if gender_obj else None
+                else:
+                    user_updates["gender_id"] = None
             else:
                 user_updates[field] = validated_data[field]
 
