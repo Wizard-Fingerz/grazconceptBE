@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    VerifyMeterView,
     ElectricityBillPayView,
     CableInternetRenewView,
     EducationFeePayView,
@@ -8,6 +9,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("bills/verify-meter/", VerifyMeterView.as_view(), name="vs-verify-meter"),
     path("bills/pay/", ElectricityBillPayView.as_view(), name="vs-bills-pay"),
     path("cable-internet/renew/", CableInternetRenewView.as_view(), name="vs-cable-renew"),
     path("education-fees/pay/", EducationFeePayView.as_view(), name="vs-education-pay"),

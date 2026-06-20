@@ -1,10 +1,12 @@
 """
 Value-services bill payment views.
 Endpoints:
-  POST /api/value-services/bills/pay/          → electricity
+  GET  /api/value-services/bills/verify-meter/  → verify meter number before payment
+  POST /api/value-services/bills/pay/           → electricity
   POST /api/value-services/cable-internet/renew/ → cable TV / internet
   POST /api/value-services/education-fees/pay/  → education / exam fees
   POST /api/value-services/webhook/flutterwave/ → Flutterwave payment webhook
+  GET  /api/value-services/payment/status/      → check payment status by reference
 """
 import logging
 from decimal import Decimal
@@ -26,6 +28,38 @@ from . import services
 logger = logging.getLogger(__name__)
 
 
+# ── UtilityBillPayment mirror helper ─────────────────────────────────────────
+
+def _mirror_to_utility_model(record: "BillPaymentRecord", result: dict):
+    """
+    Create a UtilityBillPayment record so the existing admin panel shows it.
+    Silently skips if the provider or model is unavailable.
+    """
+    try:
+        from app.services.utility.models import UtilityProvider, UtilityBillPayment
+        p = record.payload
+        provider_obj = UtilityProvider.objects.filter(value=p.get("provider", "")).first()
+        if not provider_obj:
+            # Create a placeholder provider on the fly
+            provider_obj, _ = UtilityProvider.objects.get_or_create(
+                value=p.get("provider", "unknown"),
+                defaults={"label": p.get("provider", "Unknown Provider")},
+            )
+        UtilityBillPayment.objects.create(
+            user=record.user,
+            provider=provider_obj,
+            meter_type=p.get("meter_type", "prepaid"),
+            meter_number=p.get("meter_number", ""),
+            amount=int(record.amount),
+            status="success",
+            transaction_reference=record.transaction_reference,
+            token=record.token or "",
+            completed_at=record.completed_at,
+        )
+    except Exception as exc:
+        logger.warning("Could not mirror to UtilityBillPayment: %s", exc)
+
+
 # ── Shared payment dispatcher ────────────────────────────────────────────────
 
 def _get_redirect_url():
@@ -38,7 +72,7 @@ def _build_flutterwave_meta_for_record(record_type: str, record_id: int, **extra
 
 
 def _execute_electricity(record: BillPaymentRecord):
-    """Call PremiumSub for electricity and update record."""
+    """Call PremiumSub for electricity and update record + UtilityBillPayment."""
     p = record.payload
     result = services.purchase_electricity(
         provider=p["provider"],
@@ -46,6 +80,7 @@ def _execute_electricity(record: BillPaymentRecord):
         meter_number=p["meter_number"],
         amount=record.amount,
         reference=record.transaction_reference,
+        phone=p.get("phone", ""),
     )
     record.provider_reference = result["provider_reference"]
     record.token = result.get("token", "")
@@ -53,6 +88,9 @@ def _execute_electricity(record: BillPaymentRecord):
     record.status = "successful"
     record.completed_at = timezone.now()
     record.save()
+
+    # Mirror to UtilityBillPayment for admin visibility
+    _mirror_to_utility_model(record, result)
 
 
 def _execute_cable(subscription: CableTVSubscription):
@@ -88,6 +126,48 @@ def _execute_education(record: BillPaymentRecord):
     record.status = "successful"
     record.completed_at = timezone.now()
     record.save()
+
+
+# ── Meter Verification ───────────────────────────────────────────────────────
+
+class VerifyMeterView(APIView):
+    """
+    GET /api/value-services/bills/verify-meter/
+    ?disco=ikeja-electric&meter_number=1234567890&meter_type=prepaid
+
+    Validates meter number with the provider and returns customer name.
+    Used by the frontend to auto-fill customer info before payment.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        disco = request.query_params.get("disco", "").strip()
+        meter_number = request.query_params.get("meter_number", "").strip()
+        meter_type = request.query_params.get("meter_type", "prepaid").strip()
+
+        if not disco or not meter_number:
+            return Response(
+                {"detail": "disco and meter_number query params are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(meter_number) < 5:
+            return Response(
+                {"detail": "Meter number must be at least 5 characters."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            info = services.verify_meter(disco, meter_number, meter_type)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "verified": True,
+            "customer_name":   info.get("customer_name", ""),
+            "address":         info.get("address", ""),
+            "meter_number":    info.get("meter_number", meter_number),
+            "minimum_amount":  info.get("minimum_amount", 500),
+        })
 
 
 # ── Electricity ───────────────────────────────────────────────────────────────
@@ -483,7 +563,6 @@ class BillPaymentStatusView(APIView):
         if not ref:
             return Response({"detail": "ref query param required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check all record types
         record = BillPaymentRecord.objects.filter(
             user=request.user, transaction_reference=ref
         ).first()
@@ -497,6 +576,7 @@ class BillPaymentStatusView(APIView):
                 "amount": str(record.amount),
                 "created_at": record.created_at,
                 "completed_at": record.completed_at,
+                "error_message": record.error_message,
             })
 
         sub = CableTVSubscription.objects.filter(
