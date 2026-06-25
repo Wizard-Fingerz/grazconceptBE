@@ -61,6 +61,13 @@ class SignUpView(APIView):
                 ).exists():
                     user.referred_by = referred_by
                     user.save()
+            # Send welcome email (non-fatal)
+            try:
+                from globalconceptBE.emails import send_welcome_email
+                send_welcome_email(user)
+            except Exception:
+                pass
+
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
@@ -98,6 +105,12 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 class PasswordResetRequestView(APIView):
+    """
+    POST /api/users/password/reset/
+    Body: { "email": "user@example.com" }
+    Always returns 200 (don't leak whether the email exists).
+    """
+    permission_classes = [AllowAny]
     throttle_scope = "password_reset"
 
     @swagger_auto_schema(
@@ -105,6 +118,7 @@ class PasswordResetRequestView(APIView):
         responses={200: openapi.Response("OK")},
     )
     def post(self, request):
+        from globalconceptBE.emails import send_password_reset_email
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
@@ -113,17 +127,64 @@ class PasswordResetRequestView(APIView):
             user = UserModel.objects.get(email=email)
             token = default_token_generator.make_token(user)
             reset_url = f"{settings.FRONTEND_URL}/reset-password/{user.pk}/{token}/"
-            send_mail(
-                "Password Reset",
-                f"Click the link to reset your password: {reset_url}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            send_password_reset_email(user, reset_url)
         except UserModel.DoesNotExist:
-            pass
+            pass  # Don't reveal whether the email exists
         return Response(
-            {"message": "If the email exists, a reset link has been sent."},
+            {"message": "If that email is registered, a reset link is on its way."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/users/password/reset/confirm/
+    Body: { "uid": "<user_pk>", "token": "<token>", "new_password": "...", "new_password2": "..." }
+    Validates the token and sets the new password.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid       = request.data.get("uid", "").strip()
+        token     = request.data.get("token", "").strip()
+        password  = request.data.get("new_password", "")
+        password2 = request.data.get("new_password2", "")
+
+        if not uid or not token or not password:
+            return Response(
+                {"detail": "uid, token and new_password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if password != password2:
+            return Response(
+                {"detail": "Passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(password) < 8:
+            return Response(
+                {"detail": "Password must be at least 8 characters."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        UserModel = get_user_model()
+        try:
+            user = UserModel.objects.get(pk=uid)
+        except (UserModel.DoesNotExist, ValueError):
+            return Response(
+                {"detail": "Invalid reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "This reset link has expired or is invalid. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(password)
+        user.save(update_fields=["password"])
+        return Response(
+            {"message": "Password updated successfully. You can now log in."},
             status=status.HTTP_200_OK,
         )
 

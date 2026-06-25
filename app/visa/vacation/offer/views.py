@@ -156,7 +156,23 @@ class VacationVisaApplicationViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'user_type') and getattr(user.user_type, 'term', '').lower() == 'customer' and hasattr(user, 'client') and user.client:
             if isinstance(request.data, dict):
                 request.data['applicant'] = user.client.id
-        return super().create(request, *args, **kwargs)
+        response = super().create(request, *args, **kwargs)
+
+        # Notify admin of new application (non-fatal)
+        try:
+            from globalconceptBE.emails import send_admin_application_notification
+            app_user = user
+            instance_id = response.data.get('id') if hasattr(response, 'data') else None
+            send_admin_application_notification(
+                application_type="Vacation",
+                applicant_name=app_user.get_full_name() or app_user.email,
+                applicant_email=app_user.email,
+                application_id=instance_id or '—',
+            )
+        except Exception:
+            pass
+
+        return response
 
 
 

@@ -180,16 +180,32 @@ class PilgrimageVisaApplicationViewSet(viewsets.ModelViewSet):
             client = user.client
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save(applicant=client)
+            instance = serializer.save(applicant=client)
             headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
             # Not a customer or no linked client, save as normal (applicant must be specified in payload)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            instance = serializer.save()
             headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+        # Notify admin of new application (non-fatal)
+        try:
+            from globalconceptBE.emails import send_admin_application_notification
+            applicant = getattr(instance, 'applicant', None)
+            app_user = getattr(applicant, 'user', None) or user
+            offer_title = str(getattr(getattr(instance, 'offer', None), 'title', '') or '')
+            send_admin_application_notification(
+                application_type="Pilgrimage",
+                applicant_name=app_user.get_full_name() or app_user.email,
+                applicant_email=app_user.email,
+                application_id=instance.pk,
+                extra_fields={"Package": offer_title} if offer_title else None,
+            )
+        except Exception:
+            pass
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class PilgrimageVisaApplicationCommentViewSet(viewsets.ModelViewSet):
     """

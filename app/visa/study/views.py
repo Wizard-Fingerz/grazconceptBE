@@ -60,9 +60,23 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
         is_customer = hasattr(user, 'user_type') and getattr(
             user.user_type, 'term', None) == 'Customer'
         if is_customer and hasattr(user, "client") and user.client:
-            serializer.save(applicant=user.client)
+            instance = serializer.save(applicant=user.client)
         else:
-            serializer.save()
+            instance = serializer.save()
+
+        # Notify admin of new application (non-fatal)
+        try:
+            from globalconceptBE.emails import send_admin_application_notification
+            applicant = getattr(instance, 'applicant', None)
+            app_user = getattr(applicant, 'user', None) or user
+            send_admin_application_notification(
+                application_type="Study Visa",
+                applicant_name=app_user.get_full_name() or app_user.email,
+                applicant_email=app_user.email,
+                application_id=instance.pk,
+            )
+        except Exception:
+            pass
 
 
 class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):

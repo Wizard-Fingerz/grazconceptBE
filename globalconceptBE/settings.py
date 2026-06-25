@@ -302,19 +302,49 @@ AMADEUS_CLIENT_SECRET = os.environ.get('AMADEUS_CLIENT_SECRET')
 # Frontend URL used to build links in emails (password reset, etc.)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://app.grazconcept.com.ng')
 
-# Email configuration. Defaults to console backend (prints emails to stdout)
-# so password-reset etc. don't crash if SMTP isn't configured; set EMAIL_*
-# environment variables to send real emails.
+# ── Mailgun email configuration ───────────────────────────────────────────────
+# Set MAILGUN_API_KEY and MAILGUN_DOMAIN in your environment (or .env).
+# Mailgun provides an SMTP relay at smtp.mailgun.org — no extra library needed.
+#
+# Required env vars:
+#   MAILGUN_API_KEY      = key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#   MAILGUN_DOMAIN       = mg.yourdomain.com  (or sandbox-xxx.mailgun.org for testing)
+#   MAILGUN_SMTP_LOGIN   = postmaster@mg.yourdomain.com   (optional, derived from domain)
+#   DEFAULT_FROM_EMAIL   = GrazConcept <no-reply@mg.yourdomain.com>
+#   ADMIN_NOTIFICATION_EMAIL = admin@grazconcept.com.ng
+#
+# Leave MAILGUN_API_KEY empty during local dev → falls back to console backend.
+
+MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY', '')
+MAILGUN_DOMAIN  = os.environ.get('MAILGUN_DOMAIN', '')
+
+_mailgun_ready = bool(MAILGUN_API_KEY and MAILGUN_DOMAIN)
+
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
+    'django.core.mail.backends.smtp.EmailBackend' if _mailgun_ready
+    else 'django.core.mail.backends.console.EmailBackend',
 )
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@grazconcept.com.ng')
+EMAIL_HOST         = os.environ.get('EMAIL_HOST', 'smtp.mailgun.org')
+EMAIL_PORT         = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS      = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+# SMTP login for Mailgun is usually  postmaster@<your-domain>
+EMAIL_HOST_USER    = os.environ.get(
+    'EMAIL_HOST_USER',
+    os.environ.get('MAILGUN_SMTP_LOGIN', f'postmaster@{MAILGUN_DOMAIN}' if MAILGUN_DOMAIN else ''),
+)
+# SMTP password is the Mailgun SMTP password (different from the API key).
+# Set MAILGUN_SMTP_PASSWORD (or EMAIL_HOST_PASSWORD) in your environment.
+EMAIL_HOST_PASSWORD = os.environ.get(
+    'EMAIL_HOST_PASSWORD',
+    os.environ.get('MAILGUN_SMTP_PASSWORD', ''),
+)
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    f'GrazConcept <no-reply@{MAILGUN_DOMAIN}>' if MAILGUN_DOMAIN else 'no-reply@grazconcept.com.ng',
+)
+# Email address that receives admin alerts (new applications, etc.)
+ADMIN_NOTIFICATION_EMAIL = os.environ.get('ADMIN_NOTIFICATION_EMAIL', 'admin@grazconcept.com.ng')
 
 # Production-only security hardening. Skipped under DEBUG so local HTTP dev
 # still works without a TLS cert.

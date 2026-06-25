@@ -15,6 +15,8 @@ from .views import (
     GetMyRefeereesView,
     AdminDashboardAnalyticsView,
     AdminAnalyticsReportView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
 )
 
 router = DefaultRouter()
@@ -27,6 +29,10 @@ urlpatterns = [
     path('users/register/', SignUpView.as_view(), name='register'),
     path('users/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('users/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Password reset
+    path('users/password/reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
+    path('users/password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 
     # Profile  (GET + PATCH profile_picture)
     path('users/profile/', UserProfileView.as_view(), name='profile'),

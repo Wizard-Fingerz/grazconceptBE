@@ -87,8 +87,24 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(client=client)
+        instance = serializer.save(client=client)
         headers = self.get_success_headers(serializer.data)
+
+        # Notify admin of new application (non-fatal)
+        try:
+            from globalconceptBE.emails import send_admin_application_notification
+            app_user = getattr(client, 'user', request.user)
+            offer_title = str(getattr(instance, 'offer', '') or '')
+            send_admin_application_notification(
+                application_type="Work Visa",
+                applicant_name=app_user.get_full_name() or app_user.email,
+                applicant_email=app_user.email,
+                application_id=instance.pk,
+                extra_fields={"Job Offer": offer_title} if offer_title else None,
+            )
+        except Exception:
+            pass
+
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
