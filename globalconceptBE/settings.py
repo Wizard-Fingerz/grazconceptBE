@@ -302,47 +302,34 @@ AMADEUS_CLIENT_SECRET = os.environ.get('AMADEUS_CLIENT_SECRET')
 # Frontend URL used to build links in emails (password reset, etc.)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://app.grazconcept.com.ng')
 
-# ── Mailgun email configuration ───────────────────────────────────────────────
-# Set MAILGUN_API_KEY and MAILGUN_DOMAIN in your environment (or .env).
-# Mailgun provides an SMTP relay at smtp.mailgun.org — no extra library needed.
+# ── Brevo (formerly Sendinblue) email configuration ───────────────────────────
+# Brevo SMTP relay — no extra library needed, works with Django's built-in backend.
 #
-# Required env vars:
-#   MAILGUN_API_KEY      = key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-#   MAILGUN_DOMAIN       = mg.yourdomain.com  (or sandbox-xxx.mailgun.org for testing)
-#   MAILGUN_SMTP_LOGIN   = postmaster@mg.yourdomain.com   (optional, derived from domain)
-#   DEFAULT_FROM_EMAIL   = GrazConcept <no-reply@mg.yourdomain.com>
+# Required env vars (add to your .env / deployment secrets):
+#   BREVO_SMTP_KEY   = xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ← from Brevo → SMTP & API → SMTP
+#   BREVO_SMTP_LOGIN = your-brevo-account@email.com               ← the login shown in Brevo SMTP settings
+#   DEFAULT_FROM_EMAIL = GrazConcept <no-reply@grazconcept.com.ng>
 #   ADMIN_NOTIFICATION_EMAIL = admin@grazconcept.com.ng
 #
-# Leave MAILGUN_API_KEY empty during local dev → falls back to console backend.
+# Leave BREVO_SMTP_KEY empty during local dev → falls back to console backend (prints to stdout).
 
-MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY', '')
-MAILGUN_DOMAIN  = os.environ.get('MAILGUN_DOMAIN', '')
+BREVO_SMTP_KEY   = os.environ.get('BREVO_SMTP_KEY', '')
+BREVO_SMTP_LOGIN = os.environ.get('BREVO_SMTP_LOGIN', '')
 
-_mailgun_ready = bool(MAILGUN_API_KEY and MAILGUN_DOMAIN)
+_brevo_ready = bool(BREVO_SMTP_KEY and BREVO_SMTP_LOGIN)
 
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.smtp.EmailBackend' if _mailgun_ready
+    'django.core.mail.backends.smtp.EmailBackend' if _brevo_ready
     else 'django.core.mail.backends.console.EmailBackend',
 )
-EMAIL_HOST         = os.environ.get('EMAIL_HOST', 'smtp.mailgun.org')
-EMAIL_PORT         = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS      = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
-# SMTP login for Mailgun is usually  postmaster@<your-domain>
-EMAIL_HOST_USER    = os.environ.get(
-    'EMAIL_HOST_USER',
-    os.environ.get('MAILGUN_SMTP_LOGIN', f'postmaster@{MAILGUN_DOMAIN}' if MAILGUN_DOMAIN else ''),
-)
-# SMTP password is the Mailgun SMTP password (different from the API key).
-# Set MAILGUN_SMTP_PASSWORD (or EMAIL_HOST_PASSWORD) in your environment.
-EMAIL_HOST_PASSWORD = os.environ.get(
-    'EMAIL_HOST_PASSWORD',
-    os.environ.get('MAILGUN_SMTP_PASSWORD', ''),
-)
-DEFAULT_FROM_EMAIL = os.environ.get(
-    'DEFAULT_FROM_EMAIL',
-    f'GrazConcept <no-reply@{MAILGUN_DOMAIN}>' if MAILGUN_DOMAIN else 'no-reply@grazconcept.com.ng',
-)
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp-relay.brevo.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', BREVO_SMTP_LOGIN)
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', BREVO_SMTP_KEY)
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'GrazConcept <no-reply@grazconcept.com.ng>')
+
 # Email address that receives admin alerts (new applications, etc.)
 ADMIN_NOTIFICATION_EMAIL = os.environ.get('ADMIN_NOTIFICATION_EMAIL', 'admin@grazconcept.com.ng')
 
