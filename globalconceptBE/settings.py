@@ -303,35 +303,46 @@ AMADEUS_CLIENT_SECRET = os.environ.get('AMADEUS_CLIENT_SECRET')
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://app.grazconcept.com.ng')
 
 # ── Brevo (formerly Sendinblue) email configuration ───────────────────────────
-# Brevo SMTP relay — no extra library needed, works with Django's built-in backend.
+# Add these two lines to your .env file:
 #
-# Required env vars (add to your .env / deployment secrets):
-#   BREVO_SMTP_KEY   = xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ← from Brevo → SMTP & API → SMTP
-#   BREVO_SMTP_LOGIN = your-brevo-account@email.com               ← the login shown in Brevo SMTP settings
-#   DEFAULT_FROM_EMAIL = GrazConcept <no-reply@grazconcept.com.ng>
-#   ADMIN_NOTIFICATION_EMAIL = admin@grazconcept.com.ng
+#   BREVO_SMTP_LOGIN = your-brevo-account@email.com
+#   BREVO_SMTP_KEY   = xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #
-# Leave BREVO_SMTP_KEY empty during local dev → falls back to console backend (prints to stdout).
+# Where to find them:
+#   Login  → the email address you registered with on brevo.com
+#   Key    → brevo.com → Settings → SMTP & API → SMTP tab → "Generate a new SMTP key"
+#            (this is NOT the same as the API key — it starts with xkeysib- or similar)
+#
+# Without these vars the backend falls back to console (prints to stdout, no real email).
 
-BREVO_SMTP_KEY   = os.environ.get('BREVO_SMTP_KEY', '')
 BREVO_SMTP_LOGIN = os.environ.get('BREVO_SMTP_LOGIN', '')
+BREVO_SMTP_KEY   = os.environ.get('BREVO_SMTP_KEY', '')
 
-_brevo_ready = bool(BREVO_SMTP_KEY and BREVO_SMTP_LOGIN)
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', BREVO_SMTP_LOGIN)
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', BREVO_SMTP_KEY)
 
+_brevo_ready = bool(EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
+
+# Always use SMTP when credentials are present; console otherwise (safe local default)
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
     'django.core.mail.backends.smtp.EmailBackend' if _brevo_ready
     else 'django.core.mail.backends.console.EmailBackend',
 )
-EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp-relay.brevo.com')
-EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', BREVO_SMTP_LOGIN)
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', BREVO_SMTP_KEY)
-DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'GrazConcept <no-reply@grazconcept.com.ng>')
+EMAIL_HOST     = os.environ.get('EMAIL_HOST', 'smtp-relay.brevo.com')
+EMAIL_PORT     = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS  = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'GrazConcept <no-reply@grazconcept.com.ng>')
 
 # Email address that receives admin alerts (new applications, etc.)
 ADMIN_NOTIFICATION_EMAIL = os.environ.get('ADMIN_NOTIFICATION_EMAIL', 'admin@grazconcept.com.ng')
+
+import logging as _log
+_log.getLogger('django').info(
+    "Email backend: %s | host: %s:%s | user: %s | ready: %s",
+    EMAIL_BACKEND.split('.')[-1], EMAIL_HOST, EMAIL_PORT,
+    EMAIL_HOST_USER or '(not set)', _brevo_ready,
+)
 
 # Production-only security hardening. Skipped under DEBUG so local HTTP dev
 # still works without a TLS cert.

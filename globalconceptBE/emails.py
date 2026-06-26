@@ -296,7 +296,7 @@ def send_admin_application_notification(
   </a>
 </div>
 
-n:center;">
+<p style="margin:16px 0 0;font-size:12px;color:#aaa;text-align:center;">
   This is an automated notification from {BRAND_NAME}.
 </p>"""
 
