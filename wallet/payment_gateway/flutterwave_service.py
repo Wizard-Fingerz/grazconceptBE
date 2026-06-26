@@ -102,6 +102,26 @@ def validate_webhook_signature(payload_bytes: bytes, received_hash: str) -> bool
     return received_hash == WEBHOOK_HASH
 
 
+def resolve_account(account_number: str, account_bank: str) -> dict:
+    """
+    Resolve a bank account number to the account holder's name.
+    Uses Flutterwave GET /accounts/resolve.
+    Returns dict with at least {"account_name": "...", "account_number": "..."}.
+    Raises ValueError if resolution fails.
+    """
+    url = f"{FLW_BASE_URL}/accounts/resolve"
+    resp = requests.get(
+        url,
+        params={"account_number": account_number, "account_bank": account_bank},
+        headers=_headers(),
+        timeout=15,
+    )
+    data = resp.json()
+    if data.get("status") != "success":
+        raise ValueError(data.get("message", "Could not resolve account"))
+    return data["data"]   # {"account_number": "...", "account_name": "..."}
+
+
 def get_banks(country: str = "NG") -> list:
     """Fetch list of Nigerian banks for withdrawal form."""
     url = f"{FLW_BASE_URL}/banks/{country}"

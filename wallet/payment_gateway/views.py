@@ -368,3 +368,45 @@ class FlutterwaveBanksView(APIView):
         except Exception as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({"banks": banks})
+
+
+# ─── 6. Account name resolution ───────────────────────────────────────────────
+
+class FlutterwaveResolveAccountView(APIView):
+    """
+    POST /wallet/flutterwave/resolve-account/
+    Body: { "account_number": "0123456789", "account_bank": "044" }
+    Returns: { "account_name": "JOHN DOE", "account_number": "0123456789" }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        account_number = (request.data.get("account_number") or "").strip()
+        account_bank   = (request.data.get("account_bank")   or "").strip()
+
+        if not account_number or not account_bank:
+            return Response(
+                {"detail": "account_number and account_bank are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(account_number) != 10 or not account_number.isdigit():
+            return Response(
+                {"detail": "account_number must be exactly 10 digits."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            data = flw.resolve_account(account_number, account_bank)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            logger.exception("resolve_account error: %s", exc)
+            return Response(
+                {"detail": "Account lookup failed. Please try again."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response({
+            "account_name":   data.get("account_name", ""),
+            "account_number": data.get("account_number", account_number),
+        })

@@ -5,7 +5,7 @@ from .transactions.views import WalletTransactionViewSet
 from .payment_gateway.views import (
     PaymentGatewayViewSet, PaymentGatewayCallbackLogViewSet,
     FlutterwaveInitiateView, FlutterwaveVerifyView, FlutterwaveWebhookView,
-    FlutterwaveWithdrawView, FlutterwaveBanksView,
+    FlutterwaveWithdrawView, FlutterwaveBanksView, FlutterwaveResolveAccountView,
 )
 from .saving_plans.views import SavingsPlanViewSet
 from .loan.views import LoanOfferViewSet, LoanApplicationViewSet, LoanRepaymentViewSet, LoanAnalyticsViewSet
@@ -30,5 +30,6 @@ urlpatterns = [
     path('flutterwave/verify/',    FlutterwaveVerifyView.as_view(),    name='flw-verify'),
     path('flutterwave/webhook/',   FlutterwaveWebhookView.as_view(),   name='flw-webhook'),
     path('flutterwave/withdraw/',  FlutterwaveWithdrawView.as_view(),  name='flw-withdraw'),
-    path('flutterwave/banks/',     FlutterwaveBanksView.as_view(),     name='flw-banks'),
+    path('flutterwave/banks/',          FlutterwaveBanksView.as_view(),          name='flw-banks'),
+    path('flutterwave/resolve-account/', FlutterwaveResolveAccountView.as_view(), name='flw-resolve-account'),
 ]
