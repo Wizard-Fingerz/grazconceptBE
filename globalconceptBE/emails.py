@@ -90,15 +90,29 @@ def _wrap(body_html: str, preview_text: str = "") -> str:
 
 
 def _send(subject: str, to: list[str], text_body: str, html_body: str):
-    """Send an email; swallows and logs errors so callers never crash."""
+    """
+    Send an email via the configured backend (Brevo SMTP by default).
+    Logs the full traceback on failure and re-raises so callers can decide
+    whether to surface the error or swallow it.
+    """
     from_addr = settings.DEFAULT_FROM_EMAIL
+    logger.info(
+        "Sending email: subject=%r  to=%r  from=%r  host=%s:%s",
+        subject, to, from_addr,
+        getattr(settings, 'EMAIL_HOST', '?'),
+        getattr(settings, 'EMAIL_PORT', '?'),
+    )
+    msg = EmailMultiAlternatives(subject, text_body, from_addr, to)
+    msg.attach_alternative(html_body, "text/html")
     try:
-        msg = EmailMultiAlternatives(subject, text_body, from_addr, to)
-        msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=False)
-        logger.info("Email sent: subject=%r to=%r", subject, to)
+        logger.info("Email sent OK: subject=%r to=%r", subject, to)
     except Exception as exc:
-        logger.error("Email send failed: subject=%r to=%r error=%s", subject, to, exc)
+        logger.exception(          # full traceback in server logs
+            "Email send FAILED: subject=%r to=%r — %s: %s",
+            subject, to, type(exc).__name__, exc,
+        )
+        raise   # re-raise so callers can handle or report
 
 
 # ── Password reset ────────────────────────────────────────────────────────────
@@ -282,7 +296,7 @@ def send_admin_application_notification(
   </a>
 </div>
 
-<p style="margin:0;font-size:13px;color:#aaa;text-align:center;">
+n:center;">
   This is an automated notification from {BRAND_NAME}.
 </p>"""
 

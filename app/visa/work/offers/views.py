@@ -102,8 +102,11 @@ class WorkVisaApplicationViewSet(viewsets.ModelViewSet):
                 application_id=instance.pk,
                 extra_fields={"Job Offer": offer_title} if offer_title else None,
             )
-        except Exception:
-            pass
+        except Exception as _notif_exc:
+            import logging as _log
+            _log.getLogger(__name__).exception(
+                "Admin application notification email failed: %s", _notif_exc
+            )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

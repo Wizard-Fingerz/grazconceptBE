@@ -61,12 +61,13 @@ class SignUpView(APIView):
                 ).exists():
                     user.referred_by = referred_by
                     user.save()
-            # Send welcome email (non-fatal)
+            # Send welcome email (non-fatal — registration always succeeds even if email fails)
             try:
                 from globalconceptBE.emails import send_welcome_email
                 send_welcome_email(user)
-            except Exception:
-                pass
+            except Exception as _email_exc:
+                import logging
+                logging.getLogger(__name__).exception("Welcome email failed for %s: %s", user.email, _email_exc)
 
             refresh = RefreshToken.for_user(user)
             return Response(
@@ -130,6 +131,14 @@ class PasswordResetRequestView(APIView):
             send_password_reset_email(user, reset_url)
         except UserModel.DoesNotExist:
             pass  # Don't reveal whether the email exists
+        except Exception as exc:
+            # Surface email-send errors clearly so misconfiguration is obvious
+            import logging
+            logging.getLogger(__name__).exception("Password reset email failed: %s", exc)
+            return Response(
+                {"detail": f"Email delivery failed — {type(exc).__name__}: {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return Response(
             {"message": "If that email is registered, a reset link is on its way."},
             status=status.HTTP_200_OK,

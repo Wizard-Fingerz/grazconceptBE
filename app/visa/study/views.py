@@ -75,8 +75,11 @@ class StudyVisaApplicationViewSet(viewsets.ModelViewSet):
                 applicant_email=app_user.email,
                 application_id=instance.pk,
             )
-        except Exception:
-            pass
+        except Exception as _notif_exc:
+            import logging as _log
+            _log.getLogger(__name__).exception(
+                "Admin application notification email failed: %s", _notif_exc
+            )
 
 
 class StudyVisaApplicationCommentViewSet(viewsets.ModelViewSet):
