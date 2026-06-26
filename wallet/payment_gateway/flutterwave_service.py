@@ -110,13 +110,29 @@ def resolve_account(account_number: str, account_bank: str) -> dict:
     Raises ValueError if resolution fails.
     """
     url = f"{FLW_BASE_URL}/accounts/resolve"
-    resp = requests.get(
+    resp = requests.post(
         url,
-        params={"account_number": account_number, "account_bank": account_bank},
+        json={"account_number": account_number, "account_bank": account_bank},
         headers=_headers(),
         timeout=15,
     )
-    data = resp.json()
+
+    # Guard: empty or non-JSON body (Flutterwave occasionally returns blank on bad input)
+    raw = resp.text.strip()
+    if not raw:
+        raise ValueError(
+            f"No response from Flutterwave (HTTP {resp.status_code}). "
+            "Check the account number and bank, then try again."
+        )
+
+    try:
+        data = resp.json()
+    except Exception:
+        raise ValueError(
+            f"Unexpected response from Flutterwave (HTTP {resp.status_code}). "
+            "Please try again or contact support."
+        )
+
     if data.get("status") != "success":
         raise ValueError(data.get("message", "Could not resolve account"))
     return data["data"]   # {"account_number": "...", "account_name": "..."}
