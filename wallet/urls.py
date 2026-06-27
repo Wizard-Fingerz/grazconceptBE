@@ -9,6 +9,7 @@ from .payment_gateway.views import (
 )
 from .saving_plans.views import SavingsPlanViewSet
 from .loan.views import LoanOfferViewSet, LoanApplicationViewSet, LoanRepaymentViewSet, LoanAnalyticsViewSet
+from .pin_views import WalletPinStatusView, WalletSetPinView, WalletVerifyPinView
 
 router = routers.DefaultRouter()
 router.register(r'wallets', WalletViewSet, basename='wallet')
@@ -32,4 +33,9 @@ urlpatterns = [
     path('flutterwave/withdraw/',  FlutterwaveWithdrawView.as_view(),  name='flw-withdraw'),
     path('flutterwave/banks/',          FlutterwaveBanksView.as_view(),          name='flw-banks'),
     path('flutterwave/resolve-account/', FlutterwaveResolveAccountView.as_view(), name='flw-resolve-account'),
+
+    # Wallet PIN
+    path('pin/status/', WalletPinStatusView.as_view(), name='wallet-pin-status'),
+    path('pin/setup/',  WalletSetPinView.as_view(),    name='wallet-pin-setup'),
+    path('pin/verify/', WalletVerifyPinView.as_view(),  name='wallet-pin-verify'),
 ]

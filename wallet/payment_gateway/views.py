@@ -295,6 +295,7 @@ class FlutterwaveWithdrawView(APIView):
         beneficiary_name = request.data.get("beneficiary_name", "")
         narration = request.data.get("narration", "Wallet withdrawal")
         currency = request.data.get("currency", "NGN")
+        pin = (request.data.get("pin") or "").strip()
 
         if not all([amount, account_bank, account_number]):
             return Response({"detail": "amount, account_bank, and account_number are required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -309,6 +310,24 @@ class FlutterwaveWithdrawView(APIView):
         wallet = _get_wallet(request.user)
         if not wallet:
             return Response({"detail": "Wallet not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # PIN gate
+        if not wallet.has_pin:
+            return Response(
+                {"detail": "Please set up your wallet PIN before making a withdrawal."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not pin:
+            return Response(
+                {"detail": "Your wallet PIN is required to withdraw."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not wallet.verify_pin(pin):
+            return Response(
+                {"detail": "Incorrect PIN. Please try again."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if float(wallet.balance) < amount:
             return Response({"detail": "Insufficient wallet balance."}, status=status.HTTP_400_BAD_REQUEST)
 
